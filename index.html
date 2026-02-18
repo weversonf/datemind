@@ -3,44 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind | CRM Local v07</title>
+    <title>DateMind | CRM Inteligente</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        .crm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; padding: 2rem; }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
-        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 10px 30px -10px rgba(253, 38, 125, 0.3); }
+        .crm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; padding: 2rem; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.3s ease; }
+        .glass-card:hover { transform: scale(1.02); border-color: #fd267d; }
+        .modal-bg { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); }
+        .tag-badge { background: #f1f5f9; color: #475569; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-50 bg-[#0f172a]/90 backdrop-blur-md">
+    <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-40 bg-[#0f172a]/90">
         <div class="flex items-center gap-3">
-            <div class="p-2 bg-white rounded-lg"><i class="fa-solid fa-fire text-[#fd267d] text-xl"></i></div>
-            <h1 class="text-xl font-extrabold tracking-tighter uppercase">DateMind <span class="text-[#fd267d]">Offline</span></h1>
+            <div class="p-2 bg-white rounded-lg shadow-lg shadow-rose-500/20"><i class="fa-solid fa-fire text-[#fd267d] text-xl"></i></div>
+            <h1 class="text-xl font-extrabold tracking-tighter uppercase italic">DateMind <span class="text-[#fd267d]">Intelligence</span></h1>
         </div>
-
-        <div class="flex items-center gap-4">
-            <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-800 px-3 py-1 rounded-full">Processamento Local Ativo</span>
-            <label class="tinder-gradient px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest cursor-pointer shadow-lg hover:brightness-110 transition-all flex items-center gap-2">
-                <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                <i class="fa-solid fa-plus"></i> Analisar .txt
-            </label>
-        </div>
+        <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest cursor-pointer shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+            <input type="file" id="chatUpload" class="hidden" accept=".txt">
+            <i class="fa-solid fa-bolt"></i> Processar Novo Chat
+        </label>
     </header>
 
     <main class="flex-1 overflow-y-auto">
-        <div id="welcome" class="h-full flex flex-col items-center justify-center py-40 opacity-40">
-            <i class="fa-solid fa-bolt-lightning text-8xl mb-6"></i>
-            <h2 class="text-2xl font-bold uppercase italic">Motor de Padrões v07</h2>
-            <p class="text-sm mt-2">Nenhuma chave API necessária. Arraste suas conversas abaixo.</p>
+        <div id="welcome" class="h-full flex flex-col items-center justify-center py-40 opacity-20">
+            <i class="fa-solid fa-address-book text-9xl mb-6"></i>
+            <p class="font-black uppercase tracking-[0.4em] text-[10px] text-center">Dashboard de Gestão de Relacionamentos</p>
         </div>
-
         <div id="crmBoard" class="crm-grid hidden"></div>
     </main>
+
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+        <div class="bg-white text-slate-900 w-full max-w-xl rounded-[3rem] overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-300">
+            <button onclick="closeModal()" class="absolute top-8 right-8 text-slate-300 hover:text-rose-500 transition-colors text-3xl z-10">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+            
+            <div class="h-44 tinder-gradient p-12 flex flex-col justify-end relative">
+                <h2 id="modalName" class="text-5xl font-black text-white tracking-tighter leading-none">---</h2>
+                <div id="modalStatus" class="mt-3 inline-block bg-white/20 text-white text-[10px] font-black uppercase px-4 py-1 rounded-full border border-white/30 backdrop-blur-sm">---</div>
+            </div>
+
+            <div class="p-12 space-y-8 overflow-y-auto" style="max-height: 500px;">
+                <section>
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em] flex items-center gap-2">
+                        <i class="fa-solid fa-id-card-clip text-[#fd267d]"></i> Ficha Técnica (Tags Extraídas)
+                    </h3>
+                    <div id="keyTags" class="flex flex-wrap gap-3">
+                        </div>
+                </section>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                        <span class="block text-[9px] font-black text-slate-400 uppercase mb-1">Total de Mensagens</span>
+                        <span id="modalMsgs" class="text-2xl font-black text-slate-800 tracking-tighter">0</span>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                        <span class="block text-[9px] font-black text-slate-400 uppercase mb-1">Último Papo</span>
+                        <span id="modalDate" class="text-2xl font-black text-slate-800 tracking-tighter">--/--</span>
+                    </div>
+                </div>
+
+                <section class="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h4 class="text-[10px] font-black text-[#fd267d] uppercase mb-3 tracking-widest flex items-center gap-2">
+                            <i class="fa-solid fa-lightbulb"></i> Resumo Estratégico
+                        </h4>
+                        <p id="modalBio" class="text-slate-700 text-sm font-bold leading-relaxed italic"></p>
+                    </div>
+                    <i class="fa-solid fa-quote-right absolute -bottom-4 -right-2 text-rose-200/50 text-8xl"></i>
+                </section>
+            </div>
+        </div>
+    </div>
 
     <script>
         const chatUpload = document.getElementById('chatUpload');
@@ -50,100 +90,107 @@
         chatUpload.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const text = await file.text();
             const fileName = file.name.replace('.txt', '').replace('Conversa do WhatsApp com ', '');
-            
-            // Inicia o algoritmo Old School
-            const analysis = processOldSchool(text, fileName);
-            renderCard(analysis);
+            renderCard(extractData(text, fileName));
         });
 
-        function processOldSchool(text, name) {
+        function extractData(text, fileName) {
             const lines = text.split('\n');
-            const totalMsgs = lines.length;
-            
-            // 1. Detectar última data
-            const lastLine = lines[lines.length - 2] || "";
-            const dateMatch = lastLine.match(/(\d{2}\/\d{2}\/\d{2,4})/);
-            const lastDate = dateMatch ? dateMatch[0] : "Recente";
+            const total = lines.length;
+            const textLow = text.toLowerCase();
 
-            // 2. Analisar Interesse (Baseado em Emojis e Volume)
-            const hotEmojis = (text.match(/❤️|🔥|😍|😘|🥰|heart/g) || []).length;
-            const funEmojis = (text.match(/😂|🤣|kkk|haha/g) || []).length;
-            
-            let interesse = "Morno";
-            if (hotEmojis > 10 || totalMsgs > 500) interesse = "Quente";
-            if (totalMsgs < 50) interesse = "Frio";
+            // 1. Lógica de Filhos
+            let filhos = null;
+            if (textLow.includes("meu filho") || textLow.includes("minha filha")) filhos = "Tem Filhos";
+            if (textLow.match(/tenho \d filhos/)) filhos = textLow.match(/tenho \d filhos/)[0];
 
-            // 3. Extrair Tags (Palavras com mais de 5 letras que mais repetem)
-            const words = text.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/);
-            const freqMap = {};
-            const stopWords = ['você', 'muito', 'minha', 'nossa', 'está', 'fazer', 'coisa', 'disse', 'áudio', 'oculto', 'mensagem'];
-            
-            words.forEach(word => {
-                if (word.length > 5 && !stopWords.includes(word)) {
-                    freqMap[word] = (freqMap[word] || 0) + 1;
-                }
-            });
+            // 2. Lógica de Bairro
+            let bairro = null;
+            const bairroMatch = textLow.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || textLow.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
+            if (bairroMatch) bairro = "Bairro: " + bairroMatch[1];
 
-            const sortedTags = Object.entries(freqMap)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(item => item[0].toUpperCase());
+            // 3. Lógica de Profissão
+            let profissao = null;
+            const profMatch = textLow.match(/sou ([\wáéíóúâêîôûãõç]+)/) || textLow.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
+            if (profMatch && !['você', 'eu', 'o'].includes(profMatch[1])) profissao = profMatch[1];
 
-            // 4. Gerar Bio e Insight Baseado em Lógica
-            const personality = `Conexão baseada em ${totalMsgs} interações. Frequência alta de termos como "${sortedTags[0] || 'papo'}".`;
-            const insight = interesse === "Quente" 
-                ? `Forte presença de emojis positivos (${hotEmojis}). Hora de sugerir um encontro presencial.`
-                : `Volume de mensagens moderado. Tente puxar assunto sobre "${sortedTags[1] || 'novidades'}".`;
+            // 4. Termômetro
+            const hotCount = (text.match(/❤️|🔥|😍|😘|🥰/g) || []).length;
+            const interesse = hotCount > 15 || total > 1000 ? "Interesse: Quente" : (total < 100 ? "Frio" : "Morno");
+
+            // Tags de Interesse Comum (Palavras mais repetidas)
+            const words = textLow.replace(/[^\w\s]/gi, '').split(/\s+/);
+            const freq = {};
+            const stop = ['você', 'muito', 'minha', 'nossa', 'está', 'fazer', 'coisa', 'disse', 'áudio', 'oculto', 'mensagem', 'então', 'amanhã', 'acho', 'pode', 'hoje', 'tá'];
+            words.forEach(w => { if(w.length > 5 && !stop.includes(w)) freq[w] = (freq[w] || 0) + 1; });
+            const topTags = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(i => i[0]);
 
             return {
-                nome: name.split(' ')[0],
-                ultimo_papo: lastDate,
-                personalidade: personality,
-                tags: sortedTags.length > 0 ? sortedTags : ["CONVERSA", "WHATSAPP"],
-                insight: insight,
-                interesse: interesse
+                nome: fileName.split(' ')[0],
+                total: total,
+                data: text.match(/\d{2}\/\d{2}\/\d{2,4}/g)?.pop() || "Recente",
+                status: interesse,
+                filhos: filhos,
+                bairro: bairro,
+                profissao: profissao,
+                tags: topTags,
+                bio: `Conversa com alto engajamento (${total} msgs). Temas frequentes: ${topTags.join(', ')}. O tom sugere um nível de intimidade ${interesse.split(':')[1]}.`
             };
         }
-
-            
 
         function renderCard(data) {
             welcome.classList.add('hidden');
             crmBoard.classList.remove('hidden');
 
             const card = document.createElement('div');
-            card.className = "glass-card rounded-[2rem] overflow-hidden flex flex-col";
+            card.className = "glass-card rounded-[2.5rem] overflow-hidden flex flex-col";
+            card.onclick = () => openModal(data);
             
-            const badgeClass = data.interesse === 'Quente' ? 'bg-red-500 animate-pulse' : (data.interesse === 'Frio' ? 'bg-blue-500' : 'bg-orange-500');
+            const color = data.status.includes('Quente') ? 'text-rose-500' : 'text-orange-400';
 
             card.innerHTML = `
-                <div class="h-32 tinder-gradient p-6 flex flex-col justify-end relative">
-                    <div class="absolute top-4 right-4 ${badgeClass} text-white text-[9px] font-black uppercase px-3 py-1 rounded-full shadow-lg">
-                        ${data.interesse}
-                    </div>
-                    <h3 class="text-xl font-extrabold tracking-tight">${data.nome}</h3>
-                    <p class="text-[9px] font-bold opacity-80 uppercase tracking-widest mt-1">Timeline: ${data.ultimo_papo}</p>
+                <div class="h-28 tinder-gradient p-8 flex flex-col justify-end relative shadow-inner">
+                    <h3 class="text-xl font-black text-white tracking-tighter">${data.nome}</h3>
+                    <div class="absolute bottom-4 right-8 bg-white/20 px-3 py-1 rounded-full text-[8px] font-black text-white uppercase">Ver Ficha</div>
                 </div>
-                <div class="p-6 space-y-5 flex-1 flex flex-col">
-                    <p class="text-xs text-slate-400 leading-relaxed italic">"${data.personalidade}"</p>
-                    
-                    <div class="flex flex-wrap gap-2">
-                        ${data.tags.map(t => `<span class="bg-slate-800 text-slate-300 text-[9px] font-bold uppercase px-3 py-1 rounded-lg border border-white/5 tracking-tighter">${t}</span>`).join('')}
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[9px] font-black text-slate-500 uppercase">Relacionamento</span>
+                        <span class="text-[10px] font-black ${color} uppercase tracking-widest">${data.status.split(':')[1]}</span>
                     </div>
-
-                    <div class="mt-auto pt-4 border-t border-white/5">
-                        <h4 class="text-[9px] font-black text-[#fd267d] uppercase mb-2 tracking-widest flex items-center gap-2">
-                            <i class="fa-solid fa-microchip"></i> Diagnóstico
-                        </h4>
-                        <p class="text-[11px] font-bold text-slate-200 leading-snug">${data.insight}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${data.filhos ? `<span class="bg-rose-50 text-rose-500 text-[8px] font-black px-2 py-1 rounded-lg uppercase">👶 Pais</span>` : ''}
+                        ${data.profissao ? `<span class="bg-blue-50 text-blue-500 text-[8px] font-black px-2 py-1 rounded-lg uppercase">💼 ${data.profissao}</span>` : ''}
                     </div>
                 </div>
             `;
             crmBoard.prepend(card);
         }
+
+        function openModal(data) {
+            document.getElementById('modalName').innerText = data.nome;
+            document.getElementById('modalMsgs').innerText = data.total;
+            document.getElementById('modalDate').innerText = data.data;
+            document.getElementById('modalStatus').innerText = data.status;
+            document.getElementById('modalBio').innerText = data.bio;
+
+            const tagsContainer = document.getElementById('keyTags');
+            tagsContainer.innerHTML = '';
+            
+            // Injeção Condicional de Tags
+            if (data.filhos) tagsContainer.innerHTML += `<div class="tag-badge"><i class="fa-solid fa-child-reaching mr-1"></i> ${data.filhos}</div>`;
+            if (data.bairro) tagsContainer.innerHTML += `<div class="tag-badge"><i class="fa-solid fa-location-dot mr-1"></i> ${data.bairro}</div>`;
+            if (data.profissao) tagsContainer.innerHTML += `<div class="tag-badge"><i class="fa-solid fa-briefcase mr-1"></i> Profissão: ${data.profissao}</div>`;
+            
+            data.tags.forEach(t => {
+                tagsContainer.innerHTML += `<div class="tag-badge" style="background: #fdf2f8; color: #db2777; border-color: #fce7f3"># ${t}</div>`;
+            });
+
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
     </script>
 </body>
 </html>

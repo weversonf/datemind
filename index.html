@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.5.3</title>
+    <title>DateMind v08.5.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,10 +11,8 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
         .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; transition: all 0.3s ease; cursor: pointer; }
-        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 10px 30px -10px rgba(253, 38, 125, 0.3); }
-        .input-field { background-color: #f1f5f9; color: #1e293b; width: 100%; padding: 1.2rem; border-radius: 1.5rem; outline: none; border: 2px solid transparent; }
-        .input-field:focus { border-color: #fd267d; background-color: #ffffff; }
-        #loadingOverlay { background: #0f172a; position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
+        #loadingOverlay { background: #0f172a; position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -22,66 +20,38 @@
 
     <div id="loadingOverlay">
         <div class="flex flex-col items-center">
-            <i class="fa-solid fa-fire text-[#fd267d] text-6xl animate-pulse"></i>
-            <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-6 opacity-50">Sincronizando Dossiês...</p>
-            <button onclick="forceHideLoader()" class="mt-8 text-[8px] text-slate-500 underline uppercase tracking-widest">Pular Carregamento</button>
+            <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-4 opacity-50">Sincronizando...</p>
         </div>
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-10 md:p-14 rounded-[3.5rem] w-full max-w-md shadow-2xl text-center">
-            <i class="fa-solid fa-fire text-[#fd267d] text-6xl mb-6"></i>
-            <h2 id="authTitle" class="text-3xl font-black italic tracking-tighter uppercase mb-2">DateMind</h2>
-            <p id="authSubtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Login Seguro</p>
-            <div class="space-y-4">
-                <input type="email" id="email" placeholder="E-mail" class="input-field">
-                <input type="password" id="pass" placeholder="Senha" class="input-field">
-                <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-[1.5rem] text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">Entrar</button>
-                <div class="pt-6 border-t border-slate-100">
-                    <button id="btnSwitch" class="text-[10px] font-black uppercase text-slate-400 hover:text-[#fd267d] tracking-widest">Não tem conta? Cadastre-se</button>
-                </div>
-            </div>
+        <div class="bg-white p-10 rounded-[3rem] w-full max-w-md shadow-2xl text-center">
+            <h2 class="text-3xl font-black italic mb-6 uppercase tracking-tighter text-[#fd267d]">DateMind</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-2xl mb-4 outline-none">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 outline-none">
+            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar / Cadastrar</button>
         </div>
     </div>
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-white rounded-lg shadow-lg"><i class="fa-solid fa-fire text-[#fd267d]"></i></div>
-                <h1 class="text-xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">v08.3</span></h1>
-            </div>
+            <h1 class="text-xl font-black italic uppercase">DateMind <span class="text-[#fd267d]">PRO</span></h1>
             <div class="flex items-center gap-4">
-                <button id="btnLogout" class="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-colors">Sair</button>
-                <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2 hover:scale-105 transition-all">
+                <button id="btnLogout" class="text-[10px] font-bold text-slate-500 hover:text-white uppercase mr-4">Sair</button>
+                <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Enviar Dossiê
+                    <i class="fa-solid fa-plus-circle"></i> Enviar Dossiê
                 </label>
             </div>
         </header>
-
         <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8"></main>
-    </div>
-
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="bg-white text-slate-900 w-full max-w-xl rounded-[3rem] overflow-hidden shadow-2xl relative">
-            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-300 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
-            <div class="h-40 tinder-gradient p-12 flex flex-col justify-end">
-                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none">---</h2>
-            </div>
-            <div class="p-12 space-y-6 overflow-y-auto" style="max-height: 450px;">
-                <div id="mTags" class="flex flex-wrap gap-2"></div>
-                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 italic text-slate-700 text-sm leading-relaxed">
-                    <p id="mBio"></p>
-                </div>
-                <button id="btnDelete" class="w-full py-3 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-2xl hover:bg-rose-500 hover:text-white transition-all">Excluir Dossiê</button>
-            </div>
-        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
@@ -96,34 +66,18 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let isLoginMode = true;
-        let currentProfileId = null;
-
-        // EMERGENCY LOADER HIDE
-        window.forceHideLoader = () => {
-            const loader = document.getElementById('loadingOverlay');
-            loader.style.opacity = '0';
-            setTimeout(() => loader.classList.add('hidden'), 500);
-        };
-
-        // AUTH
-        document.getElementById('btnSwitch').onclick = () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById('authTitle').innerText = isLoginMode ? "DATEMIND" : "CRIAR CONTA";
-            document.getElementById('btnPrimary').innerText = isLoginMode ? "Entrar" : "Finalizar Cadastro";
-        };
-
-        document.getElementById('btnPrimary').onclick = () => {
+        // LOGIN/CADASTRO AUTO
+        document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
-            if(isLoginMode) signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
-            else createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+            try { await signInWithEmailAndPassword(auth, email, pass); } 
+            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message)); }
         };
 
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
         onAuthStateChanged(auth, (user) => {
-            forceHideLoader();
+            document.getElementById('loadingOverlay').classList.add('hidden');
             if (user) {
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
@@ -134,72 +88,58 @@
             }
         });
 
-        // PROCESSAMENTO DE TEXTO (OLD SCHOOL)
+        // UPLOAD E RENDER IMEDIATO
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            
             const text = await file.text();
             const lowText = text.toLowerCase();
             const tags = [];
             
-            if (lowText.includes("filho") || lowText.includes("filha")) tags.push("👶 Pais");
+            // Itens Chave Local
+            if (lowText.includes("filho")) tags.push("👶 Pais");
             const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
             if(bairro) tags.push("📍 " + bairro[1]);
             const prof = lowText.match(/sou ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
-            if(prof && !['você','eu'].includes(prof[1])) tags.push("💼 " + prof[1]);
+            if(prof) tags.push("💼 " + prof[1]);
 
-            const profile = {
+            const data = {
                 nome: file.name.split(' ')[0],
                 tags: tags,
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                status: "🔥 Processado",
-                bio: `Dossiê criado a partir de ${text.split('\n').length} interações analisadas localmente.`
+                status: "🔥 PROCESSADO"
             };
 
-            await addDoc(collection(db, "profiles"), profile);
+            renderCard(data); // Mostra na hora
+            await addDoc(collection(db, "profiles"), data); // Salva em silêncio
         };
+
+        function renderCard(d) {
+            const board = document.getElementById('crmBoard');
+            const card = document.createElement('div');
+            card.className = "glass-card p-8 animate-in fade-in duration-500 mb-4";
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-black">${d.nome}</h3>
+                    <span class="text-[8px] font-black uppercase text-rose-500">${d.status}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase border border-white/5 font-bold tracking-tighter">${t}</span>`).join('')}
+                </div>
+            `;
+            board.prepend(card);
+        }
 
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid), orderBy("createdAt", "desc"));
             onSnapshot(q, (snap) => {
                 const board = document.getElementById('crmBoard');
-                board.innerHTML = '';
-                snap.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const card = document.createElement('div');
-                    card.className = "glass-card p-8 animate-in fade-in duration-500";
-                    card.onclick = () => openModal(d, docSnap.id);
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-2xl font-black tracking-tighter">${d.nome}</h3>
-                            <span class="text-[8px] font-black uppercase text-rose-500">${d.status}</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase border border-white/5 font-bold">${t}</span>`).join('')}
-                        </div>
-                    `;
-                    board.appendChild(card);
-                });
+                board.innerHTML = ''; // Limpa para evitar duplicados
+                snap.forEach(docSnap => renderCard(docSnap.data()));
             });
         }
-
-        function openModal(d, id) {
-            currentProfileId = id;
-            document.getElementById('mName').innerText = d.nome;
-            document.getElementById('mBio').innerText = d.bio;
-            document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-200 uppercase">${t}</span>`).join('');
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
-        document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
-        
-        document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir este dossiê?")) {
-                await deleteDoc(doc(db, "profiles", currentProfileId));
-                document.getElementById('modal').classList.add('hidden');
-            }
-        };
     </script>
 </body>
 </html>

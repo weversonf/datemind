@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.4.3 | GitHub Fix</title>
+    <title>DateMind v08.4.4 | Instant Card</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
         .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
         #loadingOverlay { background: #0f172a; position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
     </style>
@@ -24,8 +25,8 @@
         </div>
     </div>
 
-    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6">
-        <div class="bg-white p-10 md:p-14 rounded-[3rem] w-full max-w-md shadow-2xl text-slate-900">
+    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
+        <div class="bg-white p-10 md:p-14 rounded-[3.5rem] w-full max-w-md shadow-2xl">
             <div class="text-center mb-8">
                 <i class="fa-solid fa-fire text-[#fd267d] text-6xl mb-4"></i>
                 <h2 id="authTitle" class="text-3xl font-black italic tracking-tighter uppercase">DateMind</h2>
@@ -45,7 +46,7 @@
         <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md">
             <h1 class="text-xl font-black italic uppercase">DateMind <span class="text-[#fd267d]">PRO</span></h1>
             <div class="flex items-center gap-4">
-                <button id="btnLogout" class="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-colors">Sair da Conta</button>
+                <button id="btnLogout" class="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-colors">Sair</button>
                 <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
                     <i class="fa-solid fa-plus-circle"></i> Enviar Dossiê
@@ -75,7 +76,6 @@
 
         let isLoginMode = true;
 
-        // CORREÇÃO DOS CLIQUES (VINCULANDO EVENTOS VIA JAVASCRIPT)
         document.getElementById('btnSwitch').onclick = () => {
             isLoginMode = !isLoginMode;
             document.getElementById('authTitle').innerText = isLoginMode ? "DATEMIND" : "CADASTRO";
@@ -106,7 +106,6 @@
             }
         });
 
-        // MOTOR DE ANÁLISE OLD SCHOOL (PARA FUNCIONAR SEM CHAVE DE API GOOGLE)
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -130,28 +129,40 @@
                 status: "🔥 Processado"
             };
 
-            await addDoc(collection(db, "profiles"), profile);
+            // Adiciona localmente primeiro para feedback imediato
+            renderSingleCard(profile);
+            
+            // Tenta salvar no Firebase
+            try {
+                await addDoc(collection(db, "profiles"), profile);
+            } catch (err) {
+                console.error("Erro ao salvar no banco:", err);
+            }
         };
+
+        function renderSingleCard(d) {
+            const board = document.getElementById('crmBoard');
+            const card = document.createElement('div');
+            card.className = "glass-card rounded-[2.5rem] p-8 animate-in fade-in duration-500 mb-4";
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-black">${d.nome}</h3>
+                    <span class="text-[8px] font-black uppercase text-rose-500">${d.status}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase border border-white/5">${t}</span>`).join('')}
+                </div>
+            `;
+            board.prepend(card);
+        }
 
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid), orderBy("createdAt", "desc"));
             onSnapshot(q, (snap) => {
                 const board = document.getElementById('crmBoard');
-                board.innerHTML = '';
+                board.innerHTML = ''; // Limpa para evitar duplicados na sincronização inicial
                 snap.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const card = document.createElement('div');
-                    card.className = "glass-card rounded-[2.5rem] p-8 animate-in fade-in duration-500";
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-2xl font-black">${d.nome}</h3>
-                            <span class="text-[8px] font-black uppercase text-rose-500">${d.status}</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
-                        </div>
-                    `;
-                    board.appendChild(card);
+                    renderSingleCard(docSnap.data());
                 });
             });
         }

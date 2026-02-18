@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.8 | Unificado</title>
+    <title>DateMind v08.8.1 | Título Dinâmico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -22,16 +22,17 @@
 
     <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center">
         <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
-        <p class="text-[10px] font-black uppercase tracking-widest mt-6 opacity-50">Sincronizando...</p>
+        <p class="text-[10px] font-black uppercase tracking-widest mt-6 opacity-50">Sincronizando Dossiês...</p>
     </div>
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 border-b border-white/10 flex justify-between items-center bg-[#0f172a]/95 backdrop-blur-md sticky top-0 z-50">
-            <h1 class="text-xl font-black italic uppercase">DateMind <span class="text-[#fd267d]">v08.8</span></h1>
+            <h1 class="text-xl font-black italic uppercase italic">DateMind <span class="text-[#fd267d]">v08.8</span></h1>
             <div class="flex items-center gap-4">
                 <button id="btnLogout" class="text-[10px] font-bold text-slate-500 uppercase">Sair</button>
-                <label class="tinder-gradient px-6 py-2 rounded-full font-bold text-[10px] uppercase cursor-pointer hover:scale-105 transition-all">
-                    <input type="file" id="chatUpload" class="hidden" accept=".txt"> Novo Dossiê
+                <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                    <input type="file" id="chatUpload" class="hidden" accept=".txt">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Novo Dossiê
                 </label>
             </div>
         </header>
@@ -39,29 +40,31 @@
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl text-center">
-            <h2 class="text-3xl font-black italic mb-6 text-[#fd267d]">DateMind</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-2xl mb-4 outline-none">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 outline-none">
+        <div class="bg-white p-10 rounded-[3.5rem] w-full max-w-sm shadow-2xl text-center">
+            <h2 class="text-3xl font-black italic mb-8 uppercase tracking-tighter text-[#fd267d]">DateMind</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 outline-none border-2 border-transparent focus:border-[#fd267d]">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-50 rounded-2xl mb-6 outline-none border-2 border-transparent focus:border-[#fd267d]">
             <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar / Cadastrar</button>
         </div>
     </div>
 
     <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg">
         <div class="bg-white text-slate-900 w-full max-w-xl rounded-[2.5rem] overflow-hidden relative shadow-2xl">
-            <button id="btnCloseModal" class="absolute top-6 right-6 text-slate-300 text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
-            <div class="h-32 tinder-gradient p-8 flex flex-col justify-end">
-                <h2 id="mName" class="text-4xl font-black text-white uppercase tracking-tighter">---</h2>
-                <select id="mPhaseSelector" class="mt-2 bg-white/20 text-white text-[9px] font-black uppercase p-1 rounded-lg border-none outline-none">
-                    <option value="ice">❄️ Gelo</option>
-                    <option value="fire">🔥 Fogo</option>
-                    <option value="check">📍 Marcado</option>
-                </select>
+            <button id="btnCloseModal" class="absolute top-6 right-6 text-slate-300 text-2xl hover:text-rose-500"><i class="fa-solid fa-circle-xmark"></i></button>
+            <div class="h-40 tinder-gradient p-10 flex flex-col justify-end">
+                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none">---</h2>
+                <div class="flex items-center gap-2 mt-4">
+                    <select id="mPhaseSelector" class="bg-white/20 text-white text-[9px] font-black uppercase p-1 rounded-lg border-none outline-none cursor-pointer backdrop-blur-md">
+                        <option value="ice">❄️ Gelo</option>
+                        <option value="fire">🔥 Fogo</option>
+                        <option value="check">📍 Marcado</option>
+                    </select>
+                </div>
             </div>
-            <div class="p-8 space-y-4">
+            <div class="p-10 space-y-6">
                 <div id="mTags" class="flex flex-wrap gap-2"></div>
-                <p id="mBio" class="bg-slate-50 p-5 rounded-2xl italic text-slate-600 text-xs border border-slate-100"></p>
-                <button id="btnDelete" class="w-full py-4 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-xl">Excluir Permanentemente</button>
+                <p id="mBio" class="bg-slate-50 p-6 rounded-3xl italic text-slate-600 text-sm border border-slate-100"></p>
+                <button id="btnDelete" class="w-full py-4 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-xl hover:bg-rose-500 hover:text-white transition-all">Excluir Permanentemente</button>
             </div>
         </div>
     </div>
@@ -69,7 +72,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
@@ -84,7 +87,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // LÓGICA DE LOGIN
+        // LOGIN / CADASTRO
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
@@ -106,7 +109,7 @@
             }
         });
 
-        // MÓDULO DE UNIFICAÇÃO (DEDUPLICAÇÃO)
+        // MÓDULO DE PROCESSAMENTO E DEDUPLICAÇÃO
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -115,41 +118,40 @@
             const lowText = text.toLowerCase();
             const tags = [];
             
-            const cleanName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0].toUpperCase();
+            // 1. Extrai Nome e Idade
+            const rawName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0].toUpperCase();
+            const idadeMatch = lowText.match(/(\d{2}) anos/);
+            const idadeStr = idadeMatch ? `, ${idadeMatch[1]}` : '';
+            const finalTitle = rawName + idadeStr;
 
-            // Tags padrão
+            // 2. Extrai Itens Chave
             if (lowText.includes("filho")) tags.push("👶 Pais");
             const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
             if(bairro) tags.push("📍 " + bairro[1]);
             const prof = lowText.match(/sou ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
             if(prof && !['eu','você'].includes(prof[1])) tags.push("💼 " + prof[1]);
-            const idade = lowText.match(/(\d{2}) anos/);
-            if(idade) tags.push("🎂 " + idade[1] + " Anos");
 
             const profileData = {
-                nome: cleanName,
+                nome: finalTitle, // Título unificado (Nome + Idade)
                 tags: tags,
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                bio: `Dossiê atualizado de ${cleanName}. Histórico com ${text.split('\n').length} mensagens analisadas.`
+                bio: `Dossiê estratégico de ${rawName}. Histórico com ${text.split('\n').length} interações analisadas.`
             };
 
-            // VERIFICA SE JÁ EXISTE PARA UNIFICAR
-            const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", "==", cleanName));
+            // 3. Unifica se já existir o mesmo Nome
+            const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", "==", finalTitle));
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
-                // Se existe, atualiza o primeiro encontrado
-                const existingDoc = querySnapshot.docs[0];
-                await updateDoc(doc(db, "profiles", existingDoc.id), profileData);
+                await updateDoc(doc(db, "profiles", querySnapshot.docs[0].id), profileData);
             } else {
-                // Se não existe, cria um novo
                 profileData.fase = "ice";
                 await addDoc(collection(db, "profiles"), profileData);
             }
         };
 
-        // RENDERIZAÇÃO DO MURAL
+        // MÓDULO DE RENDERIZAÇÃO
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid));
             onSnapshot(q, (snap) => {
@@ -168,12 +170,12 @@
                         document.getElementById('mName').innerText = d.nome;
                         document.getElementById('mBio').innerText = d.bio;
                         document.getElementById('mPhaseSelector').value = d.fase || 'ice';
-                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[9px] font-black px-4 py-2 rounded-xl border border-slate-200 uppercase">${t}</span>`).join('');
+                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-200 uppercase">${t}</span>`).join('');
                         document.getElementById('modal').classList.remove('hidden');
                     };
                     card.innerHTML = `
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-2xl font-black tracking-tighter uppercase">${d.nome}</h3>
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-2xl font-black tracking-tighter uppercase leading-tight">${d.nome}</h3>
                             <i class="fa-solid fa-circle text-[6px] ${d.fase === 'fire' ? 'text-rose-500' : d.fase === 'check' ? 'text-green-500' : 'text-slate-500'}"></i>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -191,7 +193,7 @@
 
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
         document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir dossiê?")) {
+            if(confirm("Excluir dossiê permanentemente?")) {
                 await deleteDoc(doc(db, "profiles", window.currentProfileId));
                 document.getElementById('modal').classList.add('hidden');
             }

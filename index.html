@@ -3,92 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v09.1 | IA Strategic CRM</title>
+    <title>DateMind v10.0 | Tactical CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        
-        /* Glassmorphism Cards */
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; cursor: pointer; transition: 0.3s ease; border-left: 8px solid #94a3b8; }
-        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 15px 30px -10px rgba(253,38,125,0.3); }
-        
-        /* Phase Indicators */
+        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2.5rem; transition: 0.4s ease; cursor: pointer; border-left: 8px solid #94a3b8; }
+        .glass-card:hover { transform: translateY(-8px); border-color: #fd267d; box-shadow: 0 20px 40px -15px rgba(253, 38, 125, 0.4); }
+        .temp-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; }
+        .temp-fill { height: 100%; transition: width 1s ease-in-out; }
         .phase-ice { border-left-color: #94a3b8; }
         .phase-fire { border-left-color: #fd267d; }
         .phase-check { border-left-color: #22c55e; }
-        
-        /* Modal UX */
-        .modal-blur { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); }
-        .status-btn { opacity: 0.4; transition: 0.2s; border: 2px solid transparent; }
-        .status-btn.active { opacity: 1; border-color: white; transform: scale(1.05); }
+        .status-btn { opacity: 0.3; transition: 0.3s; }
+        .status-btn.active { opacity: 1; transform: scale(1.1); }
         .hidden { display: none !important; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
-        <header class="p-8 border-b border-white/5 flex justify-between items-center sticky top-0 z-50 bg-[#0f172a]/90 backdrop-blur-md">
-            <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">PRO</span></h1>
+        <header class="p-8 flex justify-between items-center sticky top-0 z-50 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5">
+            <h1 class="text-3xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V10</span></h1>
             <div class="flex items-center gap-6">
                 <button id="btnLogout" class="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest">Sair</button>
-                <label class="tinder-gradient px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
+                <label class="tinder-gradient px-10 py-4 rounded-full font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-2xl hover:brightness-110 transition-all flex items-center gap-3">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-brain"></i> Analisar Dossiê
+                    <i class="fa-solid fa-bolt-lightning"></i> Analisar Dossiê
                 </label>
             </div>
         </header>
         <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 p-10"></main>
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-blur">
-        <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[4rem] overflow-hidden relative shadow-2xl">
-            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-200 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
+    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
+        <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[4rem] overflow-hidden relative shadow-2xl animate-in slide-in-from-bottom-10 duration-500">
+            <button id="btnCloseModal" class="absolute top-10 right-10 text-slate-200 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
             
-            <div class="h-48 tinder-gradient p-12 flex flex-col justify-end">
-                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none mb-4">Nome</h2>
-                <div class="flex gap-3">
-                    <button onclick="updatePhase('ice')" id="btnIce" class="status-btn active bg-slate-400/30 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">❄️ Gelo</button>
-                    <button onclick="updatePhase('fire')" id="btnFire" class="status-btn bg-[#fd267d]/40 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">🔥 Fogo</button>
-                    <button onclick="updatePhase('check')" id="btnCheck" class="status-btn bg-green-500/40 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">📍 Marcado</button>
+            <div class="h-56 tinder-gradient p-12 flex flex-col justify-end">
+                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter mb-4 leading-none">---</h2>
+                <div class="flex gap-4">
+                    <button onclick="updatePhase('ice')" id="btnIce" class="status-btn active bg-white/20 p-3 rounded-2xl text-xl">❄️</button>
+                    <button onclick="updatePhase('fire')" id="btnFire" class="status-btn bg-white/20 p-3 rounded-2xl text-xl">🔥</button>
+                    <button onclick="updatePhase('check')" id="btnCheck" class="status-btn bg-white/20 p-3 rounded-2xl text-xl">📍</button>
                 </div>
             </div>
 
-            <div class="p-12 space-y-8 overflow-y-auto" style="max-height: 550px;">
-                <div>
-                    <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Inteligência Extraída</h4>
-                    <div id="mTags" class="flex flex-wrap gap-3"></div>
-                </div>
+            <div class="p-10 space-y-6 overflow-y-auto" style="max-height: 500px;">
+                <div id="mTags" class="flex flex-wrap gap-2"></div>
 
                 <div class="space-y-3">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Perfil Social</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="mInsta" placeholder="@instagram" class="flex-1 p-4 bg-slate-50 rounded-2xl text-sm border-none outline-none focus:ring-2 focus:ring-pink-500">
-                        <button onclick="window.open('https://instagram.com/' + document.getElementById('mInsta').value.replace('@',''))" class="p-4 bg-pink-100 text-pink-500 rounded-2xl hover:bg-pink-500 hover:text-white transition-all"><i class="fa-brands fa-instagram text-xl"></i></button>
+                    <div class="flex justify-between items-end">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Interesse Detectado</label>
+                        <span id="mTempText" class="text-sm font-black text-[#fd267d]">0%</span>
                     </div>
+                    <div class="temp-bar bg-slate-100"><div id="mTempBar" class="temp-fill tinder-gradient" style="width: 0%"></div></div>
                 </div>
 
-                <div class="space-y-3">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Dossiê e Anotações</label>
-                    <textarea id="mNotes" class="w-full p-6 bg-slate-50 rounded-[2.5rem] text-sm text-slate-600 border-none outline-none italic leading-relaxed shadow-inner" rows="5" placeholder="A IA preencherá aqui, mas você pode editar..."></textarea>
+                <div class="space-y-3 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
+                    <label class="text-[10px] font-black text-[#fd267d] uppercase tracking-widest ml-2">Perguntar à IA sobre ela</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="aiQuery" placeholder="Ex: O que ela gosta de fazer?" class="flex-1 bg-white p-4 rounded-2xl text-sm outline-none shadow-sm">
+                        <button id="btnAskIA" class="bg-slate-900 text-white p-4 rounded-2xl hover:scale-105 transition-all"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <p id="aiAnswer" class="text-xs text-slate-600 italic mt-3 leading-relaxed px-2"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Instagram & Notas</label>
+                    <input type="text" id="mInsta" placeholder="@perfil" class="w-full p-4 bg-slate-50 rounded-2xl text-sm mb-2 outline-none">
+                    <textarea id="mNotes" class="w-full p-6 bg-slate-50 rounded-[2rem] text-sm text-slate-600 outline-none italic" rows="3"></textarea>
                 </div>
 
                 <div class="flex gap-4">
-                    <button id="btnDelete" class="flex-1 py-5 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-3xl tracking-widest hover:bg-rose-500 hover:text-white transition-all">Excluir</button>
-                    <button id="btnSaveData" class="flex-1 py-5 tinder-gradient text-white text-[10px] font-black uppercase rounded-3xl shadow-xl tracking-widest font-bold">Salvar Alterações</button>
+                    <button id="btnDelete" class="flex-1 py-4 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-2xl font-bold">Remover</button>
+                    <button id="btnSaveData" class="flex-1 py-4 tinder-gradient text-white text-[10px] font-black uppercase rounded-2xl shadow-xl font-bold">Salvar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-14 rounded-[4rem] w-full max-w-md shadow-2xl text-center">
-            <h2 class="text-4xl font-black italic mb-10 text-[#fd267d]">DateMind</h2>
+        <div class="bg-white p-14 rounded-[4rem] w-full max-w-sm shadow-2xl text-center">
+            <h2 class="text-3xl font-black mb-10 text-[#fd267d]">DATEMIND</h2>
             <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-slate-50 rounded-3xl mb-4 outline-none">
             <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-slate-50 rounded-3xl mb-8 outline-none">
-            <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-3xl text-white font-black uppercase">Acessar CRM</button>
+            <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-3xl text-white font-black uppercase shadow-lg">Entrar</button>
         </div>
     </div>
 
@@ -97,21 +99,13 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-        // --- INSIRA SUA CHAVE DE IA AQUI ---
-        const GEMINI_KEY = "AIzaSyDv3_a4C6Zpq7xyCGf6rfwKY3iuz-amwZo"; //
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
-            authDomain: "memorymsg.firebaseapp.com",
-            projectId: "memorymsg",
-            storageBucket: "memorymsg.firebasestorage.app",
-            messagingSenderId: "66381936065",
-            appId: "1:66381936065:web:b440c0bbdfe63804f32b40"
-        };
+        const GEMINI_KEY = "AIzaSyDv3_a4C6Zpq7xyCGf6rfwKY3iuz-amwZo";
+        const firebaseConfig = { apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs", authDomain: "memorymsg.firebaseapp.com", projectId: "memorymsg", storageBucket: "memorymsg.firebasestorage.app", messagingSenderId: "66381936065", appId: "1:66381936065:web:b440c0bbdfe63804f32b40" };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        let currentFullChat = "";
 
         // AUTH HANDLERS
         document.getElementById('btnPrimary').onclick = async () => {
@@ -123,137 +117,95 @@
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                syncBoard(user.uid);
-            } else {
-                document.getElementById('authSection').classList.remove('hidden');
-                document.getElementById('mainApp').classList.add('hidden');
-            }
+            if (user) { document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); syncBoard(user.uid); }
+            else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
         });
 
-        // MOTOR DE INTELIGÊNCIA ARTIFICIAL
+        // IA ENGINE V10
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const text = await file.text();
-            
-            // Normalização de Nome (Carol)
             let rawName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0].toLowerCase();
             const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-            let aiTags = [];
-            let aiSummary = "Analisando perfil...";
-
             try {
-                // Prompt tático para o Gemini
-                const prompt = `Analise estritamente esta conversa e extraia em JSON: 
-                { "idade": num, "profissao": "string", "bairro": "string", "filhos": num, "resumo": "perfil psicológico e tático de 2 linhas" }. 
-                Texto: ${text.substring(0, 8000)}`;
-
+                const prompt = `Analise este chat e responda APENAS JSON: { "idade": num, "profissao": "string", "bairro": "string", "filhos": num, "interesse": num(0-100), "resumo": "string estratégica" }. Chat: ${text.substring(0, 10000)}`;
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
-
                 const data = await response.json();
-                const cleanJson = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
-                const ai = JSON.parse(cleanJson);
+                const ai = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim());
 
-                if(ai.filhos) aiTags.push(`👶 ${ai.filhos} FILHOS`);
-                if(ai.profissao) aiTags.push(`💼 ${ai.profissao.toUpperCase()}`);
-                if(ai.bairro) aiTags.push(`🏠 ${ai.bairro.toUpperCase()}`);
-                aiSummary = ai.resumo;
-                var finalTitle = cleanName + (ai.idade ? `, ${ai.idade}` : '');
-            } catch (err) {
-                console.error("Erro na IA:", err);
-                var finalTitle = cleanName;
-                aiSummary = "Dossiê processado sem IA. Verifique sua chave.";
-            }
+                const tags = [];
+                if(ai.filhos) tags.push(`👶 ${ai.filhos} FILHOS`);
+                if(ai.profissao) tags.push(`💼 ${ai.profissao.toUpperCase()}`);
+                if(ai.bairro) tags.push(`🏠 ${ai.bairro.toUpperCase()}`);
 
-            const profileData = {
-                nome: finalTitle,
-                tags: aiTags,
-                uid: auth.currentUser.uid,
-                createdAt: Date.now(),
-                notas: aiSummary,
-                fase: "ice"
-            };
+                const profileData = { nome: cleanName + (ai.idade ? `, ${ai.idade}` : ''), tags, interesse: ai.interesse || 50, notas: ai.resumo, fullChat: text.substring(0, 20000), uid: auth.currentUser.uid, createdAt: Date.now(), fase: "ice" };
 
-            // Deduplicação Inteligente
-            const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", ">=", cleanName), where("nome", "<=", cleanName + '\uf8ff'));
-            const querySnapshot = await getDocs(q);
+                const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", ">=", cleanName), where("nome", "<=", cleanName + '\uf8ff'));
+                const querySnapshot = await getDocs(q);
 
-            if (!querySnapshot.empty) {
-                await updateDoc(doc(db, "profiles", querySnapshot.docs[0].id), profileData);
-            } else {
-                await addDoc(collection(db, "profiles"), profileData);
-            }
+                if (!querySnapshot.empty) { await updateDoc(doc(db, "profiles", querySnapshot.docs[0].id), profileData); }
+                else { await addDoc(collection(db, "profiles"), profileData); }
+            } catch (err) { alert("Erro na IA. Verifique sua chave."); }
         };
 
-        // RENDERIZAÇÃO DO MURAL
+        // RENDER BOARD
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid));
             onSnapshot(q, (snap) => {
-                const board = document.getElementById('crmBoard');
-                board.innerHTML = '';
-                let docs = [];
-                snap.forEach(d => docs.push({id: d.id, ...d.data()}));
+                const board = document.getElementById('crmBoard'); board.innerHTML = '';
+                let docs = []; snap.forEach(d => docs.push({id: d.id, ...d.data()}));
                 docs.sort((a,b) => b.createdAt - a.createdAt);
 
                 docs.forEach(d => {
                     const card = document.createElement('div');
-                    card.className = `glass-card p-10 animate-in fade-in phase-${d.fase || 'ice'}`;
+                    card.className = `glass-card p-8 animate-in fade-in phase-${d.fase || 'ice'}`;
                     card.onclick = () => {
-                        window.currentProfileId = d.id;
+                        window.currentProfileId = d.id; currentFullChat = d.fullChat || "";
                         document.getElementById('mName').innerText = d.nome;
                         document.getElementById('mInsta').value = d.instagram || '';
                         document.getElementById('mNotes').value = d.notas || '';
-                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-100 uppercase">${t}</span>`).join('');
+                        document.getElementById('mTempText').innerText = d.interesse + '%';
+                        document.getElementById('mTempBar').style.width = d.interesse + '%';
+                        document.getElementById('aiAnswer').innerText = "";
+                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl uppercase">${t}</span>`).join('');
                         updateStatusButtons(d.fase || 'ice');
                         document.getElementById('modal').classList.remove('hidden');
                     };
                     card.innerHTML = `
-                        <div class="flex justify-between items-start mb-8">
-                            <h3 class="text-3xl font-black uppercase tracking-tighter">${d.nome}</h3>
-                            <div class="w-3 h-3 rounded-full ${d.fase === 'fire' ? 'bg-rose-500 shadow-[0_0_15px_#fd267d]' : d.fase === 'check' ? 'bg-green-500 shadow-[0_0_15px_#22c55e]' : 'bg-slate-500'}"></div>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            ${d.tags.map(t => `<span class="bg-white/5 text-[9px] font-bold px-3 py-1.5 rounded-xl text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
-                        </div>
+                        <div class="flex justify-between items-start mb-4"><h3 class="text-2xl font-black uppercase tracking-tighter">${d.nome}</h3><span class="text-[10px] font-black text-[#fd267d]">${d.interesse}% 🔥</span></div>
+                        <div class="temp-bar bg-white/5 mb-6"><div class="temp-fill tinder-gradient" style="width: ${d.interesse}%"></div></div>
+                        <div class="flex flex-wrap gap-2">${d.tags.map(t => `<span class="bg-white/5 text-[8px] font-bold px-3 py-1.5 rounded-lg text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}</div>
                     `;
                     board.appendChild(card);
                 });
             });
         }
 
-        window.updatePhase = async (newPhase) => {
-            await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: newPhase });
-            updateStatusButtons(newPhase);
+        // AI CONSULTANCY
+        document.getElementById('btnAskIA').onclick = async () => {
+            const queryText = document.getElementById('aiQuery').value;
+            if (!queryText || !currentFullChat) return;
+            document.getElementById('aiAnswer').innerText = "Consultando dossiê...";
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Baseado nesta conversa: ${currentFullChat.substring(0, 15000)}. Responda de forma curta e estratégica: ${queryText}` }] }] })
+                });
+                const data = await response.json();
+                document.getElementById('aiAnswer').innerText = data.candidates[0].content.parts[0].text;
+            } catch (err) { document.getElementById('aiAnswer').innerText = "Erro ao consultar IA."; }
         };
 
-        function updateStatusButtons(activePhase) {
-            ['ice', 'fire', 'check'].forEach(p => {
-                document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === activePhase);
-            });
-        }
-
-        document.getElementById('btnSaveData').onclick = async () => {
-            const insta = document.getElementById('mInsta').value;
-            const notes = document.getElementById('mNotes').value;
-            await updateDoc(doc(db, "profiles", window.currentProfileId), { instagram: insta, notas: notes });
-            alert("Informações Atualizadas!");
-        };
-
+        window.updatePhase = async (p) => { await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: p }); updateStatusButtons(p); };
+        function updateStatusButtons(active) { ['ice', 'fire', 'check'].forEach(p => { document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === active); }); }
+        document.getElementById('btnSaveData').onclick = async () => { await updateDoc(doc(db, "profiles", window.currentProfileId), { instagram: document.getElementById('mInsta').value, notas: document.getElementById('mNotes').value }); alert("Salvo!"); };
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
-        document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir dossiê?")) {
-                await deleteDoc(doc(db, "profiles", window.currentProfileId));
-                document.getElementById('modal').classList.add('hidden');
-            }
-        };
+        document.getElementById('btnDelete').onclick = async () => { if(confirm("Remover?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
     </script>
 </body>
 </html>

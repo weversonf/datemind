@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DateMind | v01</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .tinder-gradient {
+            background: linear-gradient(262deg, #ff7854 0%, #fd267d 100%);
+        }
+        .sidebar-item:hover { background-color: #f3f4f6; }
+        .active-match {
+            border-right: 4px solid #fd267d;
+            background-color: #fff1f2;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="w-80 bg-white border-r flex flex-col">
+        <div class="p-6 border-b flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-[#fd267d] animate-pulse"><i class="fa-solid fa-fire"></i> DateMind</h1>
+            <span class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-400 font-mono">v01</span>
+        </div>
+        
+        <div class="overflow-y-auto flex-1" id="matchList">
+            <div class="p-4 uppercase text-xs font-semibold text-gray-500">Matches Analisados</div>
+            <div class="sidebar-item active-match p-4 flex items-center cursor-pointer transition">
+                <div class="w-12 h-12 rounded-full bg-gray-300 mr-3 overflow-hidden border-2 border-[#fd267d]">
+                    <img src="https://ui-avatars.com/api/?name=Renata+H&background=random" alt="Avatar">
+                </div>
+                <div>
+                    <div class="font-bold text-gray-800" id="sideName">Renata Hitzschky</div>
+                    <div class="text-xs text-green-500 font-medium italic">Análise Concluída ✨</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t bg-gray-50">
+            <label class="tinder-gradient text-white w-full py-3 rounded-xl font-bold flex items-center justify-center cursor-pointer shadow-lg hover:scale-[1.02] transition-transform active:scale-95">
+                <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Novo .txt
+                <input type="file" id="chatUpload" class="hidden" accept=".txt">
+            </label>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-10 relative">
+        
+        <div id="loader" class="hidden absolute top-10 bg-white shadow-xl rounded-full px-6 py-2 text-sm font-medium text-gray-600 flex items-center gap-3 animate-bounce">
+            <i class="fa-solid fa-robot text-[#fd267d]"></i> IA processando histórico...
+        </div>
+
+        <div id="profileCard" class="w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-gray-100 transition-all duration-500">
+            
+            <div class="h-72 tinder-gradient relative">
+                <div class="absolute inset-0 bg-black opacity-10"></div>
+                <div class="absolute bottom-6 left-6 text-white z-10">
+                    <h2 class="text-3xl font-bold" id="cardName">Renata <span class="font-light opacity-80">30+</span></h2>
+                    <p class="text-sm opacity-90 flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot"></i> Fortaleza, CE
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-8 overflow-y-auto bg-white" style="max-height: 450px;">
+                
+                <section class="mb-6">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 flex items-center">
+                        <i class="fa-solid fa-user-tag mr-2"></i> Perfil Extraído
+                    </h3>
+                    <p id="bioText" class="text-gray-700 text-sm leading-relaxed">
+                        Análise inicial: Renata demonstra ser uma pessoa direta e focada na família. Valoriza segurança e não gosta de joguinhos.
+                    </p>
+                </section>
+
+                <section class="mb-8">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3"><i class="fa-solid fa-star mr-2"></i> Pontos Chave</h3>
+                    <div id="tagContainer" class="flex flex-wrap gap-2">
+                        <span class="bg-rose-50 text-[#fd267d] px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-100">Ceará SC 🏁</span>
+                        <span class="bg-rose-50 text-[#fd267d] px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-100">9 Tattoos</span>
+                        <span class="bg-rose-50 text-[#fd267d] px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-100">Filhos</span>
+                    </div>
+                </section>
+
+                <div class="p-5 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-l-4 border-[#fd267d] shadow-sm">
+                    <h3 class="text-xs font-bold text-[#fd267d] mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Dica de Ouro:
+                    </h3>
+                    <p id="aiInsight" class="text-sm text-gray-600 italic">
+                        "O papo sobre sair da rotina está aberto. Que tal sugerir um lugar em Sabiaguaba para ver o pôr do sol amanhã?"
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-6 flex justify-between items-center bg-white/80 backdrop-blur-sm border-t">
+                <button class="w-12 h-12 rounded-full border border-gray-100 text-yellow-500 shadow-sm hover:bg-yellow-50 transition"><i class="fa-solid fa-rotate-left"></i></button>
+                <button class="w-16 h-16 rounded-full tinder-gradient text-white text-2xl shadow-lg hover:scale-110 transition"><i class="fa-solid fa-heart"></i></button>
+                <button class="w-12 h-12 rounded-full border border-gray-100 text-purple-500 shadow-sm hover:bg-purple-50 transition"><i class="fa-solid fa-bolt"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('chatUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const loader = document.getElementById('loader');
+            
+            if (file) {
+                loader.classList.remove('hidden');
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const text = event.target.result;
+                    
+                    // Simulação de Inteligência Artificial de Extração
+                    setTimeout(() => {
+                        processChatData(file.name, text);
+                        loader.classList.add('hidden');
+                    }, 1500);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function processChatData(fileName, content) {
+            // Lógica simples de Parsing para a v01
+            const cleanName = fileName.replace('.txt', '').replace('Conversa do WhatsApp com ', '');
+            
+            document.getElementById('cardName').innerHTML = `${cleanName} <span class="font-light opacity-80">30+</span>`;
+            document.getElementById('sideName').innerText = cleanName;
+            
+            // Exemplo de busca por palavra-chave rudimentar
+            if(content.toLowerCase().includes('ceará')) {
+                console.log("Detectado: Torcedora do Ceará");
+            }
+
+            document.getElementById('bioText').innerText = "Análise concluída! O histórico indica uma conversa estável com potencial de encontro físico em breve. Fique atento aos sinais de cansaço no final do dia.";
+            
+            document.getElementById('aiInsight').innerText = "IA recomenda: Baseado no histórico de " + cleanName + ", evite assuntos pesados hoje e foque em convites para o próximo fim de semana.";
+        }
+    </script>
+</body>
+</html>

@@ -3,24 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.7.1</title>
+    <title>DateMind v08.7.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        /* Configuração de Cores e Fontes */
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; cursor: pointer; transition: 0.3s; position: relative; }
-        .phase-ice { border-left: 6px solid #94a3b8; }
-        .phase-fire { border-left: 6px solid #fd267d; }
-        .phase-check { border-left: 6px solid #22c55e; }
+        
+        /* Estilo dos Cartões (Glassmorphism) */
+        .glass-card { 
+            background: rgba(30, 41, 59, 0.7); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 2rem; 
+            cursor: pointer; 
+            transition: 0.3s ease; 
+            position: relative; 
+        }
+        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
+        
+        /* Cores Laterais do Pipeline (Fases) */
+        .phase-ice { border-left: 6px solid #94a3b8; }   /* Cinza - Gelo */
+        .phase-fire { border-left: 6px solid #fd267d; }  /* Rosa - Fogo */
+        .phase-check { border-left: 6px solid #22c55e; } /* Verde - Marcado */
+        
+        /* Utilitários */
         .hidden { display: none !important; }
         #loadingOverlay { position: fixed; inset: 0; z-index: 100; background: #0f172a; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="loadingOverlay"><p class="animate-pulse font-black uppercase tracking-widest text-[#fd267d]">Sincronizando...</p></div>
+    <div id="loadingOverlay">
+        <div class="text-center">
+            <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse mb-4"></i>
+            <p class="font-black uppercase tracking-widest text-xs opacity-50 text-white">Sincronizando Dossiês...</p>
+        </div>
+    </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
         <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl text-center">
@@ -33,41 +56,51 @@
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 border-b border-white/10 flex justify-between items-center bg-[#0f172a]/95 backdrop-blur-md sticky top-0 z-50">
-            <h1 class="text-xl font-black italic">DateMind <span class="text-[#fd267d]">v08.7</span></h1>
+            <h1 class="text-xl font-black italic uppercase">DateMind <span class="text-[#fd267d]">v08.7</span></h1>
             <div class="flex items-center gap-4">
                 <button id="btnLogout" class="text-[10px] font-bold text-slate-500 uppercase">Sair</button>
-                <label class="tinder-gradient px-6 py-2 rounded-full font-bold text-[10px] uppercase cursor-pointer">
+                <label class="tinder-gradient px-6 py-2 rounded-full font-bold text-[10px] uppercase cursor-pointer hover:scale-105 transition-all">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt"> Novo Dossiê
                 </label>
             </div>
         </header>
+
         <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-8"></main>
     </div>
 
     <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg">
         <div class="bg-white text-slate-900 w-full max-w-xl rounded-[2.5rem] overflow-hidden relative shadow-2xl">
-            <button id="btnCloseModal" class="absolute top-6 right-6 text-slate-300 text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            <button id="btnCloseModal" class="absolute top-6 right-6 text-slate-300 text-2xl hover:text-rose-500"><i class="fa-solid fa-circle-xmark"></i></button>
+            
             <div class="h-32 tinder-gradient p-8 flex flex-col justify-end">
-                <h2 id="mName" class="text-4xl font-black text-white">---</h2>
-                <select id="mPhaseSelector" class="mt-2 bg-white/20 text-white text-[9px] font-black uppercase p-1 rounded-lg border-none outline-none">
-                    <option value="ice">❄️ Gelo</option>
-                    <option value="fire">🔥 Fogo</option>
-                    <option value="check">📍 Marcado</option>
-                </select>
+                <h2 id="mName" class="text-4xl font-black text-white uppercase tracking-tighter">---</h2>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-white/70 text-[8px] font-black uppercase">Fase Atual:</span>
+                    <select id="mPhaseSelector" class="bg-white/20 text-white text-[9px] font-black uppercase p-1 rounded-lg border-none outline-none cursor-pointer">
+                        <option value="ice">❄️ Gelo</option>
+                        <option value="fire">🔥 Fogo</option>
+                        <option value="check">📍 Marcado</option>
+                    </select>
+                </div>
             </div>
+
             <div class="p-8 space-y-4">
                 <div id="mTags" class="flex flex-wrap gap-2"></div>
-                <p id="mBio" class="bg-slate-50 p-4 rounded-2xl italic text-slate-600 text-xs border border-slate-100"></p>
-                <button id="btnDelete" class="w-full py-3 bg-rose-50 text-rose-500 text-[9px] font-black uppercase rounded-xl">Excluir</button>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 italic text-slate-600 text-xs leading-relaxed">
+                    <p id="mBio"></p>
+                </div>
+                <button id="btnDelete" class="w-full py-4 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-xl hover:bg-rose-500 hover:text-white transition-all">Excluir Dossiê Permanentemente</button>
             </div>
         </div>
     </div>
 
     <script type="module">
+        // Importação dos serviços do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
+        // Sua Configuração de Conexão
         const firebaseConfig = {
             apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
             authDomain: "memorymsg.firebaseapp.com",
@@ -81,15 +114,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // 5.1: FUNÇÃO DE LOGIN / CADASTRO
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
             try { await signInWithEmailAndPassword(auth, email, pass); }
-            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message)); }
+            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert("Erro: " + e.message)); }
         };
 
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
+        // 5.2: OBSERVADOR DE ESTADO (Verifica se você está logado)
         onAuthStateChanged(auth, (user) => {
             document.getElementById('loadingOverlay').classList.add('hidden');
             if (user) {
@@ -102,63 +137,94 @@
             }
         });
 
+        // 5.3: MOTOR DE ANÁLISE DE TEXTO (Processa o .txt do WhatsApp)
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            
             const text = await file.text();
             const lowText = text.toLowerCase();
             const tags = [];
             
+            // Extração de Nome Real
             const cleanName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0];
-            if (lowText.includes("filho")) tags.push("👶 Pais");
+
+            // Busca de Itens Chave
+            if (lowText.includes("filho") || lowText.includes("filha")) tags.push("👶 Pais");
+            
             const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
             if(bairro) tags.push("📍 " + bairro[1]);
+            
             const prof = lowText.match(/sou ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
-            if(prof) tags.push("💼 " + prof[1]);
+            if(prof && !['eu','você'].includes(prof[1])) tags.push("💼 " + prof[1]);
 
+            const idade = lowText.match(/(\d{2}) anos/);
+            if(idade) tags.push("🎂 " + idade[1] + " Anos");
+
+            // Preparação dos dados para o Banco
             const data = {
                 nome: cleanName,
                 tags: tags,
                 fase: "ice",
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                bio: `Dossiê de ${cleanName}. Analisado localmente.`
+                bio: `Dossiê estratégico de ${cleanName}. Analisado a partir de ${text.split('\n').length} mensagens.`
             };
 
             await addDoc(collection(db, "profiles"), data);
         };
 
+        // 5.4: SINCRONIZAÇÃO DO MURAL (Busca os dados no Firebase)
         function syncBoard(uid) {
-            const q = query(collection(db, "profiles"), where("uid", "==", uid), orderBy("createdAt", "desc"));
+            // Consulta: Onde o UID é o seu e ordena por data (se o banco falhar na ordem, ele ignora o erro e mostra os cards)
+            const q = query(collection(db, "profiles"), where("uid", "==", uid));
+            
             onSnapshot(q, (snap) => {
                 const board = document.getElementById('crmBoard');
-                board.innerHTML = '';
-                snap.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const id = docSnap.id;
+                board.innerHTML = ''; // Limpa antes de desenhar
+                
+                // Converte para array para ordenar localmente (mais seguro que no servidor)
+                let docs = [];
+                snap.forEach(d => docs.push({id: d.id, ...d.data()}));
+                docs.sort((a,b) => b.createdAt - a.createdAt);
+
+                docs.forEach(d => {
                     const card = document.createElement('div');
                     card.className = `glass-card p-8 animate-in fade-in duration-500 phase-${d.fase || 'ice'}`;
+                    
+                    // Ação de clique para abrir detalhes
                     card.onclick = () => {
-                        window.currentProfileId = id;
+                        window.currentProfileId = d.id;
                         document.getElementById('mName').innerText = d.nome;
                         document.getElementById('mBio').innerText = d.bio;
                         document.getElementById('mPhaseSelector').value = d.fase || 'ice';
-                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-100 uppercase">${t}</span>`).join('');
+                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[9px] font-black px-4 py-2 rounded-xl border border-slate-200 uppercase">${t}</span>`).join('');
                         document.getElementById('modal').classList.remove('hidden');
                     };
-                    card.innerHTML = `<h3 class="text-2xl font-black">${d.nome}</h3><div class="mt-4 flex flex-wrap gap-2">${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase">${t}</span>`).join('')}</div>`;
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-2xl font-black tracking-tighter uppercase">${d.nome}</h3>
+                            <i class="fa-solid fa-circle text-[6px] ${d.fase === 'fire' ? 'text-rose-500' : d.fase === 'check' ? 'text-green-500' : 'text-slate-500'}"></i>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${d.tags.map(t => `<span class="bg-white/5 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
+                        </div>
+                    `;
                     board.appendChild(card);
                 });
             });
         }
 
+        // 5.5: FUNÇÕES DO MODAL (Mudar Fase, Excluir, Fechar)
         document.getElementById('mPhaseSelector').onchange = async (e) => {
             await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: e.target.value });
         };
 
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
+        
         document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir?")) {
+            if(confirm("Deseja excluir este dossiê permanentemente?")) {
                 await deleteDoc(doc(db, "profiles", window.currentProfileId));
                 document.getElementById('modal').classList.add('hidden');
             }

@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v10.1 | Tactical CRM</title>
+    <title>DateMind v11.0 | Simplified CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2.5rem; transition: 0.4s ease; cursor: pointer; border-left: 8px solid #94a3b8; }
-        .glass-card:hover { transform: translateY(-8px); border-color: #fd267d; box-shadow: 0 20px 40px -15px rgba(253, 38, 125, 0.4); }
+        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2.5rem; transition: 0.3s ease; cursor: pointer; border-left: 8px solid #94a3b8; }
+        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
         .temp-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; }
-        .temp-fill { height: 100%; transition: width 1s ease-in-out; }
+        .temp-fill { height: 100%; transition: width 0.5s ease; }
         .phase-ice { border-left-color: #94a3b8; }
         .phase-fire { border-left-color: #fd267d; }
         .phase-check { border-left-color: #22c55e; }
-        .status-btn { opacity: 0.3; transition: 0.3s; }
+        .status-btn { opacity: 0.3; transition: 0.3s; cursor: pointer; }
         .status-btn.active { opacity: 1; transform: scale(1.1); }
         .hidden { display: none !important; }
     </style>
@@ -26,12 +26,12 @@
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-8 flex justify-between items-center sticky top-0 z-50 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5">
-            <h1 class="text-3xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V10.1</span></h1>
+            <h1 class="text-3xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V11</span></h1>
             <div class="flex items-center gap-6">
-                <button id="btnLogout" class="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest">Sair</button>
-                <label class="tinder-gradient px-10 py-4 rounded-full font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-2xl hover:brightness-110 transition-all flex items-center gap-3">
+                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase">Sair</button>
+                <label class="tinder-gradient px-10 py-4 rounded-full font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-2xl flex items-center gap-3">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-bolt-lightning"></i> Analisar Dossiê
+                    <i class="fa-solid fa-plus"></i> Adicionar Contato
                 </label>
             </div>
         </header>
@@ -42,8 +42,8 @@
         <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[4rem] overflow-hidden relative shadow-2xl">
             <button id="btnCloseModal" class="absolute top-10 right-10 text-slate-200 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
             
-            <div class="h-56 tinder-gradient p-12 flex flex-col justify-end">
-                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter mb-4 leading-none">---</h2>
+            <div class="h-48 tinder-gradient p-12 flex flex-col justify-end">
+                <input type="text" id="mName" class="bg-transparent text-5xl font-black text-white outline-none border-b border-white/30 mb-4" placeholder="Nome, Idade">
                 <div class="flex gap-4">
                     <button onclick="updatePhase('ice')" id="btnIce" class="status-btn active bg-white/20 p-3 rounded-2xl text-xl">❄️</button>
                     <button onclick="updatePhase('fire')" id="btnFire" class="status-btn bg-white/20 p-3 rounded-2xl text-xl">🔥</button>
@@ -52,44 +52,43 @@
             </div>
 
             <div class="p-10 space-y-6 overflow-y-auto" style="max-height: 500px;">
-                <div id="mTags" class="flex flex-wrap gap-2"></div>
-
-                <div class="space-y-3">
-                    <div class="flex justify-between items-end">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Interesse Detectado</label>
-                        <span id="mTempText" class="text-sm font-black text-[#fd267d]">0%</span>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Profissão</label>
+                        <input type="text" id="mProf" placeholder="Ex: Advogada" class="w-full p-4 bg-slate-50 rounded-2xl text-sm outline-none">
                     </div>
-                    <div class="temp-bar bg-slate-100"><div id="mTempBar" class="temp-fill tinder-gradient" style="width: 0%"></div></div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Bairro</label>
+                        <input type="text" id="mBairro" placeholder="Ex: Aldeota" class="w-full p-4 bg-slate-50 rounded-2xl text-sm outline-none">
+                    </div>
                 </div>
 
-                <div class="space-y-3 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
-                    <label class="text-[10px] font-black text-[#fd267d] uppercase tracking-widest ml-2">Perguntar à IA sobre ela</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="aiQuery" placeholder="Ex: O que ela gosta de fazer?" class="flex-1 bg-white p-4 rounded-2xl text-sm outline-none shadow-sm">
-                        <button id="btnAskIA" class="bg-slate-900 text-white p-4 rounded-2xl hover:scale-105 transition-all"><i class="fa-solid fa-paper-plane"></i></button>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <label class="text-[10px] font-black text-slate-400 uppercase">Interesse (%)</label>
+                        <input type="number" id="mTempInput" class="w-12 text-sm font-black text-[#fd267d]" value="50">
                     </div>
-                    <p id="aiAnswer" class="text-xs text-slate-600 italic mt-3 leading-relaxed px-2"></p>
+                    <input type="range" id="mTempSlider" min="0" max="100" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#fd267d]">
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Instagram & Notas</label>
-                    <input type="text" id="mInsta" placeholder="@perfil" class="w-full p-4 bg-slate-50 rounded-2xl text-sm mb-2 outline-none">
-                    <textarea id="mNotes" class="w-full p-6 bg-slate-50 rounded-[2rem] text-sm text-slate-600 outline-none italic" rows="3"></textarea>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-4">Notas e Preferências</label>
+                    <textarea id="mNotes" class="w-full p-6 bg-slate-50 rounded-[2rem] text-sm text-slate-600 outline-none italic" rows="4" placeholder="O que ela gosta? Tem filhos? Anote aqui..."></textarea>
                 </div>
 
                 <div class="flex gap-4">
-                    <button id="btnDelete" class="flex-1 py-4 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-2xl font-bold">Remover</button>
-                    <button id="btnSaveData" class="flex-1 py-4 tinder-gradient text-white text-[10px] font-black uppercase rounded-2xl shadow-xl font-bold">Salvar</button>
+                    <button id="btnDelete" class="flex-1 py-4 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-2xl">Remover</button>
+                    <button id="btnSaveData" class="flex-1 py-4 tinder-gradient text-white text-[10px] font-black uppercase rounded-2xl shadow-xl font-bold">Salvar Dossiê</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-14 rounded-[4rem] w-full max-sm shadow-2xl text-center">
+        <div class="bg-white p-14 rounded-[4rem] w-full max-w-sm shadow-2xl text-center">
             <h2 class="text-3xl font-black mb-10 text-[#fd267d]">DATEMIND</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-slate-50 rounded-3xl mb-4 outline-none">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-slate-50 rounded-3xl mb-8 outline-none">
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-slate-100 rounded-3xl mb-4 outline-none">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-slate-100 rounded-3xl mb-8 outline-none">
             <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-3xl text-white font-black uppercase shadow-lg">Entrar</button>
         </div>
     </div>
@@ -99,21 +98,16 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-        // CONFIGURAÇÕES
-        const GEMINI_KEY = "COLE_SUA_CHAVE_AQUI"; 
         const firebaseConfig = { apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs", authDomain: "memorymsg.firebaseapp.com", projectId: "memorymsg", storageBucket: "memorymsg.firebasestorage.app", messagingSenderId: "66381936065", appId: "1:66381936065:web:b440c0bbdfe63804f32b40" };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentFullChat = "";
 
-        // LOGIN
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
             try { await signInWithEmailAndPassword(auth, email, pass); }
-            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message)); }
+            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert("Erro no acesso.")); }
         };
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
@@ -122,53 +116,21 @@
             else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
         });
 
-        // PROCESSAMENTO COM IA (UPLOADS NOVOS)
+        // UPLOAD SIMPLIFICADO (SEM IA)
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const text = await file.text();
             let rawName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0].toLowerCase();
             const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-            try {
-                const prompt = `Analise este chat e responda APENAS JSON puro, sem markdown: { "idade": num, "profissao": "string", "bairro": "string", "filhos": num, "interesse": num, "resumo": "string" }. Chat: ${text.substring(0, 10000)}`;
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                const data = await response.json();
-                const rawText = data.candidates[0].content.parts[0].text;
-                const ai = JSON.parse(rawText.replace(/```json|```/g, "").trim());
-
-                const tags = [];
-                if(ai.filhos) tags.push(`👶 ${ai.filhos} FILHOS`);
-                if(ai.profissao) tags.push(`💼 ${ai.profissao.toUpperCase()}`);
-                if(ai.bairro) tags.push(`🏠 ${ai.bairro.toUpperCase()}`);
-
-                const profileData = { 
-                    nome: cleanName + (ai.idade ? `, ${ai.idade}` : ''), 
-                    tags, 
-                    interesse: ai.interesse || 50, 
-                    notas: ai.resumo, 
-                    fullChat: text.substring(0, 30000), // Salva o chat para consultas futuras
-                    uid: auth.currentUser.uid, 
-                    createdAt: Date.now(), 
-                    fase: "ice" 
-                };
-
-                const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", ">=", cleanName), where("nome", "<=", cleanName + '\uf8ff'));
-                const querySnapshot = await getDocs(q);
-
-                if (!querySnapshot.empty) { await updateDoc(doc(db, "profiles", querySnapshot.docs[0].id), profileData); }
-                else { await addDoc(collection(db, "profiles"), profileData); }
-                alert("Dossiê Analisado com Sucesso!");
-            } catch (err) { 
-                console.error(err);
-                alert("Erro na análise. Certifique-se de que sua API Key é válida."); 
-            }
+            const profileData = { nome: cleanName, tags: [], interesse: 50, notas: "", uid: auth.currentUser.uid, createdAt: Date.now(), fase: "ice" };
+            
+            const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", "==", cleanName));
+            const snap = await getDocs(q);
+            if (snap.empty) { await addDoc(collection(db, "profiles"), profileData); }
+            alert("Contato " + cleanName + " adicionado!");
         };
 
-        // RENDER BOARD
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid));
             onSnapshot(q, (snap) => {
@@ -180,55 +142,44 @@
                     const card = document.createElement('div');
                     card.className = `glass-card p-8 animate-in fade-in phase-${d.fase || 'ice'}`;
                     card.onclick = () => {
-                        window.currentProfileId = d.id; 
-                        currentFullChat = d.fullChat || ""; // Recupera o chat guardado
-                        document.getElementById('mName').innerText = d.nome;
-                        document.getElementById('mInsta').value = d.instagram || '';
-                        document.getElementById('mNotes').value = d.notas || '';
-                        document.getElementById('mTempText').innerText = d.interesse + '%';
-                        document.getElementById('mTempBar').style.width = d.interesse + '%';
-                        document.getElementById('aiAnswer').innerText = "";
-                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl uppercase">${t}</span>`).join('');
+                        window.currentProfileId = d.id;
+                        document.getElementById('mName').value = d.nome;
+                        document.getElementById('mProf').value = d.profissao || "";
+                        document.getElementById('mBairro').value = d.bairro || "";
+                        document.getElementById('mNotes').value = d.notas || "";
+                        document.getElementById('mTempSlider').value = d.interesse || 50;
+                        document.getElementById('mTempInput').value = d.interesse || 50;
                         updateStatusButtons(d.fase || 'ice');
                         document.getElementById('modal').classList.remove('hidden');
                     };
                     card.innerHTML = `
-                        <div class="flex justify-between items-start mb-4"><h3 class="text-2xl font-black uppercase tracking-tighter">${d.nome}</h3><span class="text-[10px] font-black text-[#fd267d]">${d.interesse}% 🔥</span></div>
+                        <div class="flex justify-between items-start mb-4"><h3 class="text-2xl font-black uppercase tracking-tighter">${d.nome}</h3><span class="text-[10px] font-black text-[#fd267d]">${d.interesse}%</span></div>
                         <div class="temp-bar bg-white/5 mb-6"><div class="temp-fill tinder-gradient" style="width: ${d.interesse}%"></div></div>
-                        <div class="flex flex-wrap gap-2">${d.tags.map(t => `<span class="bg-white/5 text-[8px] font-bold px-3 py-1.5 rounded-lg text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}</div>
+                        <div class="flex flex-wrap gap-2">
+                            ${d.profissao ? `<span class="bg-white/5 text-[8px] font-bold px-3 py-1.5 rounded-lg text-slate-400 uppercase">💼 ${d.profissao}</span>` : ''}
+                            ${d.bairro ? `<span class="bg-white/5 text-[8px] font-bold px-3 py-1.5 rounded-lg text-slate-400 uppercase">🏠 ${d.bairro}</span>` : ''}
+                        </div>
                     `;
                     board.appendChild(card);
                 });
             });
         }
 
-        // PERGUNTAR À IA (CONSULTA O CHAT SALVO)
-        document.getElementById('btnAskIA').onclick = async () => {
-            const queryText = document.getElementById('aiQuery').value;
-            if (!queryText) return;
-            
-            if (!currentFullChat) {
-                document.getElementById('aiAnswer').innerText = "Erro: Este dossiê foi criado antes da atualização de IA. Por favor, faça o upload do .txt novamente para este contato.";
-                return;
-            }
-
-            document.getElementById('aiAnswer').innerText = "Consultando dossiê estratégico...";
-            
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Baseado nesta conversa: ${currentFullChat.substring(0, 20000)}. Responda de forma curta, direta e tática: ${queryText}` }] }] })
-                });
-                const data = await response.json();
-                document.getElementById('aiAnswer').innerText = data.candidates[0].content.parts[0].text;
-            } catch (err) { 
-                document.getElementById('aiAnswer').innerText = "Erro ao conectar com a IA. Verifique sua chave ou internet."; 
-            }
+        document.getElementById('mTempSlider').oninput = (e) => { document.getElementById('mTempInput').value = e.target.value; };
+        document.getElementById('btnSaveData').onclick = async () => {
+            const data = { 
+                nome: document.getElementById('mName').value,
+                profissao: document.getElementById('mProf').value,
+                bairro: document.getElementById('mBairro').value,
+                notas: document.getElementById('mNotes').value,
+                interesse: parseInt(document.getElementById('mTempSlider').value)
+            };
+            await updateDoc(doc(db, "profiles", window.currentProfileId), data);
+            document.getElementById('modal').classList.add('hidden');
         };
 
         window.updatePhase = async (p) => { await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: p }); updateStatusButtons(p); };
         function updateStatusButtons(active) { ['ice', 'fire', 'check'].forEach(p => { document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === active); }); }
-        document.getElementById('btnSaveData').onclick = async () => { await updateDoc(doc(db, "profiles", window.currentProfileId), { instagram: document.getElementById('mInsta').value, notas: document.getElementById('mNotes').value }); alert("Salvo!"); };
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
         document.getElementById('btnDelete').onclick = async () => { if(confirm("Remover?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
     </script>

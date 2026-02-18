@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v14</title>
+    <title>DateMind v14.1 | Tactical Funnel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -11,25 +11,20 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        
-        .kanban-column { background: rgba(15, 23, 42, 0.4); border-radius: 2rem; min-height: 80vh; border: 1px solid rgba(255,255,255,0.03); }
-        .kanban-list { min-height: 70vh; padding: 12px; }
-        
-        .glass-card { background: #111827; border-radius: 1.8rem; padding: 1.5rem; margin-bottom: 1rem; cursor: grab; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); }
-        .glass-card:hover { border-color: #fd267d; transform: translateY(-3px); box-shadow: 0 10px 20px -10px rgba(253, 38, 125, 0.3); }
-        .sortable-ghost { opacity: 0.1; }
-
-        /* Estilos de Glow Superiores */
-        .glow-ice { box-shadow: 0 -8px 15px -10px #94a3b8; border-top: 3px solid #94a3b8; }
-        .glow-fire { box-shadow: 0 -8px 15px -10px #f59e0b; border-top: 3px solid #f59e0b; }
-        .glow-flow { box-shadow: 0 -8px 15px -10px #fd267d; border-top: 3px solid #fd267d; }
-        .glow-elite { box-shadow: 0 -8px 15px -10px #8b5cf6; border-top: 3px solid #8b5cf6; }
-
+        .kanban-column { background: rgba(15, 23, 42, 0.4); border-radius: 2rem; min-height: 80vh; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; }
+        .kanban-list { flex-grow: 1; padding: 12px; min-height: 200px; }
+        .glass-card { background: #111827; border-radius: 1.8rem; padding: 1.5rem; margin-bottom: 1rem; cursor: grab; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .glass-card:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.1; transform: scale(0.9); }
+        .glow-ice { border-top: 3px solid #94a3b8; }
+        .glow-fire { border-top: 3px solid #f59e0b; }
+        .glow-flow { border-top: 3px solid #fd267d; }
+        .glow-elite { border-top: 3px solid #8b5cf6; }
         .temp-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 12px; overflow: hidden; }
         .temp-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
-        
-        .frozen { opacity: 0.5; filter: grayscale(0.8); }
-        .frozen:hover { opacity: 1; filter: grayscale(0); }
+        .frozen { opacity: 0.4; filter: grayscale(1); }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -37,12 +32,12 @@
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 flex justify-between items-center bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
             <div>
-                <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V14</span></h1>
+                <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V14.1</span></h1>
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Data-Driven Strategy</p>
             </div>
             <div class="flex items-center gap-6">
-                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase hover:text-white transition-colors">Sair</button>
-                <label class="tinder-gradient px-8 py-3 rounded-2xl font-black text-[11px] uppercase cursor-pointer shadow-xl transition-all active:scale-95">
+                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase">Sair</button>
+                <label class="tinder-gradient px-8 py-3 rounded-2xl font-black text-[11px] uppercase cursor-pointer shadow-xl">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt"> + NOVO DOSSIÊ
                 </label>
             </div>
@@ -50,21 +45,37 @@
 
         <main class="flex-1 p-8 overflow-x-auto">
             <div class="flex gap-8 min-w-[1300px] h-full">
-                
-                <template id="column-template">
-                    <div class="flex-1 kanban-column">
-                        <div class="p-5 flex justify-between items-center border-b border-white/5">
-                            <h2 class="phase-title text-xs font-black uppercase tracking-widest"></h2>
-                            <span class="phase-count bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold border border-white/10">0</span>
-                        </div>
-                        <div class="kanban-list"></div>
+                <div class="flex-1 kanban-column glow-ice">
+                    <div class="p-5 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">❄️ Ice</h2>
+                        <span id="count-ice" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
                     </div>
-                </template>
+                    <div id="list-ice" data-phase="ice" class="kanban-list"></div>
+                </div>
 
-                <div id="ice-col" class="flex-1 kanban-column glow-ice" data-phase="ice"></div>
-                <div id="fire-col" class="flex-1 kanban-column glow-fire" data-phase="fire"></div>
-                <div id="flow-col" class="flex-1 kanban-column glow-flow" data-phase="flow"></div>
-                <div id="elite-col" class="flex-1 kanban-column glow-elite" data-phase="elite"></div>
+                <div class="flex-1 kanban-column glow-fire">
+                    <div class="p-5 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-amber-500">🔥 Fire</h2>
+                        <span id="count-fire" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
+                    </div>
+                    <div id="list-fire" data-phase="fire" class="kanban-list"></div>
+                </div>
+
+                <div class="flex-1 kanban-column glow-flow">
+                    <div class="p-5 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-pink-500">✨ Flow</h2>
+                        <span id="count-flow" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
+                    </div>
+                    <div id="list-flow" data-phase="flow" class="kanban-list"></div>
+                </div>
+
+                <div class="flex-1 kanban-column glow-elite">
+                    <div class="p-5 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-purple-500">🏆 Elite</h2>
+                        <span id="count-elite" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
+                    </div>
+                    <div id="list-elite" data-phase="elite" class="kanban-list"></div>
+                </div>
             </div>
         </main>
     </div>
@@ -72,58 +83,40 @@
     <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
         <div class="bg-slate-900 text-slate-100 w-full max-w-xl rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
             <div class="p-10 space-y-6">
-                <div class="flex justify-between items-center">
-                    <input type="text" id="mName" class="w-2/3 text-4xl font-black uppercase outline-none bg-transparent border-b-2 border-white/10 pb-2 placeholder-slate-700">
-                    <div class="flex flex-col items-end">
-                        <label class="text-[9px] font-black uppercase text-slate-500 mb-1">Interesse</label>
-                        <input type="number" id="mInteresse" min="0" max="100" class="w-16 bg-white/5 p-2 rounded-xl text-center font-black text-[#fd267d]">
-                    </div>
+                <input type="text" id="mName" class="w-full text-4xl font-black uppercase outline-none bg-transparent border-b-2 border-white/10 pb-2 mb-4">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">💼 Profissão</label><input type="text" id="mProf" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">👶 Qtd Filhos</label><input type="number" id="mFilhos" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">💼 Profissão</label>
-                        <input type="text" id="mProf" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">👶 Qtd Filhos</label>
-                        <input type="number" id="mFilhos" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
-                    </div>
+                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">🏠 Bairro/Cidade</label><input type="text" id="mLocal" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">📸 Instagram (@)</label><input type="text" id="mInsta" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">🏠 Bairro</label>
-                        <input type="text" id="mBairro" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">📍 Cidade</label>
-                        <input type="text" id="mCidade" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
-                    </div>
+                <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">🔥 Interesse (0-100)</label><input type="number" id="mInteresse" class="w-full p-4 bg-white/5 rounded-2xl font-black text-[#fd267d]"></div>
+                    <button id="btnInstaLink" class="h-14 mt-5 bg-pink-500/10 text-pink-500 rounded-2xl font-black text-[10px] uppercase hover:bg-pink-500 hover:text-white transition-all">Ver Perfil</button>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-500 ml-2">📝 Notas Estratégicas</label>
-                    <textarea id="mNotes" class="w-full p-6 bg-white/5 rounded-[2rem] text-sm outline-none border border-white/5 italic" rows="3"></textarea>
-                </div>
+                <textarea id="mNotes" class="w-full p-6 bg-white/5 rounded-[2rem] text-sm outline-none italic" rows="3" placeholder="Notas..."></textarea>
 
-                <div class="flex gap-4 pt-4">
-                    <button id="btnDelete" class="bg-rose-500/10 text-rose-500 p-5 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"><i class="fa-solid fa-trash"></i></button>
-                    <button id="btnSaveData" class="flex-1 tinder-gradient text-white font-black uppercase py-5 rounded-2xl text-[11px] shadow-xl">Atualizar Dossiê</button>
+                <div class="flex gap-4">
+                    <button id="btnDelete" class="bg-rose-500/10 text-rose-500 p-5 rounded-2xl"><i class="fa-solid fa-trash"></i></button>
+                    <button id="btnSaveData" class="flex-1 tinder-gradient text-white font-black uppercase py-5 rounded-2xl text-[11px] shadow-xl">Salvar Dossiê</button>
                 </div>
-                <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full text-[9px] font-bold uppercase text-slate-600">Fechar</button>
+                <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full text-[9px] font-bold text-slate-600 uppercase">Fechar</button>
             </div>
         </div>
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center bg-[#020617]">
         <div class="bg-slate-900 p-12 rounded-[4rem] w-96 text-center shadow-2xl border border-white/5">
-            <h2 class="text-3xl font-black mb-10 text-[#fd267d] italic tracking-tighter">DATEMIND</h2>
-            <div class="space-y-4">
-                <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-white/5 rounded-2xl outline-none text-white border border-white/10">
-                <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-white/5 rounded-2xl outline-none text-white border border-white/10">
-                <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-2xl text-white font-black uppercase text-xs tracking-widest">Entrar</button>
-            </div>
+            <h2 class="text-3xl font-black mb-10 text-[#fd267d] italic">DATEMIND</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-white/5 rounded-2xl mb-4 outline-none text-white">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-white/5 rounded-2xl mb-8 outline-none text-white">
+            <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-2xl text-white font-black uppercase text-xs">Acessar</button>
         </div>
     </div>
 
@@ -137,79 +130,65 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        onAuthStateChanged(auth, (u) => {
+            if (u) { document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); setupKanban(u.uid); syncBoard(u.uid); }
+            else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
+        });
+
         document.getElementById('btnPrimary').onclick = async () => {
             const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
             try { await signInWithEmailAndPassword(auth, e, p); } catch { await createUserWithEmailAndPassword(auth, e, p); }
         };
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
-        onAuthStateChanged(auth, (u) => {
-            if (u) { document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); setupKanban(u.uid); syncBoard(u.uid); }
-            else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
-        });
-
         function setupKanban(uid) {
             ['ice', 'fire', 'flow', 'elite'].forEach(phase => {
-                const listEl = document.querySelector(`#${phase}-col`);
-                listEl.innerHTML = `
-                    <div class="p-5 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest ${phase === 'ice' ? 'text-slate-400' : phase === 'fire' ? 'text-amber-500' : phase === 'flow' ? 'text-pink-500' : 'text-purple-500'}">${phase}</h2>
-                        <span id="count-${phase}" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold border border-white/10">0</span>
-                    </div>
-                    <div id="list-${phase}" data-phase="${phase}" class="kanban-list"></div>
-                `;
-
                 new Sortable(document.getElementById('list-' + phase), {
                     group: 'kanban',
-                    animation: 250,
-                    ghostClass: 'sortable-ghost',
+                    animation: 200,
                     onEnd: async (evt) => {
                         const cardId = evt.item.getAttribute('data-id');
                         const newPhase = evt.to.getAttribute('data-phase');
-                        await updateDoc(doc(db, "profiles", cardId), { fase: newPhase, updatedAt: Date.now() });
+                        if (cardId && newPhase) {
+                            await updateDoc(doc(db, "profiles", cardId), { fase: newPhase, updatedAt: Date.now() });
+                        }
                     }
                 });
             });
         }
 
         function syncBoard(uid) {
-            const q = query(collection(db, "profiles"), where("uid", "==", uid));
-            onSnapshot(q, (snap) => {
+            onSnapshot(query(collection(db, "profiles"), where("uid", "==", uid)), (snap) => {
                 const lists = { ice: [], fire: [], flow: [], elite: [] };
                 const agora = Date.now();
-
                 snap.forEach(d => {
                     const data = d.data();
                     const phase = data.fase || 'ice';
-                    const ultimaAtv = data.updatedAt || data.createdAt;
-                    const diasParado = Math.floor((agora - ultimaAtv) / (1000 * 60 * 60 * 24));
-                    if (lists[phase]) lists[phase].push({ id: d.id, diasParado, ...data });
+                    const diff = Math.floor((agora - (data.updatedAt || data.createdAt)) / (1000*60*60*24));
+                    lists[phase].push({ id: d.id, dias: diff, ...data });
                 });
 
-                Object.keys(lists).forEach(phase => {
-                    const listEl = document.getElementById('list-' + phase);
-                    const countEl = document.getElementById('count-' + phase);
+                Object.keys(lists).forEach(p => {
+                    const listEl = document.getElementById('list-' + p);
+                    document.getElementById('count-' + p).innerText = lists[p].length;
                     listEl.innerHTML = '';
-                    countEl.innerText = lists[phase].length;
-
-                    // RANKING: Prioriza por Interesse
-                    lists[phase].sort((a,b) => (b.interesse || 0) - (a.interesse || 0)).forEach(d => {
-                        const isFrozen = d.diasParado >= 3;
+                    lists[p].sort((a,b) => (b.interesse || 0) - (a.interesse || 0)).forEach(d => {
                         const card = document.createElement('div');
-                        card.className = `glass-card ${isFrozen ? 'frozen' : ''}`;
+                        card.className = `glass-card ${d.dias >= 3 ? 'frozen' : ''}`;
                         card.setAttribute('data-id', d.id);
                         card.innerHTML = `
                             <div class="flex justify-between items-start">
-                                <span class="text-[13px] font-black uppercase text-white tracking-tighter">${d.nome}</span>
-                                <span class="text-[8px] font-black ${isFrozen ? 'text-rose-500' : 'text-slate-600'}">${isFrozen ? 'GELANDO' : d.diasParado + 'd'}</span>
+                                <span class="text-[12px] font-black uppercase text-white">${d.nome}</span>
+                                <span class="text-[8px] font-black ${d.dias >= 3 ? 'text-rose-500' : 'text-slate-600'}">${d.dias >= 3 ? 'GELANDO' : d.dias+'d'}</span>
                             </div>
-                            <div class="text-[10px] font-bold text-slate-400 mt-2 leading-tight">
-                                💼 ${d.profissao || '---'}<br>
-                                🏠 ${d.bairro || '---'} / ${d.cidade || '---'}<br>
-                                👶 ${d.filhos || 0} FILHOS
+                            <div class="text-[9px] font-bold text-slate-400 mt-2 leading-tight">
+                                💼 ${d.profissao || '---'} | 👶 ${d.filhos || 0}<br>🏠 ${d.local || '---'}
                             </div>
                             <div class="temp-bar"><div class="temp-fill tinder-gradient" style="width: ${d.interesse || 50}%"></div></div>
-                            <button onclick="editCard('${d.id}')" class="w-full mt-4 py-2 bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Editar Dossiê</button>
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="editCard('${d.id}')" class="flex-1 py-2 bg-white/5 rounded-lg text-[7px] font-black uppercase tracking-widest hover:bg-white/10">Editar</button>
+                                ${d.instagram ? `<button onclick="window.open('https://instagram.com/${d.instagram.replace('@','')}')" class="px-3 bg-pink-500/20 text-pink-500 rounded-lg text-[10px]"><i class="fa-brands fa-instagram"></i></button>` : ''}
+                            </div>
                         `;
                         listEl.appendChild(card);
                     });
@@ -223,9 +202,9 @@
             window.currentProfileId = id;
             document.getElementById('mName').value = d.nome;
             document.getElementById('mProf').value = d.profissao || "";
-            document.getElementById('mBairro').value = d.bairro || "";
-            document.getElementById('mCidade').value = d.cidade || "";
             document.getElementById('mFilhos').value = d.filhos || 0;
+            document.getElementById('mLocal').value = d.local || "";
+            document.getElementById('mInsta').value = d.instagram || "";
             document.getElementById('mInteresse').value = d.interesse || 50;
             document.getElementById('mNotes').value = d.notas || "";
             document.getElementById('modal').classList.remove('hidden');
@@ -235,14 +214,19 @@
             await updateDoc(doc(db, "profiles", window.currentProfileId), {
                 nome: document.getElementById('mName').value,
                 profissao: document.getElementById('mProf').value,
-                bairro: document.getElementById('mBairro').value,
-                cidade: document.getElementById('mCidade').value,
                 filhos: parseInt(document.getElementById('mFilhos').value),
+                local: document.getElementById('mLocal').value,
+                instagram: document.getElementById('mInsta').value,
                 interesse: parseInt(document.getElementById('mInteresse').value),
                 notas: document.getElementById('mNotes').value,
                 updatedAt: Date.now()
             });
             document.getElementById('modal').classList.add('hidden');
+        };
+
+        document.getElementById('btnInstaLink').onclick = () => {
+            const user = document.getElementById('mInsta').value.replace('@','');
+            if(user) window.open(`https://instagram.com/${user}`);
         };
 
         document.getElementById('chatUpload').onchange = async (e) => {
@@ -251,7 +235,7 @@
             await addDoc(collection(db, "profiles"), { nome: name, fase: "ice", interesse: 50, uid: auth.currentUser.uid, createdAt: Date.now(), updatedAt: Date.now() });
         };
 
-        document.getElementById('btnDelete').onclick = async () => { if(confirm("Remover contato?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
+        document.getElementById('btnDelete').onclick = async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v13 | Kanban Edition</title>
+    <title>DateMind v14</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -12,38 +12,24 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
         
-        /* Estilo das Colunas Kanban */
-        .kanban-column { background: rgba(30, 41, 59, 0.3); border-radius: 1.5rem; min-height: 70vh; transition: 0.3s; border: 1px solid rgba(255,255,255,0.03); }
-        .kanban-list { min-height: 60vh; padding: 10px; }
+        .kanban-column { background: rgba(15, 23, 42, 0.4); border-radius: 2rem; min-height: 80vh; border: 1px solid rgba(255,255,255,0.03); }
+        .kanban-list { min-height: 70vh; padding: 12px; }
         
-        .glass-card { 
-            background: #1e293b; 
-            border-radius: 1.5rem; 
-            padding: 1.25rem; 
-            margin-bottom: 1rem; 
-            cursor: grab; 
-            border-left: 5px solid #94a3b8;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .glass-card:active { cursor: grabbing; }
-        .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
+        .glass-card { background: #111827; border-radius: 1.8rem; padding: 1.5rem; margin-bottom: 1rem; cursor: grab; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); }
+        .glass-card:hover { border-color: #fd267d; transform: translateY(-3px); box-shadow: 0 10px 20px -10px rgba(253, 38, 125, 0.3); }
+        .sortable-ghost { opacity: 0.1; }
 
-        /* Cores Temáticas */
-        .col-ice { border-top: 4px solid #94a3b8; }
-        .col-fire { border-top: 4px solid #f59e0b; }
-        .col-flow { border-top: 4px solid #fd267d; }
-        .col-elite { border-top: 4px solid #8b5cf6; }
+        /* Estilos de Glow Superiores */
+        .glow-ice { box-shadow: 0 -8px 15px -10px #94a3b8; border-top: 3px solid #94a3b8; }
+        .glow-fire { box-shadow: 0 -8px 15px -10px #f59e0b; border-top: 3px solid #f59e0b; }
+        .glow-flow { box-shadow: 0 -8px 15px -10px #fd267d; border-top: 3px solid #fd267d; }
+        .glow-elite { box-shadow: 0 -8px 15px -10px #8b5cf6; border-top: 3px solid #8b5cf6; }
 
-        .card-ice { border-left-color: #94a3b8; }
-        .card-fire { border-left-color: #f59e0b; }
-        .card-flow { border-left-color: #fd267d; }
-        .card-elite { border-left-color: #8b5cf6; }
-
-        .temp-bar { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px; }
-        .temp-fill { height: 100%; border-radius: 2px; }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .temp-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 12px; overflow: hidden; }
+        .temp-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+        
+        .frozen { opacity: 0.5; filter: grayscale(0.8); }
+        .frozen:hover { opacity: 1; filter: grayscale(0); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -51,83 +37,93 @@
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 flex justify-between items-center bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
             <div>
-                <h1 class="text-xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V13</span></h1>
-                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Tactical Kanban Board</p>
+                <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V14</span></h1>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Data-Driven Strategy</p>
             </div>
-            <div class="flex items-center gap-4">
-                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase">Sair</button>
-                <label class="tinder-gradient px-5 py-2.5 rounded-xl font-black text-[10px] uppercase cursor-pointer shadow-lg transition-transform active:scale-95">
-                    <input type="file" id="chatUpload" class="hidden" accept=".txt"> + Contato
+            <div class="flex items-center gap-6">
+                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase hover:text-white transition-colors">Sair</button>
+                <label class="tinder-gradient px-8 py-3 rounded-2xl font-black text-[11px] uppercase cursor-pointer shadow-xl transition-all active:scale-95">
+                    <input type="file" id="chatUpload" class="hidden" accept=".txt"> + NOVO DOSSIÊ
                 </label>
             </div>
         </header>
 
-        <main class="flex-1 p-6 overflow-x-auto">
-            <div class="flex gap-6 min-w-[1200px] h-full">
+        <main class="flex-1 p-8 overflow-x-auto">
+            <div class="flex gap-8 min-w-[1300px] h-full">
                 
-                <div class="flex-1 kanban-column col-ice">
-                    <div class="p-4 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">❄️ Ice <span class="text-[10px] opacity-50 ml-1">(Conversando)</span></h2>
-                        <span id="count-ice" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold">0</span>
+                <template id="column-template">
+                    <div class="flex-1 kanban-column">
+                        <div class="p-5 flex justify-between items-center border-b border-white/5">
+                            <h2 class="phase-title text-xs font-black uppercase tracking-widest"></h2>
+                            <span class="phase-count bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold border border-white/10">0</span>
+                        </div>
+                        <div class="kanban-list"></div>
                     </div>
-                    <div id="list-ice" data-phase="ice" class="kanban-list"></div>
-                </div>
+                </template>
 
-                <div class="flex-1 kanban-column col-fire">
-                    <div class="p-4 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-amber-500">🔥 Fire <span class="text-[10px] opacity-50 ml-1">(Marcado)</span></h2>
-                        <span id="count-fire" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold text-amber-500">0</span>
-                    </div>
-                    <div id="list-fire" data-phase="fire" class="kanban-list"></div>
-                </div>
-
-                <div class="flex-1 kanban-column col-flow">
-                    <div class="p-4 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-rose-500">✨ Flow <span class="text-[10px] opacity-50 ml-1">(Fiquei)</span></h2>
-                        <span id="count-flow" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold text-rose-500">0</span>
-                    </div>
-                    <div id="list-flow" data-phase="flow" class="kanban-list"></div>
-                </div>
-
-                <div class="flex-1 kanban-column col-elite">
-                    <div class="p-4 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-purple-500">🏆 Elite <span class="text-[10px] opacity-50 ml-1">(Sucesso)</span></h2>
-                        <span id="count-elite" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold text-purple-500">0</span>
-                    </div>
-                    <div id="list-elite" data-phase="elite" class="kanban-list"></div>
-                </div>
-
+                <div id="ice-col" class="flex-1 kanban-column glow-ice" data-phase="ice"></div>
+                <div id="fire-col" class="flex-1 kanban-column glow-fire" data-phase="fire"></div>
+                <div id="flow-col" class="flex-1 kanban-column glow-flow" data-phase="flow"></div>
+                <div id="elite-col" class="flex-1 kanban-column glow-elite" data-phase="elite"></div>
             </div>
         </main>
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="bg-white text-slate-900 w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl">
-            <div class="p-8 space-y-5">
-                <input type="text" id="mName" class="w-full text-3xl font-black uppercase outline-none text-slate-800 border-b-2 border-slate-100 pb-2">
-                <div class="grid grid-cols-2 gap-4 text-xs font-bold uppercase text-slate-400">
-                    <div class="space-y-1"><label>Profissão</label><input type="text" id="mProf" class="w-full p-3 bg-slate-100 rounded-xl outline-none text-slate-700"></div>
-                    <div class="space-y-1"><label>Bairro</label><input type="text" id="mBairro" class="w-full p-3 bg-slate-100 rounded-xl outline-none text-slate-700"></div>
+    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+        <div class="bg-slate-900 text-slate-100 w-full max-w-xl rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
+            <div class="p-10 space-y-6">
+                <div class="flex justify-between items-center">
+                    <input type="text" id="mName" class="w-2/3 text-4xl font-black uppercase outline-none bg-transparent border-b-2 border-white/10 pb-2 placeholder-slate-700">
+                    <div class="flex flex-col items-end">
+                        <label class="text-[9px] font-black uppercase text-slate-500 mb-1">Interesse</label>
+                        <input type="number" id="mInteresse" min="0" max="100" class="w-16 bg-white/5 p-2 rounded-xl text-center font-black text-[#fd267d]">
+                    </div>
                 </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">💼 Profissão</label>
+                        <input type="text" id="mProf" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">👶 Qtd Filhos</label>
+                        <input type="number" id="mFilhos" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">🏠 Bairro</label>
+                        <input type="text" id="mBairro" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">📍 Cidade</label>
+                        <input type="text" id="mCidade" class="w-full p-4 bg-white/5 rounded-2xl outline-none border border-white/5 focus:border-[#fd267d]">
+                    </div>
+                </div>
+
                 <div class="space-y-1">
-                    <label class="text-xs font-bold uppercase text-slate-400">Notas</label>
-                    <textarea id="mNotes" class="w-full p-4 bg-slate-100 rounded-2xl text-sm outline-none" rows="3"></textarea>
+                    <label class="text-[9px] font-black uppercase text-slate-500 ml-2">📝 Notas Estratégicas</label>
+                    <textarea id="mNotes" class="w-full p-6 bg-white/5 rounded-[2rem] text-sm outline-none border border-white/5 italic" rows="3"></textarea>
                 </div>
-                <div class="flex gap-3 pt-4">
-                    <button id="btnDelete" class="bg-rose-100 text-rose-500 p-4 rounded-xl hover:bg-rose-200 transition-all"><i class="fa-solid fa-trash"></i></button>
-                    <button id="btnSaveData" class="flex-1 tinder-gradient text-white font-black uppercase py-4 rounded-xl text-xs shadow-lg">Salvar Dados</button>
-                    <button onclick="document.getElementById('modal').classList.add('hidden')" class="p-4 text-slate-400 text-xs font-bold uppercase">Fechar</button>
+
+                <div class="flex gap-4 pt-4">
+                    <button id="btnDelete" class="bg-rose-500/10 text-rose-500 p-5 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"><i class="fa-solid fa-trash"></i></button>
+                    <button id="btnSaveData" class="flex-1 tinder-gradient text-white font-black uppercase py-5 rounded-2xl text-[11px] shadow-xl">Atualizar Dossiê</button>
                 </div>
+                <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full text-[9px] font-bold uppercase text-slate-600">Fechar</button>
             </div>
         </div>
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center bg-[#020617]">
-        <div class="bg-white p-10 rounded-[3rem] w-80 text-center shadow-2xl">
-            <h2 class="text-2xl font-black mb-8 text-[#fd267d] italic">DATEMIND</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-xl mb-3 outline-none text-slate-800">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-xl mb-6 outline-none text-slate-800">
-            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-xl text-white font-black uppercase text-xs">Acessar Board</button>
+        <div class="bg-slate-900 p-12 rounded-[4rem] w-96 text-center shadow-2xl border border-white/5">
+            <h2 class="text-3xl font-black mb-10 text-[#fd267d] italic tracking-tighter">DATEMIND</h2>
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-white/5 rounded-2xl outline-none text-white border border-white/10">
+                <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-white/5 rounded-2xl outline-none text-white border border-white/10">
+                <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-2xl text-white font-black uppercase text-xs tracking-widest">Entrar</button>
+            </div>
         </div>
     </div>
 
@@ -141,7 +137,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // LOGIN / LOGOUT
         document.getElementById('btnPrimary').onclick = async () => {
             const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
             try { await signInWithEmailAndPassword(auth, e, p); } catch { await createUserWithEmailAndPassword(auth, e, p); }
@@ -153,31 +148,42 @@
             else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
         });
 
-        // SETUP DRAG AND DROP
         function setupKanban(uid) {
             ['ice', 'fire', 'flow', 'elite'].forEach(phase => {
+                const listEl = document.querySelector(`#${phase}-col`);
+                listEl.innerHTML = `
+                    <div class="p-5 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest ${phase === 'ice' ? 'text-slate-400' : phase === 'fire' ? 'text-amber-500' : phase === 'flow' ? 'text-pink-500' : 'text-purple-500'}">${phase}</h2>
+                        <span id="count-${phase}" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold border border-white/10">0</span>
+                    </div>
+                    <div id="list-${phase}" data-phase="${phase}" class="kanban-list"></div>
+                `;
+
                 new Sortable(document.getElementById('list-' + phase), {
                     group: 'kanban',
-                    animation: 150,
+                    animation: 250,
                     ghostClass: 'sortable-ghost',
                     onEnd: async (evt) => {
                         const cardId = evt.item.getAttribute('data-id');
                         const newPhase = evt.to.getAttribute('data-phase');
-                        await updateDoc(doc(db, "profiles", cardId), { fase: newPhase });
+                        await updateDoc(doc(db, "profiles", cardId), { fase: newPhase, updatedAt: Date.now() });
                     }
                 });
             });
         }
 
-        // SYNC DATA
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid));
             onSnapshot(q, (snap) => {
                 const lists = { ice: [], fire: [], flow: [], elite: [] };
+                const agora = Date.now();
+
                 snap.forEach(d => {
                     const data = d.data();
                     const phase = data.fase || 'ice';
-                    if (lists[phase]) lists[phase].push({ id: d.id, ...data });
+                    const ultimaAtv = data.updatedAt || data.createdAt;
+                    const diasParado = Math.floor((agora - ultimaAtv) / (1000 * 60 * 60 * 24));
+                    if (lists[phase]) lists[phase].push({ id: d.id, diasParado, ...data });
                 });
 
                 Object.keys(lists).forEach(phase => {
@@ -186,19 +192,24 @@
                     listEl.innerHTML = '';
                     countEl.innerText = lists[phase].length;
 
-                    lists[phase].sort((a,b) => b.createdAt - a.createdAt).forEach(d => {
+                    // RANKING: Prioriza por Interesse
+                    lists[phase].sort((a,b) => (b.interesse || 0) - (a.interesse || 0)).forEach(d => {
+                        const isFrozen = d.diasParado >= 3;
                         const card = document.createElement('div');
-                        card.className = `glass-card card-${phase}`;
+                        card.className = `glass-card ${isFrozen ? 'frozen' : ''}`;
                         card.setAttribute('data-id', d.id);
                         card.innerHTML = `
                             <div class="flex justify-between items-start">
-                                <span class="text-[11px] font-black uppercase text-white leading-tight">${d.nome}</span>
-                                <button onclick="editCard('${d.id}')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <span class="text-[13px] font-black uppercase text-white tracking-tighter">${d.nome}</span>
+                                <span class="text-[8px] font-black ${isFrozen ? 'text-rose-500' : 'text-slate-600'}">${isFrozen ? 'GELANDO' : d.diasParado + 'd'}</span>
                             </div>
-                            <div class="text-[8px] font-bold text-slate-500 uppercase mt-1">
-                                ${d.profissao || 'S/ Profissão'} • ${d.bairro || 'S/ Bairro'}
+                            <div class="text-[10px] font-bold text-slate-400 mt-2 leading-tight">
+                                💼 ${d.profissao || '---'}<br>
+                                🏠 ${d.bairro || '---'} / ${d.cidade || '---'}<br>
+                                👶 ${d.filhos || 0} FILHOS
                             </div>
                             <div class="temp-bar"><div class="temp-fill tinder-gradient" style="width: ${d.interesse || 50}%"></div></div>
+                            <button onclick="editCard('${d.id}')" class="w-full mt-4 py-2 bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Editar Dossiê</button>
                         `;
                         listEl.appendChild(card);
                     });
@@ -206,14 +217,16 @@
             });
         }
 
-        // EDIT / MODAL
         window.editCard = async (id) => {
-            const q = await getDocs(query(collection(db, "profiles"))); // Simplificado para o exemplo
+            const q = await getDocs(query(collection(db, "profiles")));
             const d = q.docs.find(doc => doc.id === id).data();
             window.currentProfileId = id;
             document.getElementById('mName').value = d.nome;
             document.getElementById('mProf').value = d.profissao || "";
             document.getElementById('mBairro').value = d.bairro || "";
+            document.getElementById('mCidade').value = d.cidade || "";
+            document.getElementById('mFilhos').value = d.filhos || 0;
+            document.getElementById('mInteresse').value = d.interesse || 50;
             document.getElementById('mNotes').value = d.notas || "";
             document.getElementById('modal').classList.remove('hidden');
         };
@@ -223,7 +236,11 @@
                 nome: document.getElementById('mName').value,
                 profissao: document.getElementById('mProf').value,
                 bairro: document.getElementById('mBairro').value,
-                notas: document.getElementById('mNotes').value
+                cidade: document.getElementById('mCidade').value,
+                filhos: parseInt(document.getElementById('mFilhos').value),
+                interesse: parseInt(document.getElementById('mInteresse').value),
+                notas: document.getElementById('mNotes').value,
+                updatedAt: Date.now()
             });
             document.getElementById('modal').classList.add('hidden');
         };
@@ -231,10 +248,10 @@
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0]; if (!file) return;
             let name = file.name.replace('.txt','').split(' ')[0];
-            await addDoc(collection(db, "profiles"), { nome: name, fase: "ice", interesse: 50, uid: auth.currentUser.uid, createdAt: Date.now() });
+            await addDoc(collection(db, "profiles"), { nome: name, fase: "ice", interesse: 50, uid: auth.currentUser.uid, createdAt: Date.now(), updatedAt: Date.now() });
         };
 
-        document.getElementById('btnDelete').onclick = async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
+        document.getElementById('btnDelete').onclick = async () => { if(confirm("Remover contato?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
     </script>
 </body>
 </html>

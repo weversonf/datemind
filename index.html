@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.5.5</title>
+    <title>DateMind v08.5.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -14,51 +14,52 @@
         .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 10px 30px -10px rgba(253, 38, 125, 0.3); }
         .modal-bg { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); }
         .hidden { display: none !important; }
+        #loadingOverlay { position: fixed; inset: 0; z-index: 100; background: #0f172a; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center">
-        <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
-        <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-4 opacity-50 text-white">Sincronizando...</p>
-    </div>
-
-    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-12 rounded-[3.5rem] w-full max-w-md shadow-2xl text-center">
-            <h2 class="text-3xl font-black italic mb-8 uppercase tracking-tighter text-[#fd267d]">DateMind</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-50 border rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-[#fd267d]">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-50 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-[#fd267d]">
-            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar / Cadastrar</button>
+    <div id="loadingOverlay">
+        <div class="flex flex-col items-center">
+            <i class="fa-solid fa-fire text-[#fd267d] text-6xl animate-pulse"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest mt-6 opacity-50">Sincronizando Dossiês...</p>
         </div>
     </div>
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md">
-            <h1 class="text-xl font-black italic uppercase">DateMind <span class="text-[#fd267d]">PRO</span></h1>
+            <h1 class="text-xl font-black italic uppercase italic">DateMind <span class="text-[#fd267d]">v08.6</span></h1>
             <div class="flex items-center gap-4">
                 <button id="btnLogout" class="text-[10px] font-bold text-slate-500 hover:text-white uppercase mr-4">Sair</button>
                 <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-plus-circle"></i> Novo Dossiê
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Novo Dossiê
                 </label>
             </div>
         </header>
         <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8"></main>
     </div>
 
+    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
+        <div class="bg-white p-12 rounded-[3.5rem] w-full max-w-md shadow-2xl text-center">
+            <h2 class="text-3xl font-black italic uppercase tracking-tighter text-[#fd267d] mb-8">DateMind</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-2xl mb-4 outline-none border-2 border-transparent focus:border-[#fd267d]">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 outline-none border-2 border-transparent focus:border-[#fd267d]">
+            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar / Cadastrar</button>
+        </div>
+    </div>
+
     <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
         <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl relative">
             <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-300 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
             <div class="h-40 tinder-gradient p-10 flex flex-col justify-end">
-                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none">Nome</h2>
-                <p id="mStatus" class="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Dossiê Estratégico</p>
+                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none">---</h2>
+                <div class="mt-3 inline-block bg-white/20 text-white text-[9px] font-black uppercase px-3 py-1 rounded-full border border-white/30">Análise Local</div>
             </div>
-            <div class="p-10 space-y-6 overflow-y-auto" style="max-height: 450px;">
+            <div class="p-10 space-y-6">
                 <div id="mTags" class="flex flex-wrap gap-2"></div>
-                <div class="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 italic text-slate-600 text-sm leading-relaxed">
-                    <span id="mBio"></span>
-                </div>
-                <button id="btnDelete" class="w-full py-3 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-xl hover:bg-rose-500 hover:text-white transition-all">Excluir Dossiê</button>
+                <p id="mBio" class="bg-slate-50 p-6 rounded-3xl italic text-slate-600 text-sm border border-slate-100"></p>
+                <button id="btnDelete" class="w-full py-3 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-xl">Excluir Dossiê</button>
             </div>
         </div>
     </div>
@@ -81,11 +82,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // AUTH
+        // LOGIN/CADASTRO UNIFICADO
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); } 
+            try { await signInWithEmailAndPassword(auth, email, pass); }
             catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message)); }
         };
 
@@ -103,7 +104,7 @@
             }
         });
 
-        // UPLOAD E LIMPEZA DE NOME
+        // PROCESSAMENTO COM NOME REAL E RENDER IMEDIATO
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -112,9 +113,8 @@
             const lowText = text.toLowerCase();
             const tags = [];
             
-            // Limpa o nome do arquivo
-            let cleanName = file.name.replace('.txt', '').replace('Conversa do WhatsApp com ', '').trim();
-            cleanName = cleanName.split(' ')[0]; // Pega o primeiro nome
+            // Limpa o nome: "Conversa do WhatsApp com Renata" -> "Renata"
+            const cleanName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0];
 
             if (lowText.includes("filho")) tags.push("👶 Pais");
             const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
@@ -127,55 +127,53 @@
                 tags: tags,
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                status: "🔥 PROCESSADO",
-                bio: `Dossiê estratégico de ${cleanName}. Histórico com ${text.split('\n').length} interações analisadas.`
+                bio: `Dossiê estratégico de ${cleanName}. Histórico com ${text.split('\n').length} mensagens processadas localmente.`
             };
 
+            // Injeta no mural na hora para feedback visual
+            renderCard(data);
+            
+            // Salva no banco em silêncio
             await addDoc(collection(db, "profiles"), data);
         };
+
+        function renderCard(d, id) {
+            const board = document.getElementById('crmBoard');
+            const card = document.createElement('div');
+            card.className = "glass-card p-8 animate-in fade-in duration-500 mb-4";
+            card.onclick = () => {
+                document.getElementById('mName').innerText = d.nome;
+                document.getElementById('mBio').innerText = d.bio;
+                document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-100 uppercase">${t}</span>`).join('');
+                window.currentProfileId = id;
+                document.getElementById('modal').classList.remove('hidden');
+            };
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black">${d.nome}</h3>
+                    <span class="text-[8px] font-black uppercase text-rose-500">🔥 PROCESSADO</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
+                </div>
+            `;
+            board.prepend(card);
+        }
 
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid), orderBy("createdAt", "desc"));
             onSnapshot(q, (snap) => {
                 const board = document.getElementById('crmBoard');
                 board.innerHTML = '';
-                snap.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const profileId = docSnap.id;
-                    const card = document.createElement('div');
-                    card.className = "glass-card p-8 animate-in fade-in duration-500 mb-4";
-                    
-                    // Conecta o clique ao modal
-                    card.onclick = () => openModal(d, profileId);
-                    
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-2xl font-black">${d.nome}</h3>
-                            <span class="text-[8px] font-black uppercase text-rose-500">🔥 PROCESSADO</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
-                        </div>
-                    `;
-                    board.prepend(card);
-                });
+                snap.forEach(docSnap => renderCard(docSnap.data(), docSnap.id));
             });
-        }
-
-        // FUNÇÃO PARA ABRIR MODAL COM DADOS REAIS
-        function openModal(data, id) {
-            window.currentDeleteId = id;
-            document.getElementById('mName').innerText = data.nome;
-            document.getElementById('mBio').innerText = data.bio;
-            document.getElementById('mTags').innerHTML = data.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-100 uppercase">${t}</span>`).join('');
-            document.getElementById('modal').classList.remove('hidden');
         }
 
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
 
         document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir dossiê permanentemente?")) {
-                await deleteDoc(doc(db, "profiles", window.currentDeleteId));
+            if(confirm("Excluir dossiê?") && window.currentProfileId) {
+                await deleteDoc(doc(db, "profiles", window.currentProfileId));
                 document.getElementById('modal').classList.add('hidden');
             }
         };

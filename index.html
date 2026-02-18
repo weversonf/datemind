@@ -3,43 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.3</title>
+    <title>DateMind v08.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; }
-        .crm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; padding: 2rem; }
-        .input-field { background-color: #f1f5f9; color: #1e293b; width: 100%; padding: 1rem; border-radius: 1.25rem; outline: none; border: 2px solid transparent; transition: all 0.3s; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 10px 30px -10px rgba(253, 38, 125, 0.3); }
+        .input-field { background-color: #f1f5f9; color: #1e293b; width: 100%; padding: 1.2rem; border-radius: 1.5rem; outline: none; border: 2px solid transparent; }
         .input-field:focus { border-color: #fd267d; background-color: #ffffff; }
+        .modal-bg { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); }
+        #loadingOverlay { background: #0f172a; position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
 
-    <div id="authSection" class="min-h-screen flex items-center justify-center p-6">
+    <div id="loadingOverlay">
+        <div class="flex flex-col items-center">
+            <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-4 opacity-50">Sincronizando Dossiês...</p>
+        </div>
+    </div>
+
+    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6">
         <div class="bg-white p-10 md:p-14 rounded-[3.5rem] w-full max-w-md shadow-2xl text-slate-900">
-            <div class="text-center mb-10">
+            <div class="text-center mb-8">
                 <i class="fa-solid fa-fire text-[#fd267d] text-6xl mb-4"></i>
-                <h2 id="authTitle" class="text-3xl font-black italic tracking-tighter">DATEMIND</h2>
-                <p id="authSubtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Entre no seu CRM Amoroso</p>
+                <h2 id="authTitle" class="text-3xl font-black italic tracking-tighter uppercase">DateMind</h2>
+                <p id="authSubtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Login Seguro</p>
             </div>
-
             <div class="space-y-4">
-                <input type="email" id="email" placeholder="Seu melhor e-mail" class="input-field">
-                <input type="password" id="pass" placeholder="Sua senha secreta" class="input-field">
-                
-                <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-[1.25rem] text-white font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-all mt-4">
-                    Entrar
-                </button>
-                
-                <p id="authError" class="text-center text-xs text-red-500 font-bold hidden"></p>
-
-                <div class="pt-6 text-center border-t border-slate-100 mt-6">
-                    <button id="btnSwitch" class="text-[10px] font-black uppercase text-slate-400 hover:text-[#fd267d] transition-colors tracking-widest">
-                        Não tem conta? Cadastre-se agora
-                    </button>
+                <input type="email" id="email" placeholder="E-mail" class="input-field">
+                <input type="password" id="pass" placeholder="Senha" class="input-field">
+                <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-[1.5rem] text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all mt-2">Entrar</button>
+                <div class="pt-6 text-center border-t border-slate-100">
+                    <button id="btnSwitch" class="text-[10px] font-black uppercase text-slate-400 hover:text-[#fd267d] tracking-widest transition-colors">Não tem conta? Cadastre-se</button>
                 </div>
             </div>
         </div>
@@ -47,24 +47,54 @@
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md">
-            <h1 class="text-xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">PRO</span></h1>
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-white rounded-lg shadow-lg"><i class="fa-solid fa-fire text-[#fd267d]"></i></div>
+                <h1 class="text-xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">v08.4</span></h1>
+            </div>
             <div class="flex items-center gap-4">
-                <button id="btnLogout" class="text-[9px] font-black uppercase text-slate-500 hover:text-white transition-colors">Sair da Conta</button>
-                <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-lg flex items-center gap-2 hover:brightness-110">
+                <button id="btnLogout" class="text-[10px] font-black uppercase text-slate-500 hover:text-white transition-colors">Sair</button>
+                <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2 hover:brightness-110">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-plus-circle"></i> Novo Dossiê
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Novo Dossiê
                 </label>
             </div>
         </header>
 
-        <main id="crmBoard" class="crm-grid">
+        <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8">
             </main>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+        <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl relative animate-in zoom-in duration-300">
+            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-300 hover:text-rose-500 text-3xl z-10"><i class="fa-solid fa-circle-xmark"></i></button>
+            
+            <div class="h-48 tinder-gradient p-12 flex flex-col justify-end relative">
+                <h2 id="mName" class="text-6xl font-black text-white tracking-tighter leading-none">---</h2>
+                <div id="mStatus" class="mt-4 inline-block bg-white/20 text-white text-[10px] font-black uppercase px-4 py-1 rounded-full border border-white/30 backdrop-blur-md">---</div>
+            </div>
+
+            <div class="p-12 space-y-8 overflow-y-auto" style="max-height: 60vh;">
+                <section>
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em]">Tags Identificadas</h3>
+                    <div id="mTags" class="flex flex-wrap gap-3"></div>
+                </section>
+
+                <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 italic text-slate-700 leading-relaxed">
+                    <p id="mBio"></p>
+                </div>
+
+                <div class="flex justify-between items-center pt-6 border-t border-slate-100">
+                    <div id="mDate" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"></div>
+                    <button id="btnDelete" class="bg-rose-50 text-rose-500 px-6 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir Dossiê</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
@@ -79,77 +109,129 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        let currentProfileId = null;
         let isLoginMode = true;
 
-        // ALTERNAR ENTRE LOGIN E CADASTRO
-        const btnSwitch = document.getElementById('btnSwitch');
-        btnSwitch.onclick = () => {
+        // AUTH HANDLERS
+        document.getElementById('btnSwitch').onclick = () => {
             isLoginMode = !isLoginMode;
             document.getElementById('authTitle').innerText = isLoginMode ? "DATEMIND" : "CRIAR CONTA";
-            document.getElementById('authSubtitle').innerText = isLoginMode ? "Entre no seu CRM Amoroso" : "Cadastre-se para salvar dossiês";
-            document.getElementById('btnPrimary').innerText = isLoginMode ? "Entrar" : "Criar Minha Conta";
-            btnSwitch.innerText = isLoginMode ? "Não tem conta? Cadastre-se agora" : "Já tem conta? Faça Login";
+            document.getElementById('btnPrimary').innerText = isLoginMode ? "Entrar" : "Finalizar Cadastro";
+            document.getElementById('btnSwitch').innerText = isLoginMode ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar";
         };
 
-        // AÇÃO PRINCIPAL (LOGIN OU CADASTRO)
         document.getElementById('btnPrimary').onclick = () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
-            const errorEl = document.getElementById('authError');
-            errorEl.classList.add('hidden');
-
-            if (isLoginMode) {
-                signInWithEmailAndPassword(auth, email, pass).catch(e => showError("E-mail ou senha incorretos."));
+            if(isLoginMode) {
+                signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Falha no login. Verifique e-mail e senha."));
             } else {
-                createUserWithEmailAndPassword(auth, email, pass).catch(e => showError("Erro ao cadastrar. Verifique os dados."));
+                createUserWithEmailAndPassword(auth, email, pass).catch(e => alert("Erro ao criar conta."));
             }
         };
 
-        function showError(msg) {
-            const err = document.getElementById('authError');
-            err.innerText = msg;
-            err.classList.remove('hidden');
-        }
-
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
-        // PERSISTÊNCIA E SINCRONIZAÇÃO
         onAuthStateChanged(auth, (user) => {
+            document.getElementById('loadingOverlay').classList.add('hidden');
             if (user) {
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                syncDashboard(user.uid);
+                syncBoard(user.uid);
             } else {
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
             }
         });
 
-        // REUTILIZE A FUNÇÃO processOldSchool E syncBoard DO CÓDIGO ANTERIOR AQUI PARA COMPLETAR
-        // ... (Mantendo a lógica de processamento local para segurança e velocidade)
-        
-        function syncDashboard(uid) {
-            const q = query(collection(db, "profiles"), where("uid", "==", uid));
+        // PROCESSAMENTO DE TEXTO (OLD SCHOOL)
+        document.getElementById('chatUpload').onchange = async (e) => {
+            const file = e.target.files[0];
+            const text = await file.text();
+            const result = analyzeChat(text, file.name);
+            result.uid = auth.currentUser.uid;
+            result.createdAt = Date.now();
+            await addDoc(collection(db, "profiles"), result);
+        };
+
+        function analyzeChat(text, fileName) {
+            const name = fileName.replace('.txt', '').replace('Conversa do WhatsApp com ', '').split(' ')[0];
+            const lowText = text.toLowerCase();
+            const tags = [];
+            
+            // 1. Tags Padrão (Itens Chave)
+            if (lowText.includes("filho") || lowText.includes("filha")) tags.push("👶 Pais");
+            
+            const idadeMatch = lowText.match(/(\d{2}) anos/);
+            if(idadeMatch) tags.push("🎂 " + idadeMatch[1] + " Anos");
+
+            const bairroMatch = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
+            if(bairroMatch) tags.push("📍 " + bairroMatch[1]);
+
+            const profMatch = lowText.match(/sou ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
+            if(profMatch && !['você','eu'].includes(profMatch[1])) tags.push("💼 " + profMatch[1]);
+
+            // 2. Termômetro
+            const heat = (text.match(/❤️|🔥|😍|🥰|😘/g) || []).length;
+            const status = heat > 15 ? "🔥 Quente" : (heat > 5 ? "⚡ Morno" : "❄️ Frio");
+
+            return {
+                nome: name,
+                tags: tags,
+                status: status,
+                bio: `Relatório gerado a partir de ${text.split('\n').length} mensagens. Presença de ${heat} sinais de interesse visual.`,
+                lastPapo: text.match(/\d{2}\/\d{2}\/\d{2,4}/g)?.pop() || "Hoje"
+            };
+        }
+
+        // SINCRONIZAÇÃO FIRESTORE
+        function syncBoard(uid) {
+            const q = query(collection(db, "profiles"), where("uid", "==", uid), orderBy("createdAt", "desc"));
             onSnapshot(q, (snap) => {
                 const board = document.getElementById('crmBoard');
                 board.innerHTML = '';
-                snap.forEach(doc => {
-                    const d = doc.data();
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
                     const card = document.createElement('div');
-                    card.className = "glass-card rounded-[2.5rem] overflow-hidden p-8 animate-in fade-in zoom-in duration-300 mb-4";
-                    card.innerHTML = `<h3 class="text-xl font-black">${d.nome}</h3><p class="text-[10px] opacity-50 uppercase font-bold mt-2 tracking-widest">${d.status}</p>`;
-                    board.prepend(card);
+                    card.className = "glass-card rounded-[2.5rem] overflow-hidden p-8 animate-in fade-in slide-in-from-bottom-4 duration-500";
+                    card.onclick = () => openModal(d, docSnap.id);
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-2xl font-black tracking-tighter">${d.nome}</h3>
+                            <span class="text-[8px] font-black uppercase bg-white/10 px-3 py-1 rounded-full">${d.status}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase border border-white/5">${t}</span>`).join('')}
+                        </div>
+                        <p class="mt-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Último papo: ${d.lastPapo}</p>
+                    `;
+                    board.appendChild(card);
                 });
             });
         }
 
-        document.getElementById('chatUpload').onchange = async (e) => {
-            const file = e.target.files[0];
-            const text = await file.text();
-            // Chame a função processOldSchool aqui
-            const data = { nome: file.name.split(' ')[0], status: "Morno", uid: auth.currentUser.uid };
-            await addDoc(collection(db, "profiles"), data);
+        // MODAL LOGIC
+        function openModal(d, id) {
+            currentProfileId = id;
+            document.getElementById('mName').innerText = d.nome;
+            document.getElementById('mStatus').innerText = d.status;
+            document.getElementById('mBio').innerText = d.bio;
+            document.getElementById('mDate').innerText = "Último registro: " + d.lastPapo;
+            document.getElementById('mTags').innerHTML = d.tags.length > 0 
+                ? d.tags.map(t => `<span class="bg-slate-100 text-slate-700 text-[10px] font-black px-5 py-2 rounded-2xl border border-slate-200 uppercase">${t}</span>`).join('')
+                : '<span class="text-slate-400 text-xs italic">Nenhum item chave detectado.</span>';
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
+        
+        document.getElementById('btnDelete').onclick = async () => {
+            if(confirm("Deseja arquivar e excluir permanentemente este dossiê?")) {
+                await deleteDoc(doc(db, "profiles", currentProfileId));
+                document.getElementById('modal').classList.add('hidden');
+            }
         };
+
     </script>
 </body>
 </html>

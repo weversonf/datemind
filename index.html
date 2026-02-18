@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.8.2 | UX Elite</title>
+    <title>DateMind v08.9 | Strategic CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -15,31 +15,31 @@
         .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; cursor: pointer; transition: 0.3s ease; border-left: 8px solid #94a3b8; }
         .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 15px 30px -10px rgba(253, 38, 125, 0.3); }
         
-        /* Phase Indicators */
+        /* Pipeline Colors */
         .phase-ice { border-left-color: #94a3b8; }
         .phase-fire { border-left-color: #fd267d; }
         .phase-check { border-left-color: #22c55e; }
         
-        /* UX: Status Buttons */
-        .status-btn { border: 2px solid transparent; transition: all 0.2s ease; opacity: 0.5; }
-        .status-btn.active { opacity: 1; border-color: white; transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        
+        /* UX Components */
+        .status-btn { opacity: 0.4; transition: all 0.2s; border: 2px solid transparent; }
+        .status-btn.active { opacity: 1; border-color: white; transform: scale(1.05); }
         .hidden { display: none !important; }
+        #loadingOverlay { position: fixed; inset: 0; z-index: 100; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center">
+    <div id="loadingOverlay">
         <i class="fa-solid fa-fire text-[#fd267d] text-6xl animate-pulse"></i>
-        <p class="text-[10px] font-black uppercase tracking-widest mt-6 opacity-50">Sincronizando Dossiês...</p>
+        <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-6 opacity-40">Sincronizando Dossiês...</p>
     </div>
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <header class="p-8 border-b border-white/5 flex justify-between items-center bg-[#0f172a]/95 backdrop-blur-md sticky top-0 z-50">
-            <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d] ml-1">v08.8</span></h1>
+            <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">v08.9</span></h1>
             <div class="flex items-center gap-6">
-                <button id="btnLogout" class="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest">Sair</button>
-                <label class="tinder-gradient px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-[0.2em] cursor-pointer shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
+                <button id="btnLogout" class="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Sair</button>
+                <label class="tinder-gradient px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
                     <i class="fa-solid fa-bolt"></i> Novo Dossiê
                 </label>
@@ -60,39 +60,30 @@
         </div>
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
-        <div class="bg-white text-slate-900 w-full max-w-xl rounded-[4rem] overflow-hidden relative shadow-[0_0_50px_-12px_rgba(253,38,125,0.5)]">
-            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-200 hover:text-rose-500 text-3xl transition-colors"><i class="fa-solid fa-circle-xmark"></i></button>
+    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+        <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[4rem] overflow-hidden relative shadow-2xl animate-in zoom-in duration-300">
+            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-200 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
             
             <div class="h-56 tinder-gradient p-12 flex flex-col justify-end">
                 <h2 id="mName" class="text-6xl font-black text-white tracking-tighter leading-none mb-6">---</h2>
-                
                 <div class="flex gap-3">
-                    <button onclick="updatePhase('ice')" id="btnIce" class="status-btn active bg-slate-400/30 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 backdrop-blur-md">
-                        <i class="fa-solid fa-snowflake"></i> Gelo
-                    </button>
-                    <button onclick="updatePhase('fire')" id="btnFire" class="status-btn bg-[#fd267d]/40 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 backdrop-blur-md">
-                        <i class="fa-solid fa-fire"></i> Fogo
-                    </button>
-                    <button onclick="updatePhase('check')" id="btnCheck" class="status-btn bg-green-500/40 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 backdrop-blur-md">
-                        <i class="fa-solid fa-location-dot"></i> Marcado
-                    </button>
+                    <button onclick="updatePhase('ice')" id="btnIce" class="status-btn active bg-slate-400/30 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 backdrop-blur-md">❄️ Gelo</button>
+                    <button onclick="updatePhase('fire')" id="btnFire" class="status-btn bg-[#fd267d]/40 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 backdrop-blur-md">🔥 Fogo</button>
+                    <button onclick="updatePhase('check')" id="btnCheck" class="status-btn bg-green-500/40 text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 backdrop-blur-md">📍 Marcado</button>
                 </div>
             </div>
 
-            <div class="p-12 space-y-8">
+            <div class="p-12 space-y-8 overflow-y-auto" style="max-height: 500px;">
                 <div>
-                    <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Informações Extraídas</h4>
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Itens de Inteligência</h4>
                     <div id="mTags" class="flex flex-wrap gap-3"></div>
                 </div>
-
                 <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 italic text-slate-600 text-sm leading-relaxed shadow-inner">
                     <p id="mBio"></p>
                 </div>
-
                 <div class="flex gap-4">
-                    <button id="btnDelete" class="flex-1 py-5 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-3xl hover:bg-rose-500 hover:text-white transition-all tracking-widest">Excluir Dossiê</button>
-                    <button id="btnCloseDetail" class="px-10 py-5 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded-3xl tracking-widest">Fechar</button>
+                    <button id="btnDelete" class="flex-1 py-5 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-3xl hover:bg-rose-500 hover:text-white transition-all font-bold">Excluir Dossiê</button>
+                    <button onclick="document.getElementById('modal').classList.add('hidden')" class="px-10 py-5 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded-3xl">Fechar</button>
                 </div>
             </div>
         </div>
@@ -116,7 +107,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // AUTH MODULE
+        // AUTH HANDLERS
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
@@ -137,7 +128,7 @@
             }
         });
 
-        // UPLOAD & DEDUPLICATION MODULE
+        // ESTRATÉGIA v08.9: EXTRAÇÃO E DEDUPLICAÇÃO
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -145,26 +136,43 @@
             const lowText = text.toLowerCase();
             const tags = [];
             
-            const rawName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0].toUpperCase();
+            // 1. Nome Normalizado (Apenas primeira letra Maiúscula)
+            let rawName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0].toLowerCase();
+            const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+            // 2. Extração de Idade
             const idadeMatch = lowText.match(/(\d{2}) anos/);
             const idadeStr = idadeMatch ? `, ${idadeMatch[1]}` : '';
-            const finalTitle = rawName + idadeStr;
+            const finalTitle = cleanName + idadeStr;
 
-            if (lowText.includes("filho")) tags.push("👶 Pais");
-            const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
-            if(bairro) tags.push("📍 " + bairro[1]);
+            // 3. Extração Inteligente de Itens Chave
+            // Filhos
+            const filhoCount = (lowText.match(/meu filho|minha filha|meus filhos/g) || []).length;
+            if (lowText.includes("filho") || lowText.includes("filha")) {
+                tags.push(filhoCount > 1 ? `👶 ${filhoCount} FILHOS` : "👶 1 FILHO");
+            }
+
+            // Bairro
+            const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro na ([\wáéíóúâêîôûãõç]+)/);
+            if(bairro) tags.push("🏠 " + bairro[1].toUpperCase());
+
+            // Profissão (Elimina o termo "ELA")
             const prof = lowText.match(/sou ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
-            if(prof && !['eu','você'].includes(prof[1])) tags.push("💼 " + prof[1]);
+            if(prof && !['eu','você','oi'].includes(prof[1])) tags.push("💼 " + prof[1].toUpperCase());
+
+            // Pets
+            if(lowText.includes("cachorro") || lowText.includes("gato") || lowText.includes("pet")) tags.push("🐕 PETS");
 
             const profileData = {
                 nome: finalTitle,
                 tags: tags,
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                bio: `Dossiê estratégico de ${rawName}. Analisado a partir de ${text.split('\n').length} mensagens.`
+                bio: `Dossiê estratégico de ${cleanName}. Histórico com ${text.split('\n').length} mensagens processadas.`
             };
 
-            const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", "==", finalTitle));
+            // 4. Unificação (Deduplicação por Nome base)
+            const q = query(collection(db, "profiles"), where("uid", "==", auth.currentUser.uid), where("nome", ">=", cleanName), where("nome", "<=", cleanName + '\uf8ff'));
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
@@ -175,7 +183,7 @@
             }
         };
 
-        // RENDER MODULE
+        // RENDERIZAÇÃO DO MURAL
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid));
             onSnapshot(q, (snap) => {
@@ -195,7 +203,7 @@
                             <div class="w-3 h-3 rounded-full ${d.fase === 'fire' ? 'bg-rose-500 shadow-[0_0_10px_#fd267d]' : d.fase === 'check' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-slate-500'}"></div>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            ${d.tags.map(t => `<span class="bg-white/5 text-[9px] font-black px-3 py-1.5 rounded-xl text-slate-400 border border-white/5 uppercase tracking-wider">${t}</span>`).join('')}
+                            ${d.tags.map(t => `<span class="bg-white/5 text-[9px] font-black px-3 py-1.5 rounded-xl text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
                         </div>
                     `;
                     board.appendChild(card);
@@ -203,14 +211,12 @@
             });
         }
 
-        // UX MODAL ACTIONS
+        // UX ACTIONS
         window.openModal = (data, id) => {
             window.currentProfileId = id;
             document.getElementById('mName').innerText = data.nome;
             document.getElementById('mBio').innerText = data.bio;
             document.getElementById('mTags').innerHTML = data.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-5 py-2 rounded-2xl border border-slate-200 uppercase">${t}</span>`).join('');
-            
-            // Highlight active phase button
             updateStatusButtons(data.fase || 'ice');
             document.getElementById('modal').classList.remove('hidden');
         };
@@ -222,15 +228,13 @@
 
         function updateStatusButtons(activePhase) {
             ['ice', 'fire', 'check'].forEach(p => {
-                const btn = document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1));
-                btn.classList.toggle('active', p === activePhase);
+                document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === activePhase);
             });
         }
 
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
-        document.getElementById('btnCloseDetail').onclick = () => document.getElementById('modal').classList.add('hidden');
         document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir dossiê permanentemente?")) {
+            if(confirm("Excluir dossiê?")) {
                 await deleteDoc(doc(db, "profiles", window.currentProfileId));
                 document.getElementById('modal').classList.add('hidden');
             }

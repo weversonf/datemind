@@ -3,94 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.7</title>
+    <title>DateMind v08.7.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        
-        /* Estilos do Pipeline */
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; }
-        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
-        
-        /* Cores das Fases */
-        .phase-ice { border-left: 8px solid #94a3b8; }    /* Gelo */
-        .phase-fire { border-left: 8px solid #fd267d; }   /* Fogo */
-        .phase-check { border-left: 8px solid #22c55e; }  /* Marcado */
-        .phase-archive { border-left: 8px solid #475569; opacity: 0.6; } /* Arquivo */
-
-        .modal-bg { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; cursor: pointer; transition: 0.3s; position: relative; }
+        .phase-ice { border-left: 6px solid #94a3b8; }
+        .phase-fire { border-left: 6px solid #fd267d; }
+        .phase-check { border-left: 6px solid #22c55e; }
         .hidden { display: none !important; }
+        #loadingOverlay { position: fixed; inset: 0; z-index: 100; background: #0f172a; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
 
-    <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center">
-        <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
-        <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-4 opacity-50 text-white">Sincronizando Dossiês...</p>
+    <div id="loadingOverlay"><p class="animate-pulse font-black uppercase tracking-widest text-[#fd267d]">Sincronizando...</p></div>
+
+    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
+        <div class="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl text-center">
+            <h2 class="text-3xl font-black italic mb-6 text-[#fd267d]">DateMind</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-2xl mb-4 outline-none">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 outline-none">
+            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase">Entrar / Cadastrar</button>
+        </div>
     </div>
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
-        <header class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md">
-            <h1 class="text-xl font-black italic uppercase italic">DateMind <span class="text-[#fd267d]">v08.7</span></h1>
+        <header class="p-6 border-b border-white/10 flex justify-between items-center bg-[#0f172a]/95 backdrop-blur-md sticky top-0 z-50">
+            <h1 class="text-xl font-black italic">DateMind <span class="text-[#fd267d]">v08.7</span></h1>
             <div class="flex items-center gap-4">
-                <button id="btnLogout" class="text-[10px] font-bold text-slate-500 hover:text-white uppercase mr-4">Sair</button>
-                <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2 transition-all hover:scale-105">
-                    <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Novo Dossiê
+                <button id="btnLogout" class="text-[10px] font-bold text-slate-500 uppercase">Sair</button>
+                <label class="tinder-gradient px-6 py-2 rounded-full font-bold text-[10px] uppercase cursor-pointer">
+                    <input type="file" id="chatUpload" class="hidden" accept=".txt"> Novo Dossiê
                 </label>
             </div>
         </header>
-        
-        <div class="flex gap-4 p-6 overflow-x-auto text-[8px] font-black uppercase tracking-widest opacity-60">
-            <span class="flex items-center gap-1"><i class="fa-solid fa-circle text-slate-400"></i> Gelo</span>
-            <span class="flex items-center gap-1"><i class="fa-solid fa-circle text-[#fd267d]"></i> Fogo</span>
-            <span class="flex items-center gap-1"><i class="fa-solid fa-circle text-green-500"></i> Marcado</span>
-            <span class="flex items-center gap-1"><i class="fa-solid fa-circle text-slate-600"></i> Arquivo</span>
-        </div>
-
-        <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8"></main>
+        <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-8"></main>
     </div>
 
-    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-12 rounded-[3.5rem] w-full max-w-md shadow-2xl text-center">
-            <i class="fa-solid fa-fire text-[#fd267d] text-5xl mb-6"></i>
-            <h2 class="text-3xl font-black italic tracking-tighter uppercase mb-8">DateMind</h2>
-            <input type="email" id="email" placeholder="Seu e-mail" class="w-full p-4 bg-slate-50 border rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-[#fd267d]">
-            <input type="password" id="pass" placeholder="Sua senha" class="w-full p-4 bg-slate-50 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-[#fd267d]">
-            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar / Cadastrar</button>
-        </div>
-    </div>
-
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
-        <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl relative animate-in zoom-in duration-300">
-            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-300 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
-            
-            <div class="h-44 tinder-gradient p-10 flex flex-col justify-end">
-                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none">Nome</h2>
-                <div class="mt-4 flex gap-2">
-                    <select id="mPhaseSelector" class="bg-white/20 text-white text-[9px] font-black uppercase px-4 py-1 rounded-full border border-white/30 outline-none backdrop-blur-md cursor-pointer">
-                        <option value="ice" class="text-slate-900">❄️ Gelo</option>
-                        <option value="fire" class="text-slate-900">🔥 Fogo</option>
-                        <option value="check" class="text-slate-900">📍 Marcado</option>
-                        <option value="archive" class="text-slate-900">📂 Arquivo</option>
-                    </select>
-                </div>
+    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg">
+        <div class="bg-white text-slate-900 w-full max-w-xl rounded-[2.5rem] overflow-hidden relative shadow-2xl">
+            <button id="btnCloseModal" class="absolute top-6 right-6 text-slate-300 text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            <div class="h-32 tinder-gradient p-8 flex flex-col justify-end">
+                <h2 id="mName" class="text-4xl font-black text-white">---</h2>
+                <select id="mPhaseSelector" class="mt-2 bg-white/20 text-white text-[9px] font-black uppercase p-1 rounded-lg border-none outline-none">
+                    <option value="ice">❄️ Gelo</option>
+                    <option value="fire">🔥 Fogo</option>
+                    <option value="check">📍 Marcado</option>
+                </select>
             </div>
-
-            <div class="p-10 space-y-6 overflow-y-auto" style="max-height: 500px;">
+            <div class="p-8 space-y-4">
                 <div id="mTags" class="flex flex-wrap gap-2"></div>
-                
-                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 italic text-slate-600 text-sm leading-relaxed">
-                    <p id="mBio"></p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="btnDelete" class="py-4 bg-rose-50 text-rose-500 text-[9px] font-black uppercase rounded-2xl hover:bg-rose-500 hover:text-white transition-all">Excluir Dossiê</button>
-                    <button id="btnCloseDetail" class="py-4 bg-slate-100 text-slate-400 text-[9px] font-black uppercase rounded-2xl">Fechar</button>
-                </div>
+                <p id="mBio" class="bg-slate-50 p-4 rounded-2xl italic text-slate-600 text-xs border border-slate-100"></p>
+                <button id="btnDelete" class="w-full py-3 bg-rose-50 text-rose-500 text-[9px] font-black uppercase rounded-xl">Excluir</button>
             </div>
         </div>
     </div>
@@ -113,12 +81,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // LOGIN / CADASTRO
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); } 
-            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert("Verifique os dados.")); }
+            try { await signInWithEmailAndPassword(auth, email, pass); }
+            catch { await createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message)); }
         };
 
         document.getElementById('btnLogout').onclick = () => signOut(auth);
@@ -135,7 +102,6 @@
             }
         });
 
-        // MOTOR DE ANÁLISE v08.7 (LOCAL + PADRÕES)
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -143,34 +109,23 @@
             const lowText = text.toLowerCase();
             const tags = [];
             
-            // Limpa o Nome
-            const cleanName = file.name.replace('.txt', '').replace('Conversa do WhatsApp com ', '').split(' ')[0];
-
-            // Busca Filhos
-            if (lowText.includes("filho") || lowText.includes("filha")) tags.push("👶 Pais");
-            
-            // Busca Idade
-            const idade = lowText.match(/(\d{2}) anos/);
-            if(idade) tags.push("🎂 " + idade[1] + " Anos");
-
-            // Busca Bairro/Local
-            const local = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro na ([\wáéíóúâêîôûãõç]+)/);
-            if(local) tags.push("📍 " + local[1]);
-
-            // Busca Profissão
+            const cleanName = file.name.replace('.txt','').replace('Conversa do WhatsApp com ','').split(' ')[0];
+            if (lowText.includes("filho")) tags.push("👶 Pais");
+            const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
+            if(bairro) tags.push("📍 " + bairro[1]);
             const prof = lowText.match(/sou ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/trabalho com ([\wáéíóúâêîôûãõç]+)/);
-            if(prof && !['eu','você','oi'].includes(prof[1])) tags.push("💼 " + prof[1]);
+            if(prof) tags.push("💼 " + prof[1]);
 
-            const profile = {
+            const data = {
                 nome: cleanName,
                 tags: tags,
                 fase: "ice",
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                bio: `Dossiê de ${cleanName}. Analisado localmente (${text.split('\n').length} msg).`
+                bio: `Dossiê de ${cleanName}. Analisado localmente.`
             };
 
-            await addDoc(collection(db, "profiles"), profile);
+            await addDoc(collection(db, "profiles"), data);
         };
 
         function syncBoard(uid) {
@@ -182,42 +137,28 @@
                     const d = docSnap.data();
                     const id = docSnap.id;
                     const card = document.createElement('div');
-                    card.className = `glass-card p-8 animate-in fade-in duration-500 phase-${d.fase}`;
-                    card.onclick = () => openModal(d, id);
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-6">
-                            <h3 class="text-2xl font-black tracking-tighter">${d.nome}</h3>
-                            <i class="fa-solid fa-circle text-[6px] ${d.fase === 'fire' ? 'text-[#fd267d]' : d.fase === 'check' ? 'text-green-500' : 'text-slate-500'}"></i>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-300 uppercase border border-white/5">${t}</span>`).join('')}
-                        </div>
-                    `;
+                    card.className = `glass-card p-8 animate-in fade-in duration-500 phase-${d.fase || 'ice'}`;
+                    card.onclick = () => {
+                        window.currentProfileId = id;
+                        document.getElementById('mName').innerText = d.nome;
+                        document.getElementById('mBio').innerText = d.bio;
+                        document.getElementById('mPhaseSelector').value = d.fase || 'ice';
+                        document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-100 uppercase">${t}</span>`).join('');
+                        document.getElementById('modal').classList.remove('hidden');
+                    };
+                    card.innerHTML = `<h3 class="text-2xl font-black">${d.nome}</h3><div class="mt-4 flex flex-wrap gap-2">${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase">${t}</span>`).join('')}</div>`;
                     board.appendChild(card);
                 });
             });
         }
 
-        // MODAL E ALTERAÇÃO DE FASE
-        function openModal(d, id) {
-            window.currentProfileId = id;
-            document.getElementById('mName').innerText = d.nome;
-            document.getElementById('mBio').innerText = d.bio;
-            document.getElementById('mPhaseSelector').value = d.fase;
-            document.getElementById('mTags').innerHTML = d.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[9px] font-black px-4 py-2 rounded-xl border border-slate-200 uppercase">${t}</span>`).join('');
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
         document.getElementById('mPhaseSelector').onchange = async (e) => {
-            const newPhase = e.target.value;
-            await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: newPhase });
+            await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: e.target.value });
         };
 
         document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
-        document.getElementById('btnCloseDetail').onclick = () => document.getElementById('modal').classList.add('hidden');
-
         document.getElementById('btnDelete').onclick = async () => {
-            if(confirm("Excluir dossiê permanentemente?")) {
+            if(confirm("Excluir?")) {
                 await deleteDoc(doc(db, "profiles", window.currentProfileId));
                 document.getElementById('modal').classList.add('hidden');
             }

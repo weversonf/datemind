@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind | v04.8</title>
+    <title>DateMind | v04.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .tinder-gradient { background: linear-gradient(262deg, #ff7854 0%, #fd267d 100%); }
-        .card-shadow { box-shadow: 0 20px 50px rgba(253, 38, 125, 0.15); }
+        .card-shadow { box-shadow: 0 20px 50px rgba(253, 38, 125, 0.2); }
         .loader { border-top-color: #fd267d; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -20,35 +20,43 @@
     <aside class="w-80 bg-white border-r flex flex-col shadow-2xl z-10">
         <div class="p-8 border-b">
             <h1 class="text-2xl font-black text-[#fd267d] tracking-tighter italic">DATEMIND</h1>
-            <p class="text-[9px] text-gray-400 font-bold tracking-widest uppercase">Versão Final v04.8</p>
+            <p class="text-[9px] text-gray-400 font-bold tracking-widest uppercase italic">Security Update v04.9</p>
         </div>
+        
+        <div class="p-4 bg-gray-50 mx-4 mt-4 rounded-xl border border-dashed border-gray-300">
+            <p class="text-[9px] font-black text-gray-400 uppercase mb-2">Chave de Segurança API</p>
+            <input type="password" id="apiKeyInput" placeholder="Cole sua chave aqui..." class="w-full p-2 text-xs rounded border border-gray-200 focus:outline-none focus:border-[#fd267d]">
+            <p class="text-[8px] text-gray-400 mt-1 italic">Sua chave não será salva no GitHub.</p>
+        </div>
+
         <div class="flex-1 overflow-y-auto p-4" id="sideList">
-            <div id="emptyMsg" class="text-center py-10 text-gray-300 text-xs font-bold uppercase tracking-widest">Aguardando .txt</div>
+            <div id="emptyMsg" class="text-center py-10 text-gray-300 text-[10px] font-bold uppercase tracking-widest italic text-center">Nenhum Dossiê Carregado</div>
         </div>
+
         <div class="p-6 bg-gray-50 border-t">
             <label class="tinder-gradient text-white w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center cursor-pointer shadow-lg hover:scale-105 transition-all">
                 <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                Importar WhatsApp
+                Importar .txt
             </label>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-12 relative bg-gray-50">
+    <main class="flex-1 flex flex-col items-center justify-center p-12 relative bg-[#f8f9fa]">
         
         <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/90 z-50 flex flex-col items-center justify-center backdrop-blur-md">
             <div class="loader w-14 h-14 border-4 border-gray-100 rounded-full mb-4"></div>
-            <p class="text-[#fd267d] font-black text-[10px] uppercase tracking-widest animate-pulse">IA Analisando Dossiê...</p>
+            <p class="text-[#fd267d] font-black text-[10px] uppercase tracking-widest animate-pulse">Sincronizando com a IA...</p>
         </div>
 
         <div id="profileCard" class="hidden w-full max-w-md bg-white rounded-[3rem] overflow-hidden flex flex-col card-shadow border border-white">
             <div class="h-80 tinder-gradient relative flex items-end p-8">
-                <div id="badgeContainer" class="absolute top-8 right-8 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
-                    <span id="interestBadge" class="text-white text-[10px] font-black uppercase">---</span>
+                <div id="badgeContainer" class="absolute top-8 right-8 px-4 py-1.5 rounded-full glass-badge bg-white/20 border border-white/30 backdrop-blur-md">
+                    <span id="interestBadge" class="text-white text-[10px] font-black uppercase tracking-widest">---</span>
                 </div>
                 <div class="z-10 text-white">
-                    <h2 id="cardName" class="text-4xl font-black tracking-tight leading-none mb-2">---</h2>
+                    <h2 id="cardName" class="text-4xl font-black tracking-tight leading-none mb-2">Nome</h2>
                     <p class="text-[10px] font-bold opacity-90 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-calendar"></i> Última: <span id="lastDate">--/--</span>
+                        <i class="fa-solid fa-clock"></i> Última Msg: <span id="lastDate">--/--</span>
                     </p>
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -56,69 +64,76 @@
 
             <div class="p-8 space-y-6 overflow-y-auto" style="max-height: 400px;">
                 <section>
-                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Vibe & Personalidade</h3>
+                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 border-l-2 border-[#fd267d] pl-2">Vibe & Personalidade</h3>
                     <p id="bioText" class="text-gray-600 text-sm leading-relaxed font-medium italic"></p>
                 </section>
                 <section>
-                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Dossiê de Fatos</h3>
+                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 border-l-2 border-[#fd267d] pl-2 uppercase">Dossiê Extraído</h3>
                     <div id="tagContainer" class="flex flex-wrap gap-2"></div>
                 </section>
-                <section class="bg-rose-50 p-6 rounded-[2rem] border border-rose-100">
+                <section class="bg-rose-50 p-6 rounded-[2.5rem] border border-rose-100">
                     <h3 class="text-[9px] font-black text-[#fd267d] uppercase mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Jogada Estratégica
+                        <i class="fa-solid fa-chess-knight"></i> Estratégia de Date
                     </h3>
-                    <p id="aiInsight" class="text-gray-800 text-sm font-bold italic leading-tight"></p>
+                    <p id="aiInsight" class="text-gray-800 text-sm font-bold italic"></p>
                 </section>
             </div>
         </div>
 
-        <div id="welcomeMsg" class="opacity-10"><i class="fa-solid fa-heart-pulse text-9xl"></i></div>
+        <div id="welcomeMsg" class="opacity-10"><i class="fa-solid fa-fire text-9xl"></i></div>
     </main>
 
     <script>
-        const API_KEY = "AIzaSyA5DZ2XJSw9eNq972bZm3aRXkYPpH7T1XU";
-
         document.getElementById('chatUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
-            if (!file) return;
+            const key = document.getElementById('apiKeyInput').value;
 
-            const reader = new FileReader();
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            if (!key) {
+                alert("Por favor, cole sua chave API no campo lateral antes de subir o arquivo.");
+                return;
+            }
 
-            reader.onload = async (event) => {
-                const content = event.target.result;
-                const fileName = file.name.replace('.txt', '').replace('Conversa do WhatsApp com ', '');
-                await callGeminiAI(fileName, content.slice(-15000)); 
-            };
-            reader.readAsText(file);
+            if (file) {
+                const reader = new FileReader();
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+
+                reader.onload = async (event) => {
+                    const content = event.target.result;
+                    const fileName = file.name.replace('.txt', '').replace('Conversa do WhatsApp com ', '');
+                    await callGeminiAI(fileName, content.slice(-15000), key); 
+                };
+                reader.readAsText(file);
+            }
         });
 
-        async function callGeminiAI(name, chatText) {
+        async function callGeminiAI(name, chatText, key) {
             const prompt = `Analise este chat com ${name}. Retorne APENAS um JSON plano, sem markdown e sem quebras de linha.
-            Formato: {"nome": "N", "ultimo_papo": "D", "ocupacao": "O", "personalidade": "P", "tags": ["T1", "T2"], "insight": "I", "interesse": "Quente"}
-            Chat: ${chatText}`;
+            Formato: {"nome": "N", "ultimo_papo": "D", "ocupacao": "O", "personalidade": "P", "tags": ["T1", "T2"], "insight": "I", "interesse": "Quente"}`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt + "\n\nChat: " + chatText }] }] })
                 });
 
                 const data = await response.json();
-                let rawText = data.candidates[0].content.parts[0].text;
                 
-                // LIMPEZA SUPREMA: Pega apenas o que está entre { e }
-                const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) throw new Error("JSON Inválido");
+                if (data.error) {
+                    throw new Error(data.error.message || "Chave de API Inválida.");
+                }
 
-                // Remove quebras de linha e caracteres de controle que quebram o parse
-                const cleanJson = jsonMatch[0].replace(/[\n\r\t]/g, " ");
-                updateUI(JSON.parse(cleanJson));
+                let rawText = data.candidates[0].content.parts[0].text;
+                const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                
+                if (!jsonMatch) throw new Error("A IA não conseguiu estruturar os dados. Tente um trecho menor.");
+                const profileData = JSON.parse(jsonMatch[0].replace(/[\n\r]/g, " "));
+
+                updateUI(profileData);
 
             } catch (err) {
-                console.error("ERRO NO PARSE:", err);
-                alert("Erro ao ler dados da IA. Tente novamente.");
+                console.error("FALHA:", err);
+                alert("ERRO: " + err.message);
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
             }
@@ -127,31 +142,29 @@
         function updateUI(data) {
             document.getElementById('welcomeMsg').classList.add('hidden');
             document.getElementById('profileCard').classList.remove('hidden');
-            
-            document.getElementById('cardName').innerText = data.nome || "---";
-            document.getElementById('lastDate').innerText = data.ultimo_papo || "---";
-            document.getElementById('bioText').innerText = data.personalidade || "";
-            document.getElementById('aiInsight').innerText = data.insight || "";
+            document.getElementById('cardName').innerText = data.nome;
+            document.getElementById('lastDate').innerText = data.ultimo_papo;
+            document.getElementById('bioText').innerText = data.personalidade;
+            document.getElementById('aiInsight').innerText = data.insight;
             
             const badge = document.getElementById('interestBadge');
             badge.innerText = data.interesse || "Morno";
             
-            if(data.interesse.toLowerCase() === 'quente') {
+            if(String(data.interesse).toLowerCase() === 'quente') {
                 document.getElementById('badgeContainer').className = "absolute top-8 right-8 px-4 py-1.5 rounded-full bg-red-500 shadow-lg animate-pulse";
             } else {
                 document.getElementById('badgeContainer').className = "absolute top-8 right-8 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30";
             }
 
             document.getElementById('tagContainer').innerHTML = (data.tags || []).map(t => 
-                `<span class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-gray-100">${t}</span>`
+                `<span class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-gray-100 tracking-tighter">${t}</span>`
             ).join('');
 
-            // Sidebar
             const sideList = document.getElementById('sideList');
             if(document.getElementById('emptyMsg')) document.getElementById('emptyMsg').remove();
             const div = document.createElement('div');
-            div.className = "p-4 mb-2 flex items-center bg-gray-50 rounded-2xl border border-gray-100";
-            div.innerHTML = `<div class="w-8 h-8 rounded-full tinder-gradient mr-3 flex items-center justify-center text-white font-black text-[10px] uppercase">${data.nome.charAt(0)}</div><div class="text-xs font-bold text-gray-700">${data.nome}</div>`;
+            div.className = "p-4 mb-2 flex items-center bg-gray-50 rounded-2xl border border-gray-100 animate-slide-in";
+            div.innerHTML = `<div class="w-8 h-8 rounded-full tinder-gradient mr-3 flex items-center justify-center text-white font-black text-[10px] uppercase shadow-md">${data.nome.charAt(0)}</div><div class="text-xs font-bold text-gray-700">${data.nome}</div>`;
             sideList.prepend(div);
         }
     </script>

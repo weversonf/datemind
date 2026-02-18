@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind | v04.4</title>
+    <title>DateMind | v04.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -12,7 +12,7 @@
         .tinder-gradient { background: linear-gradient(262deg, #ff7854 0%, #fd267d 100%); }
         .sidebar-item:hover { background-color: #f3f4f6; }
         .glass-badge { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .card-appear { animation: slideUp 0.6s ease-out; }
+        .card-appear { animation: slideUp 0.5s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .loader { border-top-color: #fd267d; animation: spinner 1s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -22,66 +22,64 @@
 
     <aside class="w-80 bg-white border-r flex flex-col z-20 shadow-xl">
         <div class="p-8 border-b">
-            <h1 class="text-2xl font-black text-[#fd267d] tracking-tighter italic">DATEMIND</h1>
-            <span class="text-[9px] text-gray-400 font-bold tracking-widest uppercase text-center block tracking-widest">Timeline Edition v04.4</span>
+            <h1 class="text-2xl font-black text-[#fd267d] tracking-tighter italic uppercase">DateMind</h1>
+            <span class="text-[9px] text-gray-400 font-bold tracking-widest uppercase text-center block">Stability Patch v04.5</span>
         </div>
         <div class="overflow-y-auto flex-1 px-2 py-4" id="sideList">
             <div id="emptyMsg" class="p-10 text-center text-gray-300">
-                <p class="text-xs font-bold uppercase tracking-widest">Sem Histórico</p>
+                <p class="text-[10px] font-black uppercase tracking-widest">Aguardando Importação</p>
             </div>
         </div>
         <div class="p-6 bg-gray-50 border-t">
-            <label class="tinder-gradient text-white w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center cursor-pointer shadow-lg hover:brightness-110 transition-all">
+            <label class="tinder-gradient text-white w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center cursor-pointer shadow-lg hover:scale-[1.02] transition-all active:scale-95">
                 <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                Subir Arquivo .txt
+                Subir Novo .txt
             </label>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-12 relative bg-[#f8f9fa]">
-        
+    <main class="flex-1 flex flex-col items-center justify-center p-12 relative">
         <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
             <div class="loader w-14 h-14 border-4 border-gray-100 rounded-full mb-4"></div>
-            <p class="text-[#fd267d] font-black text-xs uppercase tracking-widest">Sincronizando Cronologia...</p>
+            <p class="text-[#fd267d] font-black text-[10px] uppercase tracking-widest">Processando Inteligência...</p>
         </div>
 
         <div id="profileCard" class="hidden w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col card-appear border border-white">
-            <div class="h-80 tinder-gradient relative flex items-end p-8">
+            <div class="h-72 tinder-gradient relative flex items-end p-8">
                 <div id="badgeContainer" class="absolute top-8 right-8 px-4 py-1.5 rounded-full">
                     <span id="interestBadge" class="text-white text-[10px] font-black uppercase tracking-tighter"></span>
                 </div>
                 <div class="z-10 text-white">
-                    <h2 id="cardName" class="text-4xl font-black tracking-tight mb-1">Nome</h2>
-                    <p class="text-sm font-semibold opacity-90 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-check text-xs"></i> Último papo: <span id="lastDate">--/--</span>
+                    <h2 id="cardName" class="text-4xl font-black tracking-tight mb-1 leading-none">Nome</h2>
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-clock"></i> Última Interação: <span id="lastDate">--/--</span>
                     </p>
                 </div>
-                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             </div>
 
-            <div class="p-8 space-y-6 bg-white overflow-y-auto" style="max-height: 420px;">
+            <div class="p-8 space-y-6 bg-white overflow-y-auto" style="max-height: 450px;">
                 <section>
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Análise de Personalidade</h3>
+                    <h3 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 border-l-2 border-[#fd267d] pl-2">Análise de Perfil</h3>
                     <p id="bioText" class="text-gray-600 text-sm leading-relaxed font-medium"></p>
                 </section>
                 
                 <section>
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 text-center tracking-widest">Dossiê de Fatos</h3>
-                    <div id="tagContainer" class="flex flex-wrap gap-2 justify-center"></div>
+                    <h3 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-2 border-[#fd267d] pl-2 uppercase">Dossiê</h3>
+                    <div id="tagContainer" class="flex flex-wrap gap-2"></div>
                 </section>
 
-                <section class="bg-gray-50 p-6 rounded-[2.5rem] border border-gray-100 shadow-inner">
-                    <h3 class="text-[10px] font-black uppercase text-[#fd267d] mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Insight Temporal
+                <section class="bg-gray-50 p-6 rounded-[2.5rem] border border-gray-100">
+                    <h3 class="text-[9px] font-black uppercase text-[#fd267d] mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Próximo Passo sugerido
                     </h3>
-                    <p id="aiInsight" class="text-gray-800 text-sm font-bold italic"></p>
+                    <p id="aiInsight" class="text-gray-800 text-sm font-bold italic leading-snug"></p>
                 </section>
             </div>
         </div>
 
-        <div id="welcomeMsg" class="flex flex-col items-center opacity-20">
-            <i class="fa-solid fa-hourglass-half text-6xl mb-4"></i>
-            <p class="font-black uppercase tracking-widest text-xs">Aguardando Timeline</p>
+        <div id="welcomeMsg" class="flex flex-col items-center opacity-10">
+            <i class="fa-solid fa-heart-pulse text-8xl mb-4"></i>
         </div>
     </main>
 
@@ -96,26 +94,30 @@
             document.getElementById('loadingOverlay').classList.remove('hidden');
 
             reader.onload = async (event) => {
-                const content = event.target.result;
-                const fileName = file.name.split('com ')[1]?.replace('.txt', '') || file.name.replace('.txt', '');
+                let content = event.target.result;
                 
-                // Agora enviamos o conteúdo COM as datas para a IA processar a cronologia
-                // Limitamos a 15k caracteres para manter a velocidade
+                // LIMPEZA TÉCNICA: Remove ruídos do WhatsApp mas mantém DATA e MENSAGEM
+                content = content.replace(/<Mídia oculta>/g, "[Mídia]");
+                content = content.replace(/As mensagens e ligações são protegidas.*/g, "");
+                content = content.replace(/.*está na sua lista de contatos/g, "");
+
+                const fileName = file.name.split('com ')[1]?.replace('.txt', '') || file.name.replace('.txt', '');
                 await callGeminiAI(fileName, content.slice(-15000)); 
             };
             reader.readAsText(file);
         });
 
         async function callGeminiAI(name, chatText) {
-            const prompt = `Analise este chat com ${name}. As datas são fundamentais. 
-            Retorne APENAS um JSON:
+            const prompt = `Analise este chat com ${name}. Foque na cronologia das datas. 
+            Responda EXCLUSIVAMENTE com um objeto JSON válido. Não adicione texto antes ou depois.
+            Modelo:
             {
               "nome": "${name}",
-              "ultimo_papo": "data da última mensagem",
-              "ocupacao": "trabalho/área",
-              "personalidade": "resumo 2 frases",
-              "tags": ["fato1", "fato2", "gosto3"],
-              "insight": "dica baseada no tempo e conteúdo das últimas mensagens",
+              "ultimo_papo": "data formatada",
+              "ocupacao": "trabalho",
+              "personalidade": "resumo psicológico",
+              "tags": ["fato1", "fato2", "gosto"],
+              "insight": "estratégia de convite",
               "interesse": "Quente/Morno/Frio"
             }
             Chat:\n${chatText}`;
@@ -129,10 +131,16 @@
 
                 const data = await resp.json();
                 let rawText = data.candidates[0].content.parts[0].text;
-                const cleanJson = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+                
+                // EXTRATOR DE JSON BLINDADO
+                const jsonStart = rawText.indexOf('{');
+                const jsonEnd = rawText.lastIndexOf('}') + 1;
+                const cleanJson = rawText.substring(jsonStart, jsonEnd);
+                
                 updateUI(JSON.parse(cleanJson));
             } catch (e) {
-                alert("Erro ao processar timeline. Verifique se o arquivo está correto.");
+                console.error("Erro detalhado:", e);
+                alert("Erro ao processar dados. Tente um arquivo menor ou verifique sua conexão.");
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
             }
@@ -149,18 +157,21 @@
             const badge = document.getElementById('badgeContainer');
             const intBadge = document.getElementById('interestBadge');
             intBadge.innerText = data.interesse;
-            badge.className = data.interesse.toLowerCase() === 'quente' ? 
-                "absolute top-8 right-8 bg-red-500 shadow-lg px-4 py-1.5 rounded-full animate-pulse" : 
-                "absolute top-8 right-8 glass-badge px-4 py-1.5 rounded-full";
+            
+            if(data.interesse.toLowerCase() === 'quente') {
+                badge.className = "absolute top-8 right-8 bg-red-500 shadow-xl px-4 py-1.5 rounded-full animate-pulse";
+            } else {
+                badge.className = "absolute top-8 right-8 glass-badge px-4 py-1.5 rounded-full";
+            }
 
             document.getElementById('tagContainer').innerHTML = data.tags.map(t => 
-                `<span class="bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-gray-50">${t}</span>`
+                `<span class="bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-gray-100 tracking-tighter">${t}</span>`
             ).join('');
 
             if(document.getElementById('emptyMsg')) document.getElementById('emptyMsg').remove();
             const div = document.createElement('div');
             div.className = "sidebar-item p-4 mb-2 flex items-center cursor-pointer transition-all rounded-2xl mx-2 bg-white shadow-sm border border-gray-100";
-            div.innerHTML = `<div class="w-10 h-10 rounded-full tinder-gradient mr-3 flex items-center justify-center text-white font-black text-xs">${data.nome.charAt(0)}</div><div class="text-sm font-bold text-gray-700">${data.nome}</div>`;
+            div.innerHTML = `<div class="w-10 h-10 rounded-full tinder-gradient mr-3 flex items-center justify-center text-white font-black text-xs shadow-sm">${data.nome.charAt(0)}</div><div class="text-sm font-bold text-gray-700">${data.nome}</div>`;
             document.getElementById('sideList').prepend(div);
         }
     </script>

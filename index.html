@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v08.5.4 | Fix Final</title>
+    <title>DateMind v08.5.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,25 +11,23 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
         .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; transition: all 0.3s ease; cursor: pointer; }
-        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
-        #loadingOverlay { background: #0f172a; position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; box-shadow: 0 10px 30px -10px rgba(253, 38, 125, 0.3); }
+        .modal-bg { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); }
         .hidden { display: none !important; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <div id="loadingOverlay">
-        <div class="flex flex-col items-center">
-            <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
-            <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-4 opacity-50">Sincronizando...</p>
-        </div>
+    <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center">
+        <i class="fa-solid fa-fire text-[#fd267d] text-5xl animate-pulse"></i>
+        <p class="text-[10px] font-black uppercase tracking-[0.3em] mt-4 opacity-50 text-white">Sincronizando...</p>
     </div>
 
     <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-10 rounded-[3rem] w-full max-w-md shadow-2xl text-center">
-            <h2 class="text-3xl font-black italic mb-6 uppercase tracking-tighter text-[#fd267d]">DateMind</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-2xl mb-4 outline-none">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 outline-none">
+        <div class="bg-white p-12 rounded-[3.5rem] w-full max-w-md shadow-2xl text-center">
+            <h2 class="text-3xl font-black italic mb-8 uppercase tracking-tighter text-[#fd267d]">DateMind</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-50 border rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-[#fd267d]">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-50 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-[#fd267d]">
             <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar / Cadastrar</button>
         </div>
     </div>
@@ -41,17 +39,34 @@
                 <button id="btnLogout" class="text-[10px] font-bold text-slate-500 hover:text-white uppercase mr-4">Sair</button>
                 <label class="tinder-gradient px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest cursor-pointer shadow-xl flex items-center gap-2">
                     <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                    <i class="fa-solid fa-plus-circle"></i> Enviar Dossiê
+                    <i class="fa-solid fa-plus-circle"></i> Novo Dossiê
                 </label>
             </div>
         </header>
         <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8"></main>
     </div>
 
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+        <div class="bg-white text-slate-900 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl relative">
+            <button id="btnCloseModal" class="absolute top-8 right-8 text-slate-300 hover:text-rose-500 text-3xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            <div class="h-40 tinder-gradient p-10 flex flex-col justify-end">
+                <h2 id="mName" class="text-5xl font-black text-white tracking-tighter leading-none">Nome</h2>
+                <p id="mStatus" class="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Dossiê Estratégico</p>
+            </div>
+            <div class="p-10 space-y-6 overflow-y-auto" style="max-height: 450px;">
+                <div id="mTags" class="flex flex-wrap gap-2"></div>
+                <div class="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 italic text-slate-600 text-sm leading-relaxed">
+                    <span id="mBio"></span>
+                </div>
+                <button id="btnDelete" class="w-full py-3 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-xl hover:bg-rose-500 hover:text-white transition-all">Excluir Dossiê</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
@@ -66,7 +81,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // LOGIN/CADASTRO AUTO
+        // AUTH
         document.getElementById('btnPrimary').onclick = async () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
@@ -88,7 +103,7 @@
             }
         });
 
-        // UPLOAD E RENDER IMEDIATO
+        // UPLOAD E LIMPEZA DE NOME
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -97,7 +112,10 @@
             const lowText = text.toLowerCase();
             const tags = [];
             
-            // Itens Chave Local
+            // Limpa o nome do arquivo
+            let cleanName = file.name.replace('.txt', '').replace('Conversa do WhatsApp com ', '').trim();
+            cleanName = cleanName.split(' ')[0]; // Pega o primeiro nome
+
             if (lowText.includes("filho")) tags.push("👶 Pais");
             const bairro = lowText.match(/moro no ([\wáéíóúâêîôûãõç]+)/) || lowText.match(/moro em ([\wáéíóúâêîôûãõç]+)/);
             if(bairro) tags.push("📍 " + bairro[1]);
@@ -105,41 +123,62 @@
             if(prof) tags.push("💼 " + prof[1]);
 
             const data = {
-                nome: file.name.split(' ')[0],
+                nome: cleanName,
                 tags: tags,
                 uid: auth.currentUser.uid,
                 createdAt: Date.now(),
-                status: "🔥 PROCESSADO"
+                status: "🔥 PROCESSADO",
+                bio: `Dossiê estratégico de ${cleanName}. Histórico com ${text.split('\n').length} interações analisadas.`
             };
 
-            renderCard(data); // Mostra na hora
-            await addDoc(collection(db, "profiles"), data); // Salva em silêncio
+            await addDoc(collection(db, "profiles"), data);
         };
-
-        function renderCard(d) {
-            const board = document.getElementById('crmBoard');
-            const card = document.createElement('div');
-            card.className = "glass-card p-8 animate-in fade-in duration-500 mb-4";
-            card.innerHTML = `
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-black">${d.nome}</h3>
-                    <span class="text-[8px] font-black uppercase text-rose-500">${d.status}</span>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 uppercase border border-white/5 font-bold tracking-tighter">${t}</span>`).join('')}
-                </div>
-            `;
-            board.prepend(card);
-        }
 
         function syncBoard(uid) {
             const q = query(collection(db, "profiles"), where("uid", "==", uid), orderBy("createdAt", "desc"));
             onSnapshot(q, (snap) => {
                 const board = document.getElementById('crmBoard');
-                board.innerHTML = ''; // Limpa para evitar duplicados
-                snap.forEach(docSnap => renderCard(docSnap.data()));
+                board.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    const profileId = docSnap.id;
+                    const card = document.createElement('div');
+                    card.className = "glass-card p-8 animate-in fade-in duration-500 mb-4";
+                    
+                    // Conecta o clique ao modal
+                    card.onclick = () => openModal(d, profileId);
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-black">${d.nome}</h3>
+                            <span class="text-[8px] font-black uppercase text-rose-500">🔥 PROCESSADO</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${d.tags.map(t => `<span class="bg-slate-800 text-[8px] font-bold px-2 py-1 rounded-md text-slate-400 border border-white/5 uppercase">${t}</span>`).join('')}
+                        </div>
+                    `;
+                    board.prepend(card);
+                });
             });
         }
+
+        // FUNÇÃO PARA ABRIR MODAL COM DADOS REAIS
+        function openModal(data, id) {
+            window.currentDeleteId = id;
+            document.getElementById('mName').innerText = data.nome;
+            document.getElementById('mBio').innerText = data.bio;
+            document.getElementById('mTags').innerHTML = data.tags.map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-2 rounded-xl border border-slate-100 uppercase">${t}</span>`).join('');
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
+
+        document.getElementById('btnDelete').onclick = async () => {
+            if(confirm("Excluir dossiê permanentemente?")) {
+                await deleteDoc(doc(db, "profiles", window.currentDeleteId));
+                document.getElementById('modal').classList.add('hidden');
+            }
+        };
     </script>
 </body>
 </html>

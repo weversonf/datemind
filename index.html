@@ -3,100 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v12 | Strategic Funnel</title>
+    <title>DateMind v13 | Kanban Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
         .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2.5rem; transition: 0.3s ease; cursor: pointer; border-left: 8px solid #94a3b8; }
-        .glass-card:hover { transform: translateY(-5px); border-color: #fd267d; }
         
-        /* Cores das Fases */
-        .phase-ice { border-left-color: #94a3b8; }    /* Conversando */
-        .phase-fire { border-left-color: #f59e0b; }   /* Marcado */
-        .phase-flow { border-left-color: #fd267d; }   /* Fiquei */
-        .phase-elite { border-left-color: #8b5cf6; }  /* VIP/Final */
+        /* Estilo das Colunas Kanban */
+        .kanban-column { background: rgba(30, 41, 59, 0.3); border-radius: 1.5rem; min-height: 70vh; transition: 0.3s; border: 1px solid rgba(255,255,255,0.03); }
+        .kanban-list { min-height: 60vh; padding: 10px; }
+        
+        .glass-card { 
+            background: #1e293b; 
+            border-radius: 1.5rem; 
+            padding: 1.25rem; 
+            margin-bottom: 1rem; 
+            cursor: grab; 
+            border-left: 5px solid #94a3b8;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .glass-card:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
 
-        .status-btn { opacity: 0.2; transition: 0.3s; cursor: pointer; filter: grayscale(1); }
-        .status-btn.active { opacity: 1; transform: scale(1.2); filter: grayscale(0); }
-        
-        .filter-btn { padding: 8px 20px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-        .filter-btn.active { background: white; color: black; border-color: white; }
-        
-        .temp-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-        .temp-fill { height: 100%; transition: width 0.5s ease; }
+        /* Cores Temáticas */
+        .col-ice { border-top: 4px solid #94a3b8; }
+        .col-fire { border-top: 4px solid #f59e0b; }
+        .col-flow { border-top: 4px solid #fd267d; }
+        .col-elite { border-top: 4px solid #8b5cf6; }
+
+        .card-ice { border-left-color: #94a3b8; }
+        .card-fire { border-left-color: #f59e0b; }
+        .card-flow { border-left-color: #fd267d; }
+        .card-elite { border-left-color: #8b5cf6; }
+
+        .temp-bar { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px; }
+        .temp-fill { height: 100%; border-radius: 2px; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
-        <header class="p-8 sticky top-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5">
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V12</span></h1>
-                <div class="flex items-center gap-4">
-                    <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase">Sair</button>
-                    <label class="tinder-gradient px-6 py-3 rounded-2xl font-black text-[10px] uppercase cursor-pointer">
-                        <input type="file" id="chatUpload" class="hidden" accept=".txt"> Novo Contato
-                    </label>
-                </div>
+        <header class="p-6 flex justify-between items-center bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+            <div>
+                <h1 class="text-xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V13</span></h1>
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Tactical Kanban Board</p>
             </div>
-            
-            <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                <button onclick="filterBy('all')" class="filter-btn active" id="f-all">Todos</button>
-                <button onclick="filterBy('ice')" class="filter-btn" id="f-ice">❄️ Conversando</button>
-                <button onclick="filterBy('fire')" class="filter-btn" id="f-fire">🔥 Marcado</button>
-                <button onclick="filterBy('flow')" class="filter-btn" id="f-flow">✨ Flow</button>
-                <button onclick="filterBy('elite')" class="filter-btn" id="f-elite">🏆 Elite</button>
+            <div class="flex items-center gap-4">
+                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase">Sair</button>
+                <label class="tinder-gradient px-5 py-2.5 rounded-xl font-black text-[10px] uppercase cursor-pointer shadow-lg transition-transform active:scale-95">
+                    <input type="file" id="chatUpload" class="hidden" accept=".txt"> + Contato
+                </label>
             </div>
         </header>
 
-        <main id="crmBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-8"></main>
+        <main class="flex-1 p-6 overflow-x-auto">
+            <div class="flex gap-6 min-w-[1200px] h-full">
+                
+                <div class="flex-1 kanban-column col-ice">
+                    <div class="p-4 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">❄️ Ice <span class="text-[10px] opacity-50 ml-1">(Conversando)</span></h2>
+                        <span id="count-ice" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold">0</span>
+                    </div>
+                    <div id="list-ice" data-phase="ice" class="kanban-list"></div>
+                </div>
+
+                <div class="flex-1 kanban-column col-fire">
+                    <div class="p-4 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-amber-500">🔥 Fire <span class="text-[10px] opacity-50 ml-1">(Marcado)</span></h2>
+                        <span id="count-fire" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold text-amber-500">0</span>
+                    </div>
+                    <div id="list-fire" data-phase="fire" class="kanban-list"></div>
+                </div>
+
+                <div class="flex-1 kanban-column col-flow">
+                    <div class="p-4 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-rose-500">✨ Flow <span class="text-[10px] opacity-50 ml-1">(Fiquei)</span></h2>
+                        <span id="count-flow" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold text-rose-500">0</span>
+                    </div>
+                    <div id="list-flow" data-phase="flow" class="kanban-list"></div>
+                </div>
+
+                <div class="flex-1 kanban-column col-elite">
+                    <div class="p-4 flex justify-between items-center border-b border-white/5">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-purple-500">🏆 Elite <span class="text-[10px] opacity-50 ml-1">(Sucesso)</span></h2>
+                        <span id="count-elite" class="bg-slate-800 px-2 py-1 rounded text-[10px] font-bold text-purple-500">0</span>
+                    </div>
+                    <div id="list-elite" data-phase="elite" class="kanban-list"></div>
+                </div>
+
+            </div>
+        </main>
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
-        <div class="bg-white text-slate-900 w-full max-w-xl rounded-[3rem] overflow-hidden relative shadow-2xl">
-            <div class="h-40 tinder-gradient p-10 flex flex-col justify-end">
-                <input type="text" id="mName" class="bg-transparent text-4xl font-black text-white outline-none border-b border-white/20 mb-4 uppercase italic">
-                <div class="flex gap-6">
-                    <button onclick="updatePhase('ice')" id="btnIce" class="status-btn" title="Conversando">❄️</button>
-                    <button onclick="updatePhase('fire')" id="btnFire" class="status-btn" title="Marcado">🔥</button>
-                    <button onclick="updatePhase('flow')" id="btnFlow" class="status-btn" title="Fiquei">✨</button>
-                    <button onclick="updatePhase('elite')" id="btnElite" class="status-btn" title="VIP">🏆</button>
+    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="bg-white text-slate-900 w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <div class="p-8 space-y-5">
+                <input type="text" id="mName" class="w-full text-3xl font-black uppercase outline-none text-slate-800 border-b-2 border-slate-100 pb-2">
+                <div class="grid grid-cols-2 gap-4 text-xs font-bold uppercase text-slate-400">
+                    <div class="space-y-1"><label>Profissão</label><input type="text" id="mProf" class="w-full p-3 bg-slate-100 rounded-xl outline-none text-slate-700"></div>
+                    <div class="space-y-1"><label>Bairro</label><input type="text" id="mBairro" class="w-full p-3 bg-slate-100 rounded-xl outline-none text-slate-700"></div>
                 </div>
-            </div>
-
-            <div class="p-8 space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="mProf" placeholder="Profissão" class="p-4 bg-slate-50 rounded-2xl text-xs outline-none">
-                    <input type="text" id="mBairro" placeholder="Bairro" class="p-4 bg-slate-50 rounded-2xl text-xs outline-none">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold uppercase text-slate-400">Notas</label>
+                    <textarea id="mNotes" class="w-full p-4 bg-slate-100 rounded-2xl text-sm outline-none" rows="3"></textarea>
                 </div>
-                
-                <div class="space-y-2">
-                    <div class="flex justify-between text-[10px] font-black uppercase text-slate-400 px-2">
-                        <span>Nível de Interesse</span>
-                        <span id="tempVal">50%</span>
-                    </div>
-                    <input type="range" id="mTempSlider" min="0" max="100" class="w-full h-1 bg-slate-100 rounded-lg appearance-none accent-[#fd267d]">
-                </div>
-
-                <textarea id="mNotes" class="w-full p-6 bg-slate-50 rounded-3xl text-sm outline-none italic" rows="3" placeholder="Notas estratégicas..."></textarea>
-
-                <div class="flex gap-3">
-                    <button id="btnDelete" class="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-100 transition-all"><i class="fa-solid fa-trash"></i></button>
-                    <button id="btnSaveData" class="flex-1 py-4 tinder-gradient text-white text-[10px] font-black uppercase rounded-2xl shadow-xl">Salvar Alterações</button>
+                <div class="flex gap-3 pt-4">
+                    <button id="btnDelete" class="bg-rose-100 text-rose-500 p-4 rounded-xl hover:bg-rose-200 transition-all"><i class="fa-solid fa-trash"></i></button>
+                    <button id="btnSaveData" class="flex-1 tinder-gradient text-white font-black uppercase py-4 rounded-xl text-xs shadow-lg">Salvar Dados</button>
+                    <button onclick="document.getElementById('modal').classList.add('hidden')" class="p-4 text-slate-400 text-xs font-bold uppercase">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="authSection" class="hidden h-screen flex items-center justify-center p-6 text-slate-900">
-        <div class="bg-white p-12 rounded-[3.5rem] w-full max-w-sm shadow-2xl text-center">
-            <h2 class="text-3xl font-black mb-8 text-[#fd267d] italic">DATEMIND</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-2xl mb-3 outline-none">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 outline-none">
-            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-2xl text-white font-black uppercase shadow-lg">Entrar</button>
+    <div id="authSection" class="hidden h-screen flex items-center justify-center bg-[#020617]">
+        <div class="bg-white p-10 rounded-[3rem] w-80 text-center shadow-2xl">
+            <h2 class="text-2xl font-black mb-8 text-[#fd267d] italic">DATEMIND</h2>
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-4 bg-slate-100 rounded-xl mb-3 outline-none text-slate-800">
+            <input type="password" id="pass" placeholder="Senha" class="w-full p-4 bg-slate-100 rounded-xl mb-6 outline-none text-slate-800">
+            <button id="btnPrimary" class="tinder-gradient w-full py-4 rounded-xl text-white font-black uppercase text-xs">Acessar Board</button>
         </div>
     </div>
 
@@ -110,74 +141,92 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentFilter = 'all';
-
-        // AUTH
+        // LOGIN / LOGOUT
         document.getElementById('btnPrimary').onclick = async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); }
-            catch { await createUserWithEmailAndPassword(auth, email, pass); }
+            const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
+            try { await signInWithEmailAndPassword(auth, e, p); } catch { await createUserWithEmailAndPassword(auth, e, p); }
         };
         document.getElementById('btnLogout').onclick = () => signOut(auth);
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) { document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); syncBoard(user.uid); }
+        onAuthStateChanged(auth, (u) => {
+            if (u) { document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); setupKanban(u.uid); syncBoard(u.uid); }
             else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
         });
 
-        // FILTRO
-        window.filterBy = (f) => {
-            currentFilter = f;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('f-'+f).classList.add('active');
-            syncBoard(auth.currentUser.uid);
-        };
-
-        // BOARD
-        function syncBoard(uid) {
-            let q = query(collection(db, "profiles"), where("uid", "==", uid));
-            onSnapshot(q, (snap) => {
-                const board = document.getElementById('crmBoard'); board.innerHTML = '';
-                let docs = []; snap.forEach(d => {
-                    const data = d.data();
-                    if (currentFilter === 'all' || data.fase === currentFilter) {
-                        docs.push({id: d.id, ...data});
+        // SETUP DRAG AND DROP
+        function setupKanban(uid) {
+            ['ice', 'fire', 'flow', 'elite'].forEach(phase => {
+                new Sortable(document.getElementById('list-' + phase), {
+                    group: 'kanban',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: async (evt) => {
+                        const cardId = evt.item.getAttribute('data-id');
+                        const newPhase = evt.to.getAttribute('data-phase');
+                        await updateDoc(doc(db, "profiles", cardId), { fase: newPhase });
                     }
-                });
-                docs.sort((a,b) => b.createdAt - a.createdAt);
-
-                docs.forEach(d => {
-                    const card = document.createElement('div');
-                    card.className = `glass-card p-6 phase-${d.fase || 'ice'}`;
-                    card.onclick = () => openModal(d);
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-black uppercase italic">${d.nome}</h3>
-                            <span class="text-[9px] font-black opacity-40">${(d.fase || 'ice').toUpperCase()}</span>
-                        </div>
-                        <div class="temp-bar mb-4"><div class="temp-fill tinder-gradient" style="width: ${d.interesse}%"></div></div>
-                        <div class="flex flex-wrap gap-2">
-                            ${d.profissao ? `<span class="text-[8px] font-bold text-slate-400 uppercase">💼 ${d.profissao}</span>` : ''}
-                            ${d.bairro ? `<span class="text-[8px] font-bold text-slate-400 uppercase">🏠 ${d.bairro}</span>` : ''}
-                        </div>
-                    `;
-                    board.appendChild(card);
                 });
             });
         }
 
-        function openModal(d) {
-            window.currentProfileId = d.id;
+        // SYNC DATA
+        function syncBoard(uid) {
+            const q = query(collection(db, "profiles"), where("uid", "==", uid));
+            onSnapshot(q, (snap) => {
+                const lists = { ice: [], fire: [], flow: [], elite: [] };
+                snap.forEach(d => {
+                    const data = d.data();
+                    const phase = data.fase || 'ice';
+                    if (lists[phase]) lists[phase].push({ id: d.id, ...data });
+                });
+
+                Object.keys(lists).forEach(phase => {
+                    const listEl = document.getElementById('list-' + phase);
+                    const countEl = document.getElementById('count-' + phase);
+                    listEl.innerHTML = '';
+                    countEl.innerText = lists[phase].length;
+
+                    lists[phase].sort((a,b) => b.createdAt - a.createdAt).forEach(d => {
+                        const card = document.createElement('div');
+                        card.className = `glass-card card-${phase}`;
+                        card.setAttribute('data-id', d.id);
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <span class="text-[11px] font-black uppercase text-white leading-tight">${d.nome}</span>
+                                <button onclick="editCard('${d.id}')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            </div>
+                            <div class="text-[8px] font-bold text-slate-500 uppercase mt-1">
+                                ${d.profissao || 'S/ Profissão'} • ${d.bairro || 'S/ Bairro'}
+                            </div>
+                            <div class="temp-bar"><div class="temp-fill tinder-gradient" style="width: ${d.interesse || 50}%"></div></div>
+                        `;
+                        listEl.appendChild(card);
+                    });
+                });
+            });
+        }
+
+        // EDIT / MODAL
+        window.editCard = async (id) => {
+            const q = await getDocs(query(collection(db, "profiles"))); // Simplificado para o exemplo
+            const d = q.docs.find(doc => doc.id === id).data();
+            window.currentProfileId = id;
             document.getElementById('mName').value = d.nome;
             document.getElementById('mProf').value = d.profissao || "";
             document.getElementById('mBairro').value = d.bairro || "";
             document.getElementById('mNotes').value = d.notas || "";
-            document.getElementById('mTempSlider').value = d.interesse || 50;
-            document.getElementById('tempVal').innerText = (d.interesse || 50) + '%';
-            updateStatusButtons(d.fase || 'ice');
             document.getElementById('modal').classList.remove('hidden');
-        }
+        };
+
+        document.getElementById('btnSaveData').onclick = async () => {
+            await updateDoc(doc(db, "profiles", window.currentProfileId), {
+                nome: document.getElementById('mName').value,
+                profissao: document.getElementById('mProf').value,
+                bairro: document.getElementById('mBairro').value,
+                notas: document.getElementById('mNotes').value
+            });
+            document.getElementById('modal').classList.add('hidden');
+        };
 
         document.getElementById('chatUpload').onchange = async (e) => {
             const file = e.target.files[0]; if (!file) return;
@@ -185,32 +234,7 @@
             await addDoc(collection(db, "profiles"), { nome: name, fase: "ice", interesse: 50, uid: auth.currentUser.uid, createdAt: Date.now() });
         };
 
-        document.getElementById('mTempSlider').oninput = (e) => { document.getElementById('tempVal').innerText = e.target.value + '%'; };
-        
-        document.getElementById('btnSaveData').onclick = async () => {
-            await updateDoc(doc(db, "profiles", window.currentProfileId), {
-                nome: document.getElementById('mName').value,
-                profissao: document.getElementById('mProf').value,
-                bairro: document.getElementById('mBairro').value,
-                notas: document.getElementById('mNotes').value,
-                interesse: parseInt(document.getElementById('mTempSlider').value)
-            });
-            document.getElementById('modal').classList.add('hidden');
-        };
-
-        window.updatePhase = async (p) => { 
-            await updateDoc(doc(db, "profiles", window.currentProfileId), { fase: p }); 
-            updateStatusButtons(p); 
-        };
-
-        function updateStatusButtons(active) {
-            ['Ice', 'Fire', 'Flow', 'Elite'].forEach(p => {
-                document.getElementById('btn' + p).classList.toggle('active', p.toLowerCase() === active);
-            });
-        }
-
-        document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').classList.add('hidden');
-        document.getElementById('btnDelete').onclick = async () => { if(confirm("Remover?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
+        document.getElementById('btnDelete').onclick = async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
     </script>
 </body>
 </html>

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind | v04.5</title>
+    <title>DateMind | v04.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
         .tinder-gradient { background: linear-gradient(262deg, #ff7854 0%, #fd267d 100%); }
         .sidebar-item:hover { background-color: #f3f4f6; }
@@ -23,17 +23,17 @@
     <aside class="w-80 bg-white border-r flex flex-col z-20 shadow-xl">
         <div class="p-8 border-b">
             <h1 class="text-2xl font-black text-[#fd267d] tracking-tighter italic uppercase">DateMind</h1>
-            <span class="text-[9px] text-gray-400 font-bold tracking-widest uppercase text-center block">Stability Patch v04.5</span>
+            <span class="text-[9px] text-gray-400 font-bold tracking-widest uppercase text-center block italic">v04.6 Stable</span>
         </div>
         <div class="overflow-y-auto flex-1 px-2 py-4" id="sideList">
             <div id="emptyMsg" class="p-10 text-center text-gray-300">
-                <p class="text-[10px] font-black uppercase tracking-widest">Aguardando Importação</p>
+                <p class="text-[10px] font-black uppercase tracking-widest">Nenhum Dossiê</p>
             </div>
         </div>
         <div class="p-6 bg-gray-50 border-t">
-            <label class="tinder-gradient text-white w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center cursor-pointer shadow-lg hover:scale-[1.02] transition-all active:scale-95">
+            <label class="tinder-gradient text-white w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center cursor-pointer shadow-lg hover:scale-[1.02] transition-all active:scale-95">
                 <input type="file" id="chatUpload" class="hidden" accept=".txt">
-                Subir Novo .txt
+                Subir Histórico .txt
             </label>
         </div>
     </aside>
@@ -41,7 +41,7 @@
     <main class="flex-1 flex flex-col items-center justify-center p-12 relative">
         <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
             <div class="loader w-14 h-14 border-4 border-gray-100 rounded-full mb-4"></div>
-            <p class="text-[#fd267d] font-black text-[10px] uppercase tracking-widest">Processando Inteligência...</p>
+            <p class="text-[#fd267d] font-black text-[10px] uppercase tracking-widest">A analisar cronologia...</p>
         </div>
 
         <div id="profileCard" class="hidden w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col card-appear border border-white">
@@ -52,7 +52,7 @@
                 <div class="z-10 text-white">
                     <h2 id="cardName" class="text-4xl font-black tracking-tight mb-1 leading-none">Nome</h2>
                     <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-clock"></i> Última Interação: <span id="lastDate">--/--</span>
+                        <i class="fa-solid fa-clock"></i> Último Contato: <span id="lastDate">--/--</span>
                     </p>
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -60,18 +60,18 @@
 
             <div class="p-8 space-y-6 bg-white overflow-y-auto" style="max-height: 450px;">
                 <section>
-                    <h3 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 border-l-2 border-[#fd267d] pl-2">Análise de Perfil</h3>
+                    <h3 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 border-l-2 border-[#fd267d] pl-2">Análise Psicológica</h3>
                     <p id="bioText" class="text-gray-600 text-sm leading-relaxed font-medium"></p>
                 </section>
                 
                 <section>
-                    <h3 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-2 border-[#fd267d] pl-2 uppercase">Dossiê</h3>
+                    <h3 class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-2 border-[#fd267d] pl-2 uppercase tracking-widest">Dossiê Extraído</h3>
                     <div id="tagContainer" class="flex flex-wrap gap-2"></div>
                 </section>
 
                 <section class="bg-gray-50 p-6 rounded-[2.5rem] border border-gray-100">
-                    <h3 class="text-[9px] font-black uppercase text-[#fd267d] mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Próximo Passo sugerido
+                    <h3 class="text-[9px] font-black uppercase text-[#fd267d] mb-2 flex items-center gap-2 tracking-widest">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Próximo Passo Sugerido
                     </h3>
                     <p id="aiInsight" class="text-gray-800 text-sm font-bold italic leading-snug"></p>
                 </section>
@@ -96,10 +96,10 @@
             reader.onload = async (event) => {
                 let content = event.target.result;
                 
-                // LIMPEZA TÉCNICA: Remove ruídos do WhatsApp mas mantém DATA e MENSAGEM
-                content = content.replace(/<Mídia oculta>/g, "[Mídia]");
+                // Limpeza agressiva de metadados para evitar erros de token
                 content = content.replace(/As mensagens e ligações são protegidas.*/g, "");
                 content = content.replace(/.*está na sua lista de contatos/g, "");
+                content = content.replace(/<Mídia oculta>/g, "[Mídia]");
 
                 const fileName = file.name.split('com ')[1]?.replace('.txt', '') || file.name.replace('.txt', '');
                 await callGeminiAI(fileName, content.slice(-15000)); 
@@ -108,18 +108,20 @@
         });
 
         async function callGeminiAI(name, chatText) {
-            const prompt = `Analise este chat com ${name}. Foque na cronologia das datas. 
-            Responda EXCLUSIVAMENTE com um objeto JSON válido. Não adicione texto antes ou depois.
-            Modelo:
+            const prompt = `Analise este histórico de chat com ${name}. 
+            Retorne APENAS o JSON no formato abaixo, sem nenhum texto adicional ou markdown.
+            Importante: Mantenha as datas para identificar o "ultimo_papo".
+            
             {
               "nome": "${name}",
-              "ultimo_papo": "data formatada",
+              "ultimo_papo": "data da ultima msg",
               "ocupacao": "trabalho",
-              "personalidade": "resumo psicológico",
-              "tags": ["fato1", "fato2", "gosto"],
-              "insight": "estratégia de convite",
+              "personalidade": "resumo breve",
+              "tags": ["tag1", "tag2", "tag3"],
+              "insight": "estratégia",
               "interesse": "Quente/Morno/Frio"
             }
+            
             Chat:\n${chatText}`;
 
             try {
@@ -130,17 +132,20 @@
                 });
 
                 const data = await resp.json();
+                if (!data.candidates || !data.candidates[0]) throw new Error("IA não retornou dados");
+
                 let rawText = data.candidates[0].content.parts[0].text;
                 
-                // EXTRATOR DE JSON BLINDADO
-                const jsonStart = rawText.indexOf('{');
-                const jsonEnd = rawText.lastIndexOf('}') + 1;
-                const cleanJson = rawText.substring(jsonStart, jsonEnd);
-                
-                updateUI(JSON.parse(cleanJson));
+                // BUSCA DE JSON VIA REGEX (BLINDAGEM CONTRA ERROS DE FORMATAÇÃO)
+                const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("JSON não encontrado na resposta");
+
+                const profileData = JSON.parse(jsonMatch[0]);
+                updateUI(profileData);
+
             } catch (e) {
-                console.error("Erro detalhado:", e);
-                alert("Erro ao processar dados. Tente um arquivo menor ou verifique sua conexão.");
+                console.error("Erro:", e);
+                alert("Erro ao processar o histórico. Tente carregar o arquivo novamente.");
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
             }
@@ -149,29 +154,32 @@
         function updateUI(data) {
             document.getElementById('welcomeMsg').classList.add('hidden');
             document.getElementById('profileCard').classList.remove('hidden');
-            document.getElementById('cardName').innerText = data.nome;
-            document.getElementById('lastDate').innerText = data.ultimo_papo;
-            document.getElementById('bioText').innerText = data.personalidade;
-            document.getElementById('aiInsight').innerText = data.insight;
+            document.getElementById('cardName').innerText = data.nome || "---";
+            document.getElementById('lastDate').innerText = data.ultimo_papo || "---";
+            document.getElementById('bioText').innerText = data.personalidade || "Sem dados";
+            document.getElementById('aiInsight').innerText = data.insight || "Sem sugestões";
 
             const badge = document.getElementById('badgeContainer');
             const intBadge = document.getElementById('interestBadge');
-            intBadge.innerText = data.interesse;
+            const interesse = (data.interesse || "Morno").toLowerCase();
             
-            if(data.interesse.toLowerCase() === 'quente') {
+            intBadge.innerText = data.interesse;
+            if(interesse === 'quente') {
                 badge.className = "absolute top-8 right-8 bg-red-500 shadow-xl px-4 py-1.5 rounded-full animate-pulse";
+            } else if(interesse === 'frio') {
+                badge.className = "absolute top-8 right-8 bg-blue-500 shadow-xl px-4 py-1.5 rounded-full";
             } else {
                 badge.className = "absolute top-8 right-8 glass-badge px-4 py-1.5 rounded-full";
             }
 
-            document.getElementById('tagContainer').innerHTML = data.tags.map(t => 
+            document.getElementById('tagContainer').innerHTML = (data.tags || []).map(t => 
                 `<span class="bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-gray-100 tracking-tighter">${t}</span>`
             ).join('');
 
             if(document.getElementById('emptyMsg')) document.getElementById('emptyMsg').remove();
             const div = document.createElement('div');
             div.className = "sidebar-item p-4 mb-2 flex items-center cursor-pointer transition-all rounded-2xl mx-2 bg-white shadow-sm border border-gray-100";
-            div.innerHTML = `<div class="w-10 h-10 rounded-full tinder-gradient mr-3 flex items-center justify-center text-white font-black text-xs shadow-sm">${data.nome.charAt(0)}</div><div class="text-sm font-bold text-gray-700">${data.nome}</div>`;
+            div.innerHTML = `<div class="w-10 h-10 rounded-full tinder-gradient mr-3 flex items-center justify-center text-white font-black text-xs shadow-sm">${(data.nome || "D").charAt(0)}</div><div class="text-sm font-bold text-gray-700">${data.nome}</div>`;
             document.getElementById('sideList').prepend(div);
         }
     </script>

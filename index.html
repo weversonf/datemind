@@ -1,241 +1,407 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateMind v14.1 | Tactical Funnel</title>
+    <title>Memória T | CRM Amoroso</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase SDKs (Versão Compat para facilitar uso em arquivo único) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
-        .tinder-gradient { background: linear-gradient(135deg, #ff7854 0%, #fd267d 100%); }
-        .kanban-column { background: rgba(15, 23, 42, 0.4); border-radius: 2rem; min-height: 80vh; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; }
-        .kanban-list { flex-grow: 1; padding: 12px; min-height: 200px; }
-        .glass-card { background: #111827; border-radius: 1.8rem; padding: 1.5rem; margin-bottom: 1rem; cursor: grab; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); position: relative; }
-        .glass-card:active { cursor: grabbing; }
-        .sortable-ghost { opacity: 0.1; transform: scale(0.9); }
-        .glow-ice { border-top: 3px solid #94a3b8; }
-        .glow-fire { border-top: 3px solid #f59e0b; }
-        .glow-flow { border-top: 3px solid #fd267d; }
-        .glow-elite { border-top: 3px solid #8b5cf6; }
-        .temp-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 12px; overflow: hidden; }
-        .temp-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
-        .frozen { opacity: 0.4; filter: grayscale(1); }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .pipeline-col { min-width: 300px; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .modal-overlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
+        .toast { transform: translateY(100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast.show { transform: translateY(0); }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-gray-50 text-gray-900">
 
-    <div id="mainApp" class="hidden flex flex-col min-h-screen">
-        <header class="p-6 flex justify-between items-center bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+    <!-- AVISO DE ERRO (Toast) -->
+    <div id="error-toast" class="toast fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
+        <i data-lucide="alert-circle"></i>
+        <span id="error-message">Erro ao conectar</span>
+        <button onclick="hideError()"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-gray-950 flex items-center justify-center p-6 text-white">
+        <div class="max-w-md w-full bg-gray-900 rounded-[3rem] p-10 border border-gray-800 text-center space-y-8 shadow-2xl">
+            <div class="w-24 h-24 bg-gradient-to-br from-pink-500 to-rose-600 rounded-[2rem] mx-auto flex items-center justify-center shadow-xl shadow-pink-500/20">
+                <i data-lucide="lock" class="text-white w-12 h-12"></i>
+            </div>
             <div>
-                <h1 class="text-2xl font-black italic uppercase tracking-tighter">DateMind <span class="text-[#fd267d]">V14.1</span></h1>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Data-Driven Strategy</p>
+                <h1 class="text-4xl font-black tracking-tight">Memória T</h1>
+                <p class="text-gray-500 mt-2 text-sm font-medium uppercase tracking-[0.2em]">Personal CRM Advisor</p>
             </div>
-            <div class="flex items-center gap-6">
-                <button id="btnLogout" class="text-[10px] font-black text-slate-500 uppercase">Sair</button>
-                <label class="tinder-gradient px-8 py-3 rounded-2xl font-black text-[11px] uppercase cursor-pointer shadow-xl">
-                    <input type="file" id="chatUpload" class="hidden" accept=".txt"> + NOVO DOSSIÊ
-                </label>
+            
+            <button id="btn-login" onclick="login()" class="w-full bg-white text-black py-5 rounded-3xl font-black hover:bg-gray-200 transition-all flex justify-center items-center gap-3 text-lg">
+                Entrar no Dashboard
+            </button>
+            <p class="text-[10px] text-gray-600 uppercase font-bold tracking-widest">Acesso seguro via Firebase Auth</p>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="app-content" class="hidden min-h-screen flex flex-col">
+        <header class="bg-white/80 backdrop-blur-md border-b px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-pink-100">
+                    <i data-lucide="heart" class="text-white fill-white w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-gray-800 leading-none">Memória T</h1>
+                    <p class="text-[9px] text-gray-400 uppercase font-black tracking-widest mt-1">Sincronizado</p>
+                </div>
             </div>
+            <button onclick="openModal('import-modal')" class="bg-black text-white px-6 py-3 rounded-2xl text-sm font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-all active:scale-95">
+                <i data-lucide="plus" class="w-4 h-4"></i> Novo Registro
+            </button>
         </header>
 
-        <main class="flex-1 p-8 overflow-x-auto">
-            <div class="flex gap-8 min-w-[1300px] h-full">
-                <div class="flex-1 kanban-column glow-ice">
-                    <div class="p-5 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">❄️ Ice</h2>
-                        <span id="count-ice" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
-                    </div>
-                    <div id="list-ice" data-phase="ice" class="kanban-list"></div>
-                </div>
+        <div class="flex border-b bg-white sticky top-[77px] z-30">
+            <button onclick="switchTab('pipeline')" id="tab-pipeline" class="px-8 py-4 text-xs font-black uppercase tracking-[0.2em] border-b-4 border-pink-500 text-pink-500 transition-all">Pipeline</button>
+            <button onclick="switchTab('lista')" id="tab-lista" class="px-8 py-4 text-xs font-black uppercase tracking-[0.2em] border-b-4 border-transparent text-gray-400 transition-all">Lista Completa</button>
+        </div>
 
-                <div class="flex-1 kanban-column glow-fire">
-                    <div class="p-5 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-amber-500">🔥 Fire</h2>
-                        <span id="count-fire" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
-                    </div>
-                    <div id="list-fire" data-phase="fire" class="kanban-list"></div>
-                </div>
-
-                <div class="flex-1 kanban-column glow-flow">
-                    <div class="p-5 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-pink-500">✨ Flow</h2>
-                        <span id="count-flow" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
-                    </div>
-                    <div id="list-flow" data-phase="flow" class="kanban-list"></div>
-                </div>
-
-                <div class="flex-1 kanban-column glow-elite">
-                    <div class="p-5 flex justify-between items-center border-b border-white/5">
-                        <h2 class="text-xs font-black uppercase tracking-widest text-purple-500">🏆 Elite</h2>
-                        <span id="count-elite" class="bg-slate-800/50 px-3 py-1 rounded-lg text-[10px] font-bold">0</span>
-                    </div>
-                    <div id="list-elite" data-phase="elite" class="kanban-list"></div>
-                </div>
-            </div>
+        <main id="main-view" class="p-6 flex-1 overflow-x-auto hide-scroll bg-gray-50">
+            <!-- Conteúdo injetado -->
         </main>
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
-        <div class="bg-slate-900 text-slate-100 w-full max-w-xl rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
-            <div class="p-10 space-y-6">
-                <input type="text" id="mName" class="w-full text-4xl font-black uppercase outline-none bg-transparent border-b-2 border-white/10 pb-2 mb-4">
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">💼 Profissão</label><input type="text" id="mProf" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
-                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">👶 Qtd Filhos</label><input type="number" id="mFilhos" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
+    <!-- MODAIS -->
+    <div id="import-modal" class="hidden fixed inset-0 z-[60] modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-8 border-b flex justify-between items-center bg-gray-50/50">
+                <div>
+                    <h3 class="font-black text-xl">Importar Conversas</h3>
+                    <p class="text-xs text-gray-400">Suba os ficheiros .txt do WhatsApp</p>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">🏠 Bairro/Cidade</label><input type="text" id="mLocal" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
-                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">📸 Instagram (@)</label><input type="text" id="mInsta" class="w-full p-4 bg-white/5 rounded-2xl outline-none"></div>
+                <button onclick="closeModal('import-modal')" class="p-2 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
+            </div>
+            <div class="p-8 space-y-6 overflow-y-auto flex-1">
+                <div class="border-2 border-dashed border-gray-200 rounded-[2rem] p-12 text-center relative group hover:border-pink-300 hover:bg-pink-50 transition-all">
+                    <input type="file" id="file-input" multiple accept=".txt" onchange="handleFiles(this)" class="absolute inset-0 opacity-0 cursor-pointer">
+                    <div class="bg-white w-16 h-16 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 text-gray-400 group-hover:text-pink-500 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                    </div>
+                    <p class="font-bold text-gray-700">Clique ou arraste os ficheiros</p>
+                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold">Apenas arquivos de texto</p>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4 items-center">
-                    <div class="space-y-1"><label class="text-[9px] font-black uppercase text-slate-500">🔥 Interesse (0-100)</label><input type="number" id="mInteresse" class="w-full p-4 bg-white/5 rounded-2xl font-black text-[#fd267d]"></div>
-                    <button id="btnInstaLink" class="h-14 mt-5 bg-pink-500/10 text-pink-500 rounded-2xl font-black text-[10px] uppercase hover:bg-pink-500 hover:text-white transition-all">Ver Perfil</button>
-                </div>
-
-                <textarea id="mNotes" class="w-full p-6 bg-white/5 rounded-[2rem] text-sm outline-none italic" rows="3" placeholder="Notas..."></textarea>
-
-                <div class="flex gap-4">
-                    <button id="btnDelete" class="bg-rose-500/10 text-rose-500 p-5 rounded-2xl"><i class="fa-solid fa-trash"></i></button>
-                    <button id="btnSaveData" class="flex-1 tinder-gradient text-white font-black uppercase py-5 rounded-2xl text-[11px] shadow-xl">Salvar Dossiê</button>
-                </div>
-                <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full text-[9px] font-bold text-slate-600 uppercase">Fechar</button>
+                <div id="file-list" class="space-y-3"></div>
+            </div>
+            <div class="p-8 border-t bg-white">
+                <button id="btn-analyze" onclick="startAnalysis()" disabled class="w-full bg-pink-600 text-white py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-pink-100 disabled:opacity-30 flex justify-center items-center gap-3 transition-all">
+                    <i data-lucide="brain" class="w-6 h-6"></i> Alimentar Memória
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="authSection" class="hidden h-screen flex items-center justify-center bg-[#020617]">
-        <div class="bg-slate-900 p-12 rounded-[4rem] w-96 text-center shadow-2xl border border-white/5">
-            <h2 class="text-3xl font-black mb-10 text-[#fd267d] italic">DATEMIND</h2>
-            <input type="email" id="email" placeholder="E-mail" class="w-full p-5 bg-white/5 rounded-2xl mb-4 outline-none text-white">
-            <input type="password" id="pass" placeholder="Senha" class="w-full p-5 bg-white/5 rounded-2xl mb-8 outline-none text-white">
-            <button id="btnPrimary" class="tinder-gradient w-full py-5 rounded-2xl text-white font-black uppercase text-xs">Acessar</button>
-        </div>
-    </div>
+    <div id="detail-modal" class="hidden fixed inset-0 z-[60] modal-overlay flex items-center justify-center p-4"></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    <script>
+        // --- CONFIGURAÇÃO FIREBASE (Atualizada com seus dados) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs",
+            authDomain: "memorymsg.firebaseapp.com",
+            projectId: "memorymsg",
+            storageBucket: "memorymsg.firebasestorage.app",
+            messagingSenderId: "66381936065",
+            appId: "1:66381936065:web:b440c0bbdfe63804f32b40"
+        };
+        
+        // --- IMPORTANTE: COLOQUE SUA CHAVE DO GEMINI AQUI ---
+        const geminiApiKey = "AIzaSyCNvMbzSa_xyzUvbCKr-bljTeWVaa7Omxk"; 
 
-        const firebaseConfig = { apiKey: "AIzaSyCV1GoLh63JnbosKXY4eTMptOUedA29Jcs", authDomain: "memorymsg.firebaseapp.com", projectId: "memorymsg", storageBucket: "memorymsg.firebasestorage.app", messagingSenderId: "66381936065", appId: "1:66381936065:web:b440c0bbdfe63804f32b40" };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Inicialização
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) { console.error("Erro config:", e); }
+        
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
+        let allProfiles = [];
+        let currentTab = 'pipeline';
+        let pendingFiles = [];
 
-        onAuthStateChanged(auth, (u) => {
-            if (u) { document.getElementById('authSection').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); setupKanban(u.uid); syncBoard(u.uid); }
-            else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
+        const STAGES = [
+            { id: 'match', label: 'Match/Tinder', color: 'bg-blue-100 text-blue-700' },
+            { id: 'talking', label: 'Conversando', color: 'bg-purple-100 text-purple-700' },
+            { id: 'date_scheduled', label: 'Date Marcado', color: 'bg-yellow-100 text-yellow-700' },
+            { id: 'ongoing', label: 'Em Progresso', color: 'bg-pink-100 text-pink-700' },
+            { id: 'archived', label: 'Arquivo/Amizade', color: 'bg-gray-100 text-gray-700' }
+        ];
+
+        // --- AUTH ---
+        async function login() {
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin mr-2">◌</span> Validando Acesso...`;
+
+            try {
+                await auth.signInAnonymously();
+            } catch (err) {
+                let msg = "Erro. Verifique se o 'Login Anônimo' está ativo no Firebase.";
+                if (err.code === "auth/operation-not-allowed") msg = "Ative 'Anonymous Auth' no console do Firebase!";
+                showError(msg);
+                btn.disabled = false;
+                btn.innerHTML = "Entrar no Dashboard";
+            }
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                initData();
+            }
         });
 
-        document.getElementById('btnPrimary').onclick = async () => {
-            const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
-            try { await signInWithEmailAndPassword(auth, e, p); } catch { await createUserWithEmailAndPassword(auth, e, p); }
-        };
-        document.getElementById('btnLogout').onclick = () => signOut(auth);
-
-        function setupKanban(uid) {
-            ['ice', 'fire', 'flow', 'elite'].forEach(phase => {
-                new Sortable(document.getElementById('list-' + phase), {
-                    group: 'kanban',
-                    animation: 200,
-                    onEnd: async (evt) => {
-                        const cardId = evt.item.getAttribute('data-id');
-                        const newPhase = evt.to.getAttribute('data-phase');
-                        if (cardId && newPhase) {
-                            await updateDoc(doc(db, "profiles", cardId), { fase: newPhase, updatedAt: Date.now() });
-                        }
-                    }
-                });
-            });
+        // --- DATA ---
+        function initData() {
+            db.collection('artifacts').doc('memoria-t').collection('users').doc(currentUser.uid).collection('profiles')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot(snapshot => {
+                    allProfiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    render();
+                }, err => showError("Erro DB: " + err.message));
         }
 
-        function syncBoard(uid) {
-            onSnapshot(query(collection(db, "profiles"), where("uid", "==", uid)), (snap) => {
-                const lists = { ice: [], fire: [], flow: [], elite: [] };
-                const agora = Date.now();
-                snap.forEach(d => {
-                    const data = d.data();
-                    const phase = data.fase || 'ice';
-                    const diff = Math.floor((agora - (data.updatedAt || data.createdAt)) / (1000*60*60*24));
-                    lists[phase].push({ id: d.id, dias: diff, ...data });
-                });
+        // --- RENDER ---
+        function render() {
+            const main = document.getElementById('main-view');
+            main.innerHTML = "";
 
-                Object.keys(lists).forEach(p => {
-                    const listEl = document.getElementById('list-' + p);
-                    document.getElementById('count-' + p).innerText = lists[p].length;
-                    listEl.innerHTML = '';
-                    lists[p].sort((a,b) => (b.interesse || 0) - (a.interesse || 0)).forEach(d => {
-                        const card = document.createElement('div');
-                        card.className = `glass-card ${d.dias >= 3 ? 'frozen' : ''}`;
-                        card.setAttribute('data-id', d.id);
-                        card.innerHTML = `
-                            <div class="flex justify-between items-start">
-                                <span class="text-[12px] font-black uppercase text-white">${d.nome}</span>
-                                <span class="text-[8px] font-black ${d.dias >= 3 ? 'text-rose-500' : 'text-slate-600'}">${d.dias >= 3 ? 'GELANDO' : d.dias+'d'}</span>
-                            </div>
-                            <div class="text-[9px] font-bold text-slate-400 mt-2 leading-tight">
-                                💼 ${d.profissao || '---'} | 👶 ${d.filhos || 0}<br>🏠 ${d.local || '---'}
-                            </div>
-                            <div class="temp-bar"><div class="temp-fill tinder-gradient" style="width: ${d.interesse || 50}%"></div></div>
-                            <div class="flex gap-2 mt-3">
-                                <button onclick="editCard('${d.id}')" class="flex-1 py-2 bg-white/5 rounded-lg text-[7px] font-black uppercase tracking-widest hover:bg-white/10">Editar</button>
-                                ${d.instagram ? `<button onclick="window.open('https://instagram.com/${d.instagram.replace('@','')}')" class="px-3 bg-pink-500/20 text-pink-500 rounded-lg text-[10px]"><i class="fa-brands fa-instagram"></i></button>` : ''}
-                            </div>
-                        `;
-                        listEl.appendChild(card);
+            if (currentTab === 'pipeline') {
+                const container = document.createElement('div');
+                container.className = "flex gap-6 h-full";
+                STAGES.forEach(stage => {
+                    const col = document.createElement('div');
+                    col.className = "pipeline-col flex flex-col gap-4";
+                    col.innerHTML = `<div class="p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-center ${stage.color}">${stage.label}</div>`;
+                    
+                    const list = document.createElement('div');
+                    list.className = "space-y-4 flex-1";
+                    allProfiles.filter(p => p.stage === stage.id).forEach(p => {
+                        list.appendChild(createCard(p));
                     });
+                    col.appendChild(list);
+                    container.appendChild(col);
                 });
-            });
+                main.appendChild(container);
+            } else {
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto w-full";
+                allProfiles.forEach(p => grid.appendChild(createCard(p)));
+                main.appendChild(grid);
+            }
+            lucide.createIcons();
         }
 
-        window.editCard = async (id) => {
-            const q = await getDocs(query(collection(db, "profiles")));
-            const d = q.docs.find(doc => doc.id === id).data();
-            window.currentProfileId = id;
-            document.getElementById('mName').value = d.nome;
-            document.getElementById('mProf').value = d.profissao || "";
-            document.getElementById('mFilhos').value = d.filhos || 0;
-            document.getElementById('mLocal').value = d.local || "";
-            document.getElementById('mInsta').value = d.instagram || "";
-            document.getElementById('mInteresse').value = d.interesse || 50;
-            document.getElementById('mNotes').value = d.notas || "";
-            document.getElementById('modal').classList.remove('hidden');
-        };
+        function createCard(p) {
+            const div = document.createElement('div');
+            div.className = "bg-white p-6 rounded-3xl border border-gray-100 cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all group";
+            div.onclick = () => openDetails(p);
+            
+            const hasKids = p.hasChildren && p.hasChildren.toLowerCase() !== 'não' && p.hasChildren.toLowerCase() !== 'não mencionado';
+            const firstName = p.name ? p.name.split(' ')[0] : '???';
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <h4 class="font-black text-2xl text-gray-800 group-hover:text-pink-600 transition-colors">${firstName}, ${p.age || '00'}</h4>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 text-sm text-gray-500 font-medium">
+                        <div class="bg-pink-50 p-2 rounded-lg text-pink-400"><i data-lucide="briefcase" class="w-4 h-4"></i></div>
+                        <span class="truncate">${p.profession}</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-500 font-medium">
+                        <div class="bg-blue-50 p-2 rounded-lg text-blue-400"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
+                        <span class="truncate">${p.location}</span>
+                    </div>
+                    ${hasKids ? `
+                    <div class="mt-4 flex items-center gap-2 text-[10px] text-amber-600 font-black uppercase bg-amber-50 w-fit px-3 py-1.5 rounded-xl border border-amber-100">
+                        <i data-lucide="baby" class="w-3.5 h-3.5"></i> ${p.hasChildren}
+                    </div>` : ''}
+                </div>
+            `;
+            return div;
+        }
 
-        document.getElementById('btnSaveData').onclick = async () => {
-            await updateDoc(doc(db, "profiles", window.currentProfileId), {
-                nome: document.getElementById('mName').value,
-                profissao: document.getElementById('mProf').value,
-                filhos: parseInt(document.getElementById('mFilhos').value),
-                local: document.getElementById('mLocal').value,
-                instagram: document.getElementById('mInsta').value,
-                interesse: parseInt(document.getElementById('mInteresse').value),
-                notas: document.getElementById('mNotes').value,
-                updatedAt: Date.now()
-            });
-            document.getElementById('modal').classList.add('hidden');
-        };
+        // --- ACTIONS ---
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-pipeline').className = tab === 'pipeline' ? "px-8 py-4 text-xs font-black uppercase tracking-[0.2em] border-b-4 border-pink-500 text-pink-500" : "px-8 py-4 text-xs font-black uppercase tracking-[0.2em] border-b-4 border-transparent text-gray-400";
+            document.getElementById('tab-lista').className = tab === 'lista' ? "px-8 py-4 text-xs font-black uppercase tracking-[0.2em] border-b-4 border-pink-500 text-pink-500" : "px-8 py-4 text-xs font-black uppercase tracking-[0.2em] border-b-4 border-transparent text-gray-400";
+            render();
+        }
 
-        document.getElementById('btnInstaLink').onclick = () => {
-            const user = document.getElementById('mInsta').value.replace('@','');
-            if(user) window.open(`https://instagram.com/${user}`);
-        };
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        document.getElementById('chatUpload').onchange = async (e) => {
-            const file = e.target.files[0]; if (!file) return;
-            let name = file.name.replace('.txt','').split(' ')[0];
-            await addDoc(collection(db, "profiles"), { nome: name, fase: "ice", interesse: 50, uid: auth.currentUser.uid, createdAt: Date.now(), updatedAt: Date.now() });
-        };
+        async function handleFiles(input) {
+            const files = Array.from(input.files);
+            for (const file of files) {
+                const text = await file.text();
+                pendingFiles.push({ id: Math.random(), name: file.name, content: text, status: 'ready' });
+            }
+            updateFileList();
+        }
 
-        document.getElementById('btnDelete').onclick = async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "profiles", window.currentProfileId)); document.getElementById('modal').classList.add('hidden'); } };
+        function updateFileList() {
+            const list = document.getElementById('file-list');
+            list.innerHTML = pendingFiles.map(f => `
+                <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <i data-lucide="file-text" class="w-5 h-5 text-gray-400"></i>
+                    <span class="flex-1 text-sm font-bold truncate text-gray-700">${f.name}</span>
+                    ${f.status === 'done' ? '<i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>' : ''}
+                </div>
+            `).join('');
+            const btn = document.getElementById('btn-analyze');
+            btn.disabled = pendingFiles.length === 0 || pendingFiles.every(f => f.status === 'done');
+            btn.style.opacity = btn.disabled ? "0.3" : "1";
+            lucide.createIcons();
+        }
+
+        async function startAnalysis() {
+            if (!geminiApiKey) return showError("Configure a sua geminiApiKey no código!");
+            
+            const btn = document.getElementById('btn-analyze');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin mr-3">◌</span> Sincronizando Memória...`;
+            btn.disabled = true;
+
+            const systemPrompt = `Você é a Memória T. Analise o log e retorne APENAS JSON: {"name": "String", "age": "String", "profession": "String", "hasChildren": "Sim (Quantidade) ou Não", "location": "Bairro - Cidade", "vibe": "String", "summary": "Resumo da relação", "notes": "Gostos e qualidades"}`;
+
+            for (let i = 0; i < pendingFiles.length; i++) {
+                if (pendingFiles[i].status === 'done') continue;
+                
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: `Analise esta conversa: ${pendingFiles[i].content}` }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    const data = await response.json();
+                    const result = JSON.parse(data.candidates[0].content.parts[0].text);
+                    
+                    await db.collection('artifacts').doc('memoria-t').collection('users').doc(currentUser.uid).collection('profiles').add({
+                        ...result,
+                        stage: 'talking',
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    pendingFiles[i].status = 'done';
+                    updateFileList();
+                } catch (e) { 
+                    console.error(e);
+                    showError("Erro na IA. Verifique sua chave Gemini.");
+                }
+            }
+            
+            setTimeout(() => {
+                closeModal('import-modal');
+                pendingFiles = [];
+                updateFileList();
+                btn.innerHTML = originalText;
+            }, 1000);
+        }
+
+        function openDetails(p) {
+            const modal = document.getElementById('detail-modal');
+            const hasKids = p.hasChildren && p.hasChildren.toLowerCase() !== 'não';
+
+            modal.innerHTML = `
+                <div class="bg-white rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh]">
+                    <button onclick="closeModal('detail-modal')" class="absolute top-6 right-6 z-10 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"><i data-lucide="x" class="w-6 h-6 text-gray-500"></i></button>
+                    
+                    <div class="md:w-1/3 bg-gray-50 p-10 border-r flex flex-col items-center md:items-start text-center md:text-left">
+                        <div class="w-32 h-32 bg-pink-500 rounded-[2.5rem] flex items-center justify-center text-5xl font-black text-white shadow-2xl shadow-pink-200 mb-8">${p.name ? p.name[0] : '?'}</div>
+                        <h2 class="text-3xl font-black text-gray-800 leading-tight">${p.name}, ${p.age}</h2>
+                        <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest mt-2 px-3 py-1 bg-pink-50 rounded-lg border border-pink-100">${p.stage}</p>
+                        
+                        <div class="mt-10 space-y-4 w-full">
+                            <div class="flex items-center gap-4 text-sm font-bold text-gray-600 bg-white p-4 rounded-2xl shadow-sm"><i data-lucide="briefcase" class="w-5 h-5 text-gray-400"></i> ${p.profession}</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-gray-600 bg-white p-4 rounded-2xl shadow-sm"><i data-lucide="map-pin" class="w-5 h-5 text-gray-400"></i> ${p.location}</div>
+                            ${hasKids ? `<div class="flex items-center gap-4 text-sm font-bold text-amber-700 bg-amber-50 p-4 rounded-2xl border border-amber-100"><i data-lucide="baby" class="w-5 h-5 text-amber-500"></i> ${p.hasChildren}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="flex-1 p-10 overflow-y-auto hide-scroll">
+                        <div class="bg-gray-900 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-6 opacity-10"><i data-lucide="brain" class="w-20 h-20"></i></div>
+                            <h3 class="font-black text-pink-400 flex items-center gap-2 mb-4 uppercase tracking-widest text-xs">Insight Memória T</h3>
+                            <p class="text-xl font-medium leading-relaxed italic">"${p.summary || "Nenhuma análise disponível ainda."}"</p>
+                        </div>
+
+                        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-6 border border-gray-100 rounded-[2rem] bg-gray-50/50">
+                                <h4 class="font-black text-[10px] uppercase text-gray-400 mb-2 tracking-widest">Vibe Geral</h4>
+                                <p class="text-sm text-gray-700 leading-relaxed font-medium">${p.vibe}</p>
+                            </div>
+                            <div class="p-6 border border-gray-100 rounded-[2rem] bg-gray-50/50">
+                                <h4 class="font-black text-[10px] uppercase text-gray-400 mb-2 tracking-widest">Qualidades & Notas</h4>
+                                <p class="text-sm text-gray-700 leading-relaxed font-medium">${p.notes}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-10 pt-6 border-t">
+                            <h4 class="font-black text-[10px] uppercase text-gray-400 mb-4 tracking-widest">Alterar Estágio</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${STAGES.map(s => `
+                                    <button onclick="updateProfileStage('${p.id}', '${s.id}')" 
+                                    class="px-4 py-2 rounded-2xl text-[10px] font-black uppercase transition-all 
+                                    ${p.stage === s.id ? 'bg-black text-white shadow-lg' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}">
+                                        ${s.label}
+                                    </button>`).join('')}
+                            </div>
+                            <div class="mt-8 pt-8 border-t flex justify-end">
+                                <button onclick="deleteProfile('${p.id}')" class="flex items-center gap-2 text-red-400 font-black text-[10px] uppercase hover:text-red-600 transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar Registro
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        async function updateProfileStage(id, stage) {
+            await db.collection('artifacts').doc('memoria-t').collection('users').doc(currentUser.uid).collection('profiles').doc(id).update({ stage });
+            closeModal('detail-modal');
+        }
+
+        async function deleteProfile(id) {
+            if(confirm("Deseja apagar permanentemente este registro da sua memória?")) {
+                await db.collection('artifacts').doc('memoria-t').collection('users').doc(currentUser.uid).collection('profiles').doc(id).delete();
+                closeModal('detail-modal');
+            }
+        }
+
+        function showError(text) {
+            document.getElementById('error-message').innerText = text;
+            document.getElementById('error-toast').classList.add('show');
+            lucide.createIcons();
+            setTimeout(hideError, 6000);
+        }
+        function hideError() { document.getElementById('error-toast').classList.remove('show'); }
+
+        lucide.createIcons();
     </script>
 </body>
 </html>

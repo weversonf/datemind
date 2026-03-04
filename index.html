@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAP Pro - Dashboard v1.11</title>
+    <title>MAP Pro - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -24,7 +24,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Login Interface */
+        /* Ecrã de Login */
         #auth-screen {
             position: fixed;
             inset: 0;
@@ -62,13 +62,13 @@
             border-radius: 1.5rem;
         }
 
-        /* Status Colors */
+        /* Cores de Status */
         .status-conheci { border-left: 4px solid #3b82f6; }
         .status-sai { border-left: 4px solid #a855f7; }
         .status-fiquei { border-left: 4px solid #ec4899; }
         .status-transei { border-left: 4px solid #ef4444; }
 
-        /* Navigation */
+        /* Navegação */
         .bottom-nav-wrapper {
             position: fixed;
             bottom: 25px;
@@ -161,7 +161,7 @@
 </head>
 <body class="no-scrollbar">
 
-    <!-- Login Screen -->
+    <!-- Ecrã de Login -->
     <div id="auth-screen">
         <div class="text-center space-y-10">
             <div class="space-y-3">
@@ -179,7 +179,7 @@
         </div>
     </div>
 
-    <!-- Application -->
+    <!-- Aplicação Principal -->
     <div id="real-app" class="min-h-screen pb-40 hidden">
         <header class="p-8 flex justify-between items-center max-w-lg mx-auto">
             <div class="flex items-center gap-4">
@@ -196,7 +196,7 @@
         </header>
 
         <main class="max-w-lg mx-auto px-6 space-y-8">
-            <!-- TAB: HOME -->
+            <!-- ABA HOME -->
             <div id="tab-home" class="tab-content active space-y-6">
                 <section class="glass-card p-6 border border-white/5 shadow-xl">
                     <div class="flex items-center justify-between mb-6">
@@ -220,7 +220,7 @@
                 </div>
             </div>
 
-            <!-- TAB: SEARCH -->
+            <!-- ABA BUSCA -->
             <div id="tab-search" class="tab-content space-y-6">
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600"></i>
@@ -229,7 +229,7 @@
                 <div id="search-results" class="space-y-4"></div>
             </div>
 
-            <!-- TAB: STATS -->
+            <!-- ABA MÉTRICAS -->
             <div id="tab-stats" class="tab-content space-y-8">
                 <h2 class="text-2xl font-black italic tracking-tighter">Performance de Campo</h2>
                 <div class="glass-card p-6 space-y-4">
@@ -238,7 +238,7 @@
                 </div>
             </div>
 
-            <!-- TAB: PROFILE -->
+            <!-- ABA PERFIL -->
             <div id="tab-profile" class="tab-content space-y-6">
                 <div class="glass-card p-8 space-y-8 text-center shadow-2xl">
                     <div class="flex flex-col items-center gap-4">
@@ -251,7 +251,7 @@
                         </div>
                     </div>
 
-                    <!-- ADMIN PANEL (MASTER ONLY) -->
+                    <!-- GESTÃO MASTER (Apenas Master) -->
                     <div id="master-area" class="hidden pt-8 border-t border-white/5 text-left space-y-5">
                         <div class="flex items-center gap-2">
                             <i data-lucide="shield-check" class="w-4 h-4 text-rose-500"></i>
@@ -275,7 +275,7 @@
             </div>
         </main>
 
-        <!-- Navigation Bar -->
+        <!-- Navegação Inferior -->
         <nav class="bottom-nav-wrapper">
             <div class="bottom-nav-container">
                 <button onclick="switchTab('home')" id="nav-home" class="nav-btn nav-active"><i data-lucide="layout-grid" class="w-6 h-6"></i></button>
@@ -286,11 +286,11 @@
         </nav>
     </div>
 
-    <!-- Modal Dossiê -->
+    <!-- Modal Dossiê Full -->
     <div id="match-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 z-[110]">
         <div class="glass-card w-full max-w-lg p-10 space-y-8 relative max-h-[92vh] overflow-y-auto no-scrollbar border-t border-white/10 shadow-2xl">
             <div class="absolute top-8 right-8 flex items-center gap-3">
-                <button id="modal-delete-btn" class="p-3 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500/20 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                <button onclick="deleteMatch()" class="p-3 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500/20 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                 <button onclick="closeModal()" class="p-3 bg-zinc-900 rounded-2xl text-zinc-500"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
@@ -312,11 +312,10 @@
                 </div>
             </div>
 
-            <!-- Detailed Dossier -->
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="glass-card p-5 bg-zinc-900/40">
-                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Carreira</p>
+                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Profissão</p>
                         <input type="text" id="edit-profession" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="...">
                     </div>
                     <div class="glass-card p-5 bg-zinc-900/40">
@@ -326,8 +325,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="glass-card p-5 bg-zinc-900/40">
-                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Localização</p>
-                        <input type="text" id="edit-neighborhood" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="Bairro...">
+                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Bairro</p>
+                        <input type="text" id="edit-neighborhood" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="...">
                     </div>
                     <div class="glass-card p-5 bg-zinc-900/40">
                         <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Cidade/UF</p>
@@ -335,7 +334,7 @@
                     </div>
                 </div>
                 <div class="glass-card p-5 bg-zinc-900/40">
-                    <p class="text-[10px] font-black text-rose-500/60 uppercase mb-2 tracking-widest italic">Rede Social</p>
+                    <p class="text-[10px] font-black text-rose-500/60 uppercase mb-2 tracking-widest italic">Instagram</p>
                     <div class="flex items-center gap-1">
                         <span class="text-zinc-500 text-sm font-bold">@</span>
                         <input type="text" id="edit-instagram" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="user_insta">
@@ -343,7 +342,7 @@
                 </div>
             </div>
 
-            <!-- Lifestyle Badges -->
+            <!-- Badges -->
             <div class="flex justify-center gap-4">
                 <div onclick="toggleBadge('bebe')" id="badge-bebe" class="badge-circle"><i data-lucide="wine"></i><span class="italic">Bebe</span></div>
                 <div onclick="toggleBadge('fuma')" id="badge-fuma" class="badge-circle"><i data-lucide="cigar"></i><span class="italic">Fuma</span></div>
@@ -359,13 +358,15 @@
                 <textarea id="edit-topics" class="w-full h-32 bg-transparent text-[12px] text-zinc-400 italic outline-none resize-none leading-relaxed" placeholder="Anotações para não falhar na próxima conversa..."></textarea>
             </div>
 
-            <button onclick="saveAndClose()" class="w-full bg-white text-black text-[12px] font-black uppercase py-5 rounded-[1.8rem] active:scale-95 italic transition-all shadow-2xl shadow-white/5">Finalizar Dossiê</button>
+            <button onclick="saveAndClose()" class="w-full bg-white text-black text-[12px] font-black uppercase py-5 rounded-[1.8rem] active:scale-95 italic transition-all shadow-2xl shadow-white/5">Salvar Dossiê</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO: COLA O TEU LINK DO APPS SCRIPT AQUI ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOuuMGlaTJIl4he-H0gALsRNn40IjM4pmWfNR8vcmCTGf3LYfo40Pt-4dLMz0m4YZ/exec"; 
+        // ==========================================
+        // COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT
+        // ==========================================
+        const SCRIPT_URL = "SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI"; 
 
         let currentUser = null;
         let userData = { role: 'Comum' };
@@ -386,7 +387,7 @@
             err.classList.add('hidden');
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=login&user=${user}&pass=${pass}`);
+                const response = await fetch(`${SCRIPT_URL}?action=login&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
                 const result = await response.json();
 
                 if (result.success) {
@@ -394,9 +395,10 @@
                     userData = result.userData; // { role: "Master" | "Comum" }
                     initApp();
                 } else {
-                    throw new Error("Login falhou");
+                    throw new Error(result.message || "Login falhou");
                 }
             } catch (e) {
+                console.error(e);
                 err.classList.remove('hidden');
                 btn.textContent = "Entrar no Sistema";
                 btn.disabled = false;
@@ -425,11 +427,15 @@
         async function loadData() {
             const status = document.getElementById('cloud-status');
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getMatches&user=${currentUser}`);
-                window.matches = await response.json();
+                const response = await fetch(`${SCRIPT_URL}?action=getMatches&user=${encodeURIComponent(currentUser)}`);
+                const data = await response.json();
+                window.matches = Array.isArray(data) ? data : [];
                 render();
                 status.classList.replace('bg-zinc-700', 'bg-green-500');
-            } catch(e) { status.classList.replace('bg-zinc-700', 'bg-red-500'); }
+            } catch(e) { 
+                console.error(e);
+                status.classList.replace('bg-zinc-700', 'bg-red-500'); 
+            }
         }
 
         async function sync() {
@@ -462,13 +468,13 @@
                     mode: 'no-cors',
                     body: JSON.stringify({ action: 'createAccount', newUserName, newUserPass, type })
                 });
-                alert(`Sucesso! Utilizador ${newUserName} ativo.`);
+                alert(`Sucesso! Utilizador ${newUserName} ativo na base de dados.`);
                 document.getElementById('new-user-name').value = "";
                 document.getElementById('new-user-pass').value = "";
             } catch (e) { alert("Erro na criação."); }
         }
 
-        // --- CORE UI ---
+        // --- TABS & RENDERING ---
         function switchTab(t) {
             activeTab = t;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -486,23 +492,24 @@
 
             const container = activeTab === 'home' ? document.getElementById('recent-list') : 
                              activeTab === 'search' ? document.getElementById('search-results') : null;
+            
             if(!container) {
                 if(activeTab === 'stats') renderStats();
                 return;
             }
 
             const query = document.getElementById('search-input')?.value.toLowerCase() || "";
-            const filtered = activeTab === 'search' ? window.matches.filter(m => m.nome.toLowerCase().includes(query)) : window.matches;
+            const filtered = activeTab === 'search' ? window.matches.filter(m => (m.nome || "").toLowerCase().includes(query)) : window.matches;
 
             container.innerHTML = filtered.map(m => `
-                <div class="glass-card p-5 flex items-center justify-between border-l-4 status-${m.status}" onclick="openModal('${m.id}')">
+                <div class="glass-card p-5 flex items-center justify-between border-l-4 status-${m.status || 'conheci'}" onclick="openModal('${m.id}')">
                     <div class="flex items-center gap-4">
                         <div class="w-11 h-11 rounded-2xl bg-zinc-900 flex items-center justify-center font-black italic border border-white/5 uppercase overflow-hidden">
-                            ${m.foto ? `<img src="${m.foto}" class="w-full h-full object-cover">` : (m.nome || "?")[0]}
+                            ${m.foto ? `<img src="${m.foto}" class="w-full h-full object-cover">` : ((m.nome || "?")[0])}
                         </div>
                         <div>
-                            <h3 class="font-black italic text-[13px] tracking-tighter uppercase">${m.nome}</h3>
-                            <p class="text-[8px] text-zinc-600 font-black uppercase tracking-widest italic">${m.data}</p>
+                            <h3 class="font-black italic text-[13px] tracking-tighter uppercase">${m.nome || "Novo"}</h3>
+                            <p class="text-[8px] text-zinc-600 font-black uppercase tracking-widest italic">${m.data || ""}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2" onclick="event.stopPropagation()">
@@ -519,7 +526,9 @@
 
         function renderStats() {
             const counts = {};
-            window.matches.forEach(m => { if(m.nome) counts[m.nome[0].toUpperCase()] = (counts[m.nome[0].toUpperCase()] || 0) + 1; });
+            window.matches.forEach(m => { 
+                if(m.nome) counts[m.nome[0].toUpperCase()] = (counts[m.nome[0].toUpperCase()] || 0) + 1; 
+            });
             document.getElementById('alphabet-grid').innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(l => `
                 <div class="p-4 rounded-3xl border ${counts[l] ? 'bg-zinc-800 border-rose-500/20 text-white' : 'bg-zinc-900/40 border-white/5 text-zinc-800'} flex flex-col items-center">
                     <span class="text-[12px] font-black italic">${l}</span>
@@ -527,13 +536,13 @@
                 </div>`).join('');
         }
 
-        // --- DOSSIÊ CRUD ---
+        // --- DOSSIÊ LOGIC ---
         function openModal(id) {
             currentEditingId = id;
             const m = window.matches.find(x => x.id == id);
             if(!m) return;
 
-            const setV = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ""; };
+            const setV = (elementId, val) => { const el = document.getElementById(elementId); if(el) el.value = val || ""; };
             setV('edit-name', m.nome); setV('edit-age', m.idade); setV('edit-profession', m.profissao);
             setV('edit-formation', m.formacao); setV('edit-neighborhood', m.bairro); setV('edit-city', m.cidade);
             setV('edit-instagram', m.instagram); setV('edit-topics', m.memoria_estrategica);
@@ -560,7 +569,7 @@
         function saveAndClose() {
             const m = window.matches.find(x => x.id == currentEditingId);
             if(m) {
-                const getV = (id) => document.getElementById(id).value;
+                const getV = (elementId) => document.getElementById(elementId).value;
                 m.nome = getV('edit-name'); m.idade = getV('edit-age'); m.profissao = getV('edit-profession');
                 m.formacao = getV('edit-formation'); m.bairro = getV('edit-neighborhood'); m.cidade = getV('edit-city');
                 m.instagram = getV('edit-instagram'); m.memoria_estrategica = getV('edit-topics');

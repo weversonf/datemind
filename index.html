@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Gestão</title>
+    <title>MAP Pro - Dashboard v1.11</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -24,7 +24,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Ecrã de Autenticação */
+        /* Login Interface */
         #auth-screen {
             position: fixed;
             inset: 0;
@@ -34,18 +34,18 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.5s ease;
+            transition: all 0.5s ease;
         }
 
         .auth-input {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            padding: 1rem 1.5rem;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.5rem;
             color: white;
             font-weight: 700;
             outline: none;
-            width: 280px;
+            width: 300px;
             transition: all 0.3s;
             font-size: 0.9rem;
         }
@@ -53,7 +53,7 @@
         .auth-input:focus {
             border-color: var(--accent-pink);
             background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 20px rgba(244, 63, 94, 0.1);
+            box-shadow: 0 0 30px rgba(244, 63, 94, 0.15);
         }
 
         .glass-card { 
@@ -62,36 +62,39 @@
             border-radius: 1.5rem;
         }
 
+        /* Status Colors */
         .status-conheci { border-left: 4px solid #3b82f6; }
         .status-sai { border-left: 4px solid #a855f7; }
         .status-fiquei { border-left: 4px solid #ec4899; }
         .status-transei { border-left: 4px solid #ef4444; }
 
+        /* Navigation */
         .bottom-nav-wrapper {
             position: fixed;
-            bottom: 30px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            width: 90%;
+            width: 92%;
             max-width: 400px;
         }
 
         .bottom-nav-container {
-            background: #0d0d0e;
+            background: rgba(13, 13, 14, 0.8);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 999px;
-            padding: 8px 12px;
+            padding: 8px;
             display: flex; 
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         .nav-btn {
             color: #52525b;
-            width: 44px; height: 44px;
-            transition: all 0.3s ease;
+            width: 48px; height: 48px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 999px;
             display: flex; align-items: center; justify-content: center;
         }
@@ -99,255 +102,269 @@
         .nav-btn.nav-active {
             color: #ffffff;
             background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            box-shadow: 0 10px 20px rgba(244, 63, 94, 0.3);
         }
 
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: tabFadeIn 0.3s ease; }
+        .tab-content.active { display: block; animation: tabFadeIn 0.4s ease-out; }
 
         @keyframes tabFadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
+        /* Modal Dossiê */
         .modal-overlay {
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(15px);
             z-index: 110;
         }
 
         .badge-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 20px;
-            background: #0d0d0e;
+            width: 65px;
+            height: 65px;
+            border-radius: 24px;
+            background: #161617;
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            opacity: 0.2;
-            transition: all 0.2s;
+            gap: 6px;
+            opacity: 0.3;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
         .badge-circle.active {
             opacity: 1;
-            border-color: rgba(244, 63, 94, 0.4);
-            background: rgba(244, 63, 94, 0.05);
+            border-color: rgba(244, 63, 94, 0.5);
+            background: rgba(244, 63, 94, 0.08);
+            transform: scale(1.05);
         }
-        .badge-circle i { width: 18px; height: 18px; }
-        .badge-circle span { font-size: 8px; font-weight: 900; text-transform: uppercase; }
+        .badge-circle i { width: 20px; height: 20px; }
+        .badge-circle span { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 
         .pro-label {
-            background: #f43f5e;
+            background: linear-gradient(90deg, #f43f5e, #e11d48);
             color: white;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
             text-transform: uppercase;
         }
+        
+        #login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body class="no-scrollbar">
 
-    <!-- Ecrã de Login -->
+    <!-- Login Screen -->
     <div id="auth-screen">
-        <div class="text-center space-y-8">
-            <div class="space-y-2">
-                <span class="text-4xl font-black tracking-tighter italic">MAP<span class="text-rose-500">.</span></span>
-                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em] italic">Dossiê Analytics v09</p>
+        <div class="text-center space-y-10">
+            <div class="space-y-3">
+                <span class="text-5xl font-black tracking-tighter italic">MAP<span class="text-rose-500">.</span></span>
+                <p class="text-[11px] font-bold text-zinc-500 uppercase tracking-[0.4em] italic">Dossiê Ranking System</p>
             </div>
             <div class="space-y-4 flex flex-col">
                 <input type="text" id="login-user" placeholder="UTILIZADOR" class="auth-input italic uppercase">
                 <input type="password" id="login-pass" placeholder="PALAVRA-PASSE" class="auth-input italic uppercase">
-                <button onclick="handleLogin()" id="login-btn" class="bg-white text-black py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest active:scale-95 transition-all">
-                    Aceder ao Ranking
+                <button onclick="handleLogin()" id="login-btn" class="bg-white text-black py-5 rounded-[1.2rem] font-black text-[12px] uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-white/5">
+                    Entrar no Sistema
                 </button>
-                <p id="error-msg" class="text-rose-500 text-[9px] font-black uppercase mt-2 hidden">Credenciais Inválidas</p>
+                <p id="error-msg" class="text-rose-500 text-[10px] font-black uppercase mt-2 hidden">Falha na Autenticação</p>
             </div>
         </div>
     </div>
 
-    <!-- Aplicação Principal -->
+    <!-- Application -->
     <div id="real-app" class="min-h-screen pb-40 hidden">
-        <header class="p-6 flex justify-between items-center max-w-lg mx-auto">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl font-black tracking-tighter italic">MAP<span class="text-rose-500">.</span></span>
-                <div class="bg-zinc-900/50 px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/5">
-                    <div id="cloud-status" class="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
-                    <span class="text-[12px] font-black text-yellow-500 italic" id="global-score">0.00</span>
+        <header class="p-8 flex justify-between items-center max-w-lg mx-auto">
+            <div class="flex items-center gap-4">
+                <span class="text-3xl font-black tracking-tighter italic">MAP<span class="text-rose-500">.</span></span>
+                <div class="bg-zinc-900/80 px-4 py-2 rounded-2xl flex items-center gap-2 border border-white/5">
+                    <div id="cloud-status" class="w-2 h-2 rounded-full bg-zinc-700"></div>
+                    <span class="text-[13px] font-black text-yellow-500 italic" id="global-score">0.00</span>
                 </div>
             </div>
             
-            <button onclick="switchTab('profile')" class="w-11 h-11 rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-rose-500/5">
+            <button onclick="switchTab('profile')" class="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl active:scale-90 transition-transform">
                 <img id="user-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="w-full h-full object-cover">
             </button>
         </header>
 
-        <main class="max-w-lg mx-auto px-6 space-y-6">
-            <!-- ABA HOME -->
+        <main class="max-w-lg mx-auto px-6 space-y-8">
+            <!-- TAB: HOME -->
             <div id="tab-home" class="tab-content active space-y-6">
-                <section class="glass-card p-6 border border-white/5">
-                    <div class="flex items-center justify-between mb-4">
+                <section class="glass-card p-6 border border-white/5 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="zap" class="w-4 h-4 text-rose-500 fill-current"></i>
-                            <h3 class="text-xs font-black text-zinc-100 uppercase tracking-widest italic">Novo Registo</h3>
+                            <i data-lucide="sparkles" class="w-4 h-4 text-rose-500"></i>
+                            <h3 class="text-[11px] font-black text-zinc-100 uppercase tracking-widest italic">Novo Dossiê</h3>
                         </div>
-                        <button onclick="createNewMatch()" class="text-[9px] font-black bg-rose-500/10 border border-rose-500/20 text-rose-500 px-3 py-1.5 rounded-lg uppercase tracking-widest italic">Adicionar</button>
+                        <button onclick="createNewMatch()" class="text-[10px] font-black bg-rose-500/10 border border-rose-500/20 text-rose-500 px-4 py-2 rounded-xl uppercase italic hover:bg-rose-500/20 transition-all">Manual</button>
                     </div>
-                    <textarea id="wa-text-input" placeholder="Cola trechos da conversa aqui..." 
-                        class="w-full h-32 bg-zinc-900/50 rounded-2xl p-4 text-sm text-zinc-400 outline-none border border-white/5 focus:border-rose-500/20 transition-all resize-none italic mb-4"></textarea>
+                    <textarea id="wa-text-input" placeholder="Cole a conversa do WhatsApp aqui..." 
+                        class="w-full h-36 bg-zinc-900/40 rounded-2xl p-5 text-sm text-zinc-400 outline-none border border-white/5 focus:border-rose-500/30 transition-all resize-none italic mb-4 leading-relaxed"></textarea>
                     
-                    <button onclick="processAIImport()" class="w-full bg-zinc-900/80 hover:bg-zinc-800 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 border border-white/5 italic">
-                        <i data-lucide="sparkles" class="w-4 h-4 text-rose-500"></i> Analisar Dossiê
+                    <button onclick="processAIImport()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 border border-white/5 italic transition-all">
+                        Analisar Conversa
                     </button>
                 </section>
 
-                <div id="recent-list" class="space-y-4"></div>
+                <div class="space-y-4">
+                     <h4 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic px-2">Registos Recentes</h4>
+                     <div id="recent-list" class="space-y-4"></div>
+                </div>
             </div>
 
-            <!-- ABA BUSCA -->
+            <!-- TAB: SEARCH -->
             <div id="tab-search" class="tab-content space-y-6">
                 <div class="relative">
-                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i>
-                    <input type="text" id="search-input" oninput="render()" placeholder="Procurar no ranking..." class="w-full bg-zinc-900/50 border border-white/5 rounded-2xl pl-12 pr-6 py-4 outline-none font-bold italic">
+                    <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600"></i>
+                    <input type="text" id="search-input" oninput="render()" placeholder="Procurar no seu ranking..." class="w-full bg-zinc-900/60 border border-white/5 rounded-3xl pl-14 pr-8 py-5 outline-none font-bold italic text-white placeholder-zinc-700">
                 </div>
                 <div id="search-results" class="space-y-4"></div>
             </div>
 
-            <!-- ABA MÉTRICAS -->
-            <div id="tab-stats" class="tab-content space-y-6">
-                <h2 class="text-xl font-black italic tracking-tighter">Ranking & Alfabeto</h2>
-                <div id="alphabet-grid" class="grid grid-cols-4 gap-2"></div>
+            <!-- TAB: STATS -->
+            <div id="tab-stats" class="tab-content space-y-8">
+                <h2 class="text-2xl font-black italic tracking-tighter">Performance de Campo</h2>
+                <div class="glass-card p-6 space-y-4">
+                    <h4 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Distribuição Alfabética</h4>
+                    <div id="alphabet-grid" class="grid grid-cols-4 gap-3"></div>
+                </div>
             </div>
 
-            <!-- ABA PERFIL -->
+            <!-- TAB: PROFILE -->
             <div id="tab-profile" class="tab-content space-y-6">
-                <div class="glass-card p-6 space-y-6 text-center">
-                    <div class="flex flex-col items-center gap-3">
-                        <div class="w-20 h-20 rounded-3xl overflow-hidden border-2 border-zinc-800">
-                             <img id="profile-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="w-full h-full object-cover">
+                <div class="glass-card p-8 space-y-8 text-center shadow-2xl">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-24 h-24 rounded-[2rem] overflow-hidden border-2 border-zinc-800 p-1 bg-zinc-900">
+                             <img id="profile-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="w-full h-full object-cover rounded-[1.8rem]">
                         </div>
                         <div>
-                            <h3 id="display-name" class="font-black italic text-xl uppercase tracking-tighter">Utilizador</h3>
-                            <span id="display-role" class="pro-label inline-block mt-2 tracking-widest italic">Acesso Ativo</span>
+                            <h3 id="display-name" class="font-black italic text-2xl uppercase tracking-tighter">Utilizador</h3>
+                            <span id="display-role" class="pro-label inline-block mt-3">Acesso Premium</span>
                         </div>
                     </div>
 
-                    <!-- GESTÃO MASTER: Adicionar Novos Usuários -->
-                    <div id="master-area" class="hidden pt-6 border-t border-white/5 text-left space-y-4">
+                    <!-- ADMIN PANEL (MASTER ONLY) -->
+                    <div id="master-area" class="hidden pt-8 border-t border-white/5 text-left space-y-5">
                         <div class="flex items-center gap-2">
                             <i data-lucide="shield-check" class="w-4 h-4 text-rose-500"></i>
-                            <h4 class="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Painel de Administração (Master)</h4>
+                            <h4 class="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Gestão Master de Logins</h4>
                         </div>
-                        <div class="space-y-2">
-                            <input type="text" id="new-user-name" placeholder="NOVO LOGIN" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none uppercase italic">
-                            <input type="text" id="new-user-pass" placeholder="SENHA" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none uppercase italic">
-                            <select id="new-user-type" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none uppercase italic text-zinc-400">
+                        <div class="space-y-3">
+                            <input type="text" id="new-user-name" placeholder="LOGIN DO NOVO MEMBRO" class="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold outline-none uppercase italic text-white">
+                            <input type="text" id="new-user-pass" placeholder="SENHA DE ACESSO" class="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold outline-none uppercase italic text-white">
+                            <select id="new-user-type" class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold outline-none uppercase italic text-zinc-500">
                                 <option value="Comum">Tipo: Comum</option>
                                 <option value="Master">Tipo: Master</option>
                             </select>
-                            <button onclick="createNewAccount()" class="w-full bg-zinc-800 text-white py-3 rounded-xl font-black text-[9px] uppercase tracking-widest italic hover:bg-zinc-700 transition-colors">Gerar Acesso</button>
+                            <button onclick="createNewAccount()" class="w-full bg-rose-500 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest italic shadow-lg shadow-rose-500/10">Criar Nova Conta</button>
                         </div>
                     </div>
 
-                    <div class="pt-6 border-t border-white/5">
-                        <button onclick="handleLogout()" class="w-full bg-zinc-900 text-zinc-500 py-4 rounded-2xl font-black text-[10px] uppercase italic tracking-widest border border-white/5 hover:text-white transition-all">Sair do Sistema</button>
+                    <div class="pt-8 border-t border-white/5">
+                        <button onclick="handleLogout()" class="w-full bg-zinc-900 text-zinc-500 py-5 rounded-3xl font-black text-[11px] uppercase italic tracking-widest border border-white/5 hover:text-white transition-all">Terminar Sessão</button>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Navegação Inferior -->
+        <!-- Navigation Bar -->
         <nav class="bottom-nav-wrapper">
             <div class="bottom-nav-container">
-                <button onclick="switchTab('home')" id="nav-home" class="nav-btn nav-active"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
-                <button onclick="switchTab('search')" id="nav-search" class="nav-btn"><i data-lucide="search" class="w-5 h-5"></i></button>
-                <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></button>
-                <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn"><i data-lucide="user" class="w-5 h-5"></i></button>
+                <button onclick="switchTab('home')" id="nav-home" class="nav-btn nav-active"><i data-lucide="layout-grid" class="w-6 h-6"></i></button>
+                <button onclick="switchTab('search')" id="nav-search" class="nav-btn"><i data-lucide="search" class="w-6 h-6"></i></button>
+                <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn"><i data-lucide="bar-chart-2" class="w-6 h-6"></i></button>
+                <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn"><i data-lucide="user" class="w-6 h-6"></i></button>
             </div>
         </nav>
     </div>
 
-    <!-- Modal Dossiê Full -->
+    <!-- Modal Dossiê -->
     <div id="match-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 z-[110]">
-        <div class="glass-card w-full max-w-lg p-8 space-y-6 relative max-h-[95vh] overflow-y-auto no-scrollbar border-t border-white/10 shadow-2xl">
-            <div class="absolute top-6 right-6 flex items-center gap-2">
-                <button onclick="deleteMatch()" class="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                <button onclick="closeModal()" class="p-2 bg-zinc-900 rounded-full text-zinc-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <div class="glass-card w-full max-w-lg p-10 space-y-8 relative max-h-[92vh] overflow-y-auto no-scrollbar border-t border-white/10 shadow-2xl">
+            <div class="absolute top-8 right-8 flex items-center gap-3">
+                <button id="modal-delete-btn" class="p-3 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500/20 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                <button onclick="closeModal()" class="p-3 bg-zinc-900 rounded-2xl text-zinc-500"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <div class="flex flex-col items-center gap-4">
-                <div class="w-24 h-24 rounded-3xl bg-zinc-900 border-2 border-zinc-800 overflow-hidden relative">
+            <div class="flex flex-col items-center gap-6">
+                <div class="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-zinc-800 overflow-hidden relative shadow-2xl">
                     <img id="modal-photo-img" src="" class="hidden w-full h-full object-cover">
-                    <span id="modal-initial" class="absolute inset-0 flex items-center justify-center text-4xl font-black italic text-zinc-700 uppercase"></span>
-                    <label class="absolute -bottom-1 -right-1 bg-rose-500 p-2 rounded-xl cursor-pointer">
-                        <i data-lucide="camera" class="w-3.5 h-3.5 text-white"></i>
+                    <span id="modal-initial" class="absolute inset-0 flex items-center justify-center text-5xl font-black italic text-zinc-800 uppercase"></span>
+                    <label class="absolute -bottom-1 -right-1 bg-rose-500 p-2.5 rounded-2xl cursor-pointer shadow-xl active:scale-90 transition-transform">
+                        <i data-lucide="camera" class="w-4 h-4 text-white"></i>
                         <input type="file" class="hidden" id="match-photo-input" accept="image/*">
                     </label>
                 </div>
                 <div class="text-center w-full">
-                    <input type="text" id="edit-name" class="text-center text-2xl font-black italic tracking-tighter bg-transparent outline-none w-full text-white uppercase" placeholder="NOME">
-                    <div class="flex justify-center items-center gap-2 mt-2">
-                        <span class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Idade:</span>
-                        <input type="number" id="edit-age" class="w-12 bg-transparent font-black italic text-zinc-300 outline-none">
+                    <input type="text" id="edit-name" class="text-center text-3xl font-black italic tracking-tighter bg-transparent outline-none w-full text-white uppercase placeholder-zinc-800" placeholder="NOME DO MATCH">
+                    <div class="flex justify-center items-center gap-3 mt-3">
+                        <span class="text-[11px] font-black text-zinc-600 uppercase tracking-widest italic">Idade Atual:</span>
+                        <input type="number" id="edit-age" class="w-14 bg-transparent font-black italic text-xl text-rose-500 outline-none">
                     </div>
                 </div>
             </div>
 
-            <!-- Dossiê Inteligente: Identidade -->
+            <!-- Detailed Dossier -->
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="glass-card p-4 bg-zinc-900/30">
-                        <p class="text-[9px] font-black text-zinc-600 uppercase mb-1 tracking-widest italic">Profissão</p>
-                        <input type="text" id="edit-profession" class="w-full bg-transparent outline-none italic font-bold text-sm" placeholder="...">
+                    <div class="glass-card p-5 bg-zinc-900/40">
+                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Carreira</p>
+                        <input type="text" id="edit-profession" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="...">
                     </div>
-                    <div class="glass-card p-4 bg-zinc-900/30">
-                        <p class="text-[9px] font-black text-zinc-600 uppercase mb-1 tracking-widest italic">Formação</p>
-                        <input type="text" id="edit-formation" class="w-full bg-transparent outline-none italic font-bold text-sm" placeholder="...">
+                    <div class="glass-card p-5 bg-zinc-900/40">
+                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Estudos</p>
+                        <input type="text" id="edit-formation" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="...">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="glass-card p-4 bg-zinc-900/30">
-                        <p class="text-[9px] font-black text-zinc-600 uppercase mb-1 tracking-widest italic">Bairro</p>
-                        <input type="text" id="edit-neighborhood" class="w-full bg-transparent outline-none italic font-bold text-sm" placeholder="...">
+                    <div class="glass-card p-5 bg-zinc-900/40">
+                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Localização</p>
+                        <input type="text" id="edit-neighborhood" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="Bairro...">
                     </div>
-                    <div class="glass-card p-4 bg-zinc-900/30">
-                        <p class="text-[9px] font-black text-zinc-600 uppercase mb-1 tracking-widest italic">Cidade/UF</p>
-                        <input type="text" id="edit-city" class="w-full bg-transparent outline-none italic font-bold text-sm" placeholder="...">
+                    <div class="glass-card p-5 bg-zinc-900/40">
+                        <p class="text-[10px] font-black text-zinc-600 uppercase mb-2 tracking-widest italic">Cidade/UF</p>
+                        <input type="text" id="edit-city" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="...">
                     </div>
                 </div>
-                <div class="glass-card p-4 bg-zinc-900/30">
-                    <p class="text-[9px] font-black text-rose-500/60 uppercase mb-1 tracking-widest italic">Instagram</p>
+                <div class="glass-card p-5 bg-zinc-900/40">
+                    <p class="text-[10px] font-black text-rose-500/60 uppercase mb-2 tracking-widest italic">Rede Social</p>
                     <div class="flex items-center gap-1">
-                        <span class="text-zinc-500 text-xs">@</span>
-                        <input type="text" id="edit-instagram" class="w-full bg-transparent outline-none italic font-bold text-sm" placeholder="...">
+                        <span class="text-zinc-500 text-sm font-bold">@</span>
+                        <input type="text" id="edit-instagram" class="w-full bg-transparent outline-none italic font-bold text-[13px] text-white" placeholder="user_insta">
                     </div>
                 </div>
             </div>
 
-            <!-- Logística & Badges -->
-            <div class="flex justify-center gap-3">
-                <div onclick="toggleBadge('bebe')" id="badge-bebe" class="badge-circle"><i data-lucide="wine" class="text-rose-400"></i><span class="italic">Bebe</span></div>
-                <div onclick="toggleBadge('fuma')" id="badge-fuma" class="badge-circle"><i data-lucide="cigar" class="text-zinc-400"></i><span class="italic">Fuma</span></div>
-                <div onclick="askKidsCount()" id="badge-filhos" class="badge-circle"><i data-lucide="baby" class="text-blue-400"></i><span id="label-filhos" class="italic">Kids</span></div>
-                <div onclick="toggleBadge('pets')" id="badge-pets" class="badge-circle"><i data-lucide="dog" class="text-yellow-400"></i><span class="italic">Pets</span></div>
+            <!-- Lifestyle Badges -->
+            <div class="flex justify-center gap-4">
+                <div onclick="toggleBadge('bebe')" id="badge-bebe" class="badge-circle"><i data-lucide="wine"></i><span class="italic">Bebe</span></div>
+                <div onclick="toggleBadge('fuma')" id="badge-fuma" class="badge-circle"><i data-lucide="cigar"></i><span class="italic">Fuma</span></div>
+                <div onclick="askKidsCount()" id="badge-filhos" class="badge-circle"><i data-lucide="baby"></i><span id="label-filhos" class="italic">Kids</span></div>
+                <div onclick="toggleBadge('pets')" id="badge-pets" class="badge-circle"><i data-lucide="dog"></i><span class="italic">Pets</span></div>
             </div>
 
-            <div class="bg-zinc-900/30 p-5 rounded-2xl border border-white/5 space-y-3">
-                <p class="text-[9px] font-black text-zinc-500 uppercase tracking-widest italic">Memória Estratégica (Hot Topics)</p>
-                <textarea id="edit-topics" class="w-full h-24 bg-transparent text-[11px] text-zinc-400 italic outline-none resize-none leading-relaxed" placeholder="Tópicos que renderam assunto..."></textarea>
+            <div class="bg-zinc-900/50 p-6 rounded-[2rem] border border-white/5 space-y-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="brain-circuit" class="w-4 h-4 text-zinc-600"></i>
+                    <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Memória Estratégica</p>
+                </div>
+                <textarea id="edit-topics" class="w-full h-32 bg-transparent text-[12px] text-zinc-400 italic outline-none resize-none leading-relaxed" placeholder="Anotações para não falhar na próxima conversa..."></textarea>
             </div>
 
-            <button onclick="saveAndClose()" class="w-full bg-white text-black text-[11px] font-black uppercase py-4 rounded-2xl active:scale-95 italic transition-all shadow-lg shadow-white/5">Sincronizar Dossiê</button>
+            <button onclick="saveAndClose()" class="w-full bg-white text-black text-[12px] font-black uppercase py-5 rounded-[1.8rem] active:scale-95 italic transition-all shadow-2xl shadow-white/5">Finalizar Dossiê</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO: COLA AQUI O TEU SCRIPT URL DO GOOGLE APPS SCRIPT ---
+        // --- CONFIGURAÇÃO: COLA O TEU LINK DO APPS SCRIPT AQUI ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOuuMGlaTJIl4he-H0gALsRNn40IjM4pmWfNR8vcmCTGf3LYfo40Pt-4dLMz0m4YZ/exec"; 
 
         let currentUser = null;
@@ -356,7 +373,7 @@
         let activeTab = 'home';
         let currentEditingId = null;
 
-        // --- Autenticação ---
+        // --- AUTH ---
         async function handleLogin() {
             const user = document.getElementById('login-user').value.toLowerCase().trim();
             const pass = document.getElementById('login-pass').value.trim();
@@ -364,8 +381,9 @@
             const err = document.getElementById('error-msg');
 
             if(!user || !pass) return;
-            btn.textContent = "VALIDANDO ACESSO...";
+            btn.textContent = "AUTENTICANDO...";
             btn.disabled = true;
+            err.classList.add('hidden');
 
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=login&user=${user}&pass=${pass}`);
@@ -376,12 +394,11 @@
                     userData = result.userData; // { role: "Master" | "Comum" }
                     initApp();
                 } else {
-                    throw new Error(result.message || "Erro de login");
+                    throw new Error("Login falhou");
                 }
             } catch (e) {
                 err.classList.remove('hidden');
-                err.textContent = "Credenciais Inválidas";
-                btn.textContent = "Aceder ao Ranking";
+                btn.textContent = "Entrar no Sistema";
                 btn.disabled = false;
             }
         }
@@ -391,17 +408,14 @@
             setTimeout(() => {
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('real-app').classList.remove('hidden');
-                
                 document.getElementById('display-name').textContent = currentUser;
-                document.getElementById('display-role').textContent = userData.role === 'Master' ? 'Acesso Master' : 'Acesso Comum';
+                document.getElementById('display-role').textContent = userData.role === 'Master' ? 'Master Profile' : 'Common Account';
                 
-                const seed = currentUser === 'wevs' || currentUser === 'admin' ? 'Felix' : currentUser;
+                const seed = (currentUser === 'wevs' || currentUser === 'admin') ? 'Felix' : currentUser;
                 document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
                 document.getElementById('profile-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 
-                if(userData.role === 'Master') {
-                    document.getElementById('master-area').classList.remove('hidden');
-                }
+                if(userData.role === 'Master') document.getElementById('master-area').classList.remove('hidden');
                 
                 loadData();
                 lucide.createIcons();
@@ -415,9 +429,7 @@
                 window.matches = await response.json();
                 render();
                 status.classList.replace('bg-zinc-700', 'bg-green-500');
-            } catch(e) {
-                status.classList.replace('bg-zinc-700', 'bg-red-500');
-            }
+            } catch(e) { status.classList.replace('bg-zinc-700', 'bg-red-500'); }
         }
 
         async function sync() {
@@ -427,13 +439,8 @@
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify({
-                        action: 'saveMatches',
-                        user: currentUser,
-                        list: window.matches
-                    })
+                    body: JSON.stringify({ action: 'saveMatches', user: currentUser, list: window.matches })
                 });
-                // Feedback visual após um pequeno delay por causa do no-cors
                 setTimeout(() => {
                     status.classList.replace('bg-blue-500', 'bg-green-500');
                     status.classList.remove('animate-pulse');
@@ -442,32 +449,26 @@
             } catch (e) { status.classList.replace('bg-blue-500', 'bg-red-500'); }
         }
 
-        // --- Gestão de Usuários (Master Only) ---
+        // --- MASTER ADMIN ---
         async function createNewAccount() {
             const newUserName = document.getElementById('new-user-name').value.toLowerCase().trim();
             const newUserPass = document.getElementById('new-user-pass').value.trim();
             const type = document.getElementById('new-user-type').value;
 
             if(!newUserName || !newUserPass) return;
-
             try {
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify({
-                        action: 'createAccount',
-                        newUserName,
-                        newUserPass,
-                        type
-                    })
+                    body: JSON.stringify({ action: 'createAccount', newUserName, newUserPass, type })
                 });
-                alert(`Utilizador ${newUserName} criado com sucesso!`);
+                alert(`Sucesso! Utilizador ${newUserName} ativo.`);
                 document.getElementById('new-user-name').value = "";
                 document.getElementById('new-user-pass').value = "";
-            } catch (e) { alert("Erro ao criar conta."); }
+            } catch (e) { alert("Erro na criação."); }
         }
 
-        // --- Lógica de UI ---
+        // --- CORE UI ---
         function switchTab(t) {
             activeTab = t;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -485,7 +486,10 @@
 
             const container = activeTab === 'home' ? document.getElementById('recent-list') : 
                              activeTab === 'search' ? document.getElementById('search-results') : null;
-            if(!container) return;
+            if(!container) {
+                if(activeTab === 'stats') renderStats();
+                return;
+            }
 
             const query = document.getElementById('search-input')?.value.toLowerCase() || "";
             const filtered = activeTab === 'search' ? window.matches.filter(m => m.nome.toLowerCase().includes(query)) : window.matches;
@@ -493,16 +497,16 @@
             container.innerHTML = filtered.map(m => `
                 <div class="glass-card p-5 flex items-center justify-between border-l-4 status-${m.status}" onclick="openModal('${m.id}')">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center font-black italic border border-white/5 uppercase overflow-hidden">
+                        <div class="w-11 h-11 rounded-2xl bg-zinc-900 flex items-center justify-center font-black italic border border-white/5 uppercase overflow-hidden">
                             ${m.foto ? `<img src="${m.foto}" class="w-full h-full object-cover">` : (m.nome || "?")[0]}
                         </div>
                         <div>
-                            <h3 class="font-black italic text-sm tracking-tighter uppercase">${m.nome}</h3>
+                            <h3 class="font-black italic text-[13px] tracking-tighter uppercase">${m.nome}</h3>
                             <p class="text-[8px] text-zinc-600 font-black uppercase tracking-widest italic">${m.data}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2" onclick="event.stopPropagation()">
-                         <select onchange="updateStatus('${m.id}', this.value)" class="text-[8px] bg-zinc-900 rounded-xl px-2 py-2 font-black uppercase text-zinc-400 outline-none italic border border-white/5">
+                         <select onchange="updateStatus('${m.id}', this.value)" class="text-[9px] bg-zinc-900 rounded-xl px-2 py-2 font-black uppercase text-zinc-500 outline-none italic border border-white/5">
                             <option value="conheci" ${m.status === 'conheci' ? 'selected' : ''}>Conheci</option>
                             <option value="sai" ${m.status === 'sai' ? 'selected' : ''}>Saí</option>
                             <option value="fiquei" ${m.status === 'fiquei' ? 'selected' : ''}>Fiquei</option>
@@ -510,43 +514,36 @@
                          </select>
                     </div>
                 </div>`).join('');
-            
-            if(activeTab === 'stats') {
-                const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-                const counts = {};
-                window.matches.forEach(m => { if(m.nome) counts[m.nome[0].toUpperCase()] = (counts[m.nome[0].toUpperCase()] || 0) + 1; });
-                document.getElementById('alphabet-grid').innerHTML = alphabet.map(l => `
-                    <div class="p-3 rounded-2xl border ${counts[l] ? 'bg-zinc-800 border-rose-500/20 text-white' : 'bg-zinc-900/40 border-white/5 text-zinc-800'} flex flex-col items-center">
-                        <span class="text-[11px] font-black italic">${l}</span>
-                        <span class="text-[8px] font-bold mt-0.5">${counts[l] || 0}</span>
-                    </div>`).join('');
-            }
             lucide.createIcons();
         }
 
-        // --- Modal & Dossiê ---
+        function renderStats() {
+            const counts = {};
+            window.matches.forEach(m => { if(m.nome) counts[m.nome[0].toUpperCase()] = (counts[m.nome[0].toUpperCase()] || 0) + 1; });
+            document.getElementById('alphabet-grid').innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(l => `
+                <div class="p-4 rounded-3xl border ${counts[l] ? 'bg-zinc-800 border-rose-500/20 text-white' : 'bg-zinc-900/40 border-white/5 text-zinc-800'} flex flex-col items-center">
+                    <span class="text-[12px] font-black italic">${l}</span>
+                    <span class="text-[9px] font-bold mt-1 opacity-60">${counts[l] || 0}</span>
+                </div>`).join('');
+        }
+
+        // --- DOSSIÊ CRUD ---
         function openModal(id) {
             currentEditingId = id;
             const m = window.matches.find(x => x.id == id);
             if(!m) return;
 
-            document.getElementById('edit-name').value = m.nome;
-            document.getElementById('edit-age').value = m.idade;
-            document.getElementById('edit-profession').value = m.profissao || "";
-            document.getElementById('edit-formation').value = m.formacao || "";
-            document.getElementById('edit-neighborhood').value = m.bairro || "";
-            document.getElementById('edit-city').value = m.cidade || "";
-            document.getElementById('edit-instagram').value = m.instagram || "";
-            document.getElementById('edit-topics').value = m.memoria_estrategica || "";
+            const setV = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ""; };
+            setV('edit-name', m.nome); setV('edit-age', m.idade); setV('edit-profession', m.profissao);
+            setV('edit-formation', m.formacao); setV('edit-neighborhood', m.bairro); setV('edit-city', m.cidade);
+            setV('edit-instagram', m.instagram); setV('edit-topics', m.memoria_estrategica);
 
             const updBadge = (bid, act, lbl = null) => {
                 const el = document.getElementById(`badge-${bid}`);
                 if (el) act ? el.classList.add('active') : el.classList.remove('active');
                 if (lbl) { const le = document.getElementById(`label-${bid}`); if(le) le.textContent = lbl; }
             };
-            updBadge('bebe', m.bebe);
-            updBadge('fuma', m.fuma);
-            updBadge('pets', m.pets);
+            updBadge('bebe', m.bebe); updBadge('fuma', m.fuma); updBadge('pets', m.pets);
             updBadge('filhos', m.filhos > 0, m.filhos > 0 ? `Kids (${m.filhos})` : 'Kids');
 
             const pImg = document.getElementById('modal-photo-img');
@@ -563,14 +560,10 @@
         function saveAndClose() {
             const m = window.matches.find(x => x.id == currentEditingId);
             if(m) {
-                m.nome = document.getElementById('edit-name').value;
-                m.idade = document.getElementById('edit-age').value;
-                m.profissao = document.getElementById('edit-profession').value;
-                m.formacao = document.getElementById('edit-formation').value;
-                m.bairro = document.getElementById('edit-neighborhood').value;
-                m.cidade = document.getElementById('edit-city').value;
-                m.instagram = document.getElementById('edit-instagram').value;
-                m.memoria_estrategica = document.getElementById('edit-topics').value;
+                const getV = (id) => document.getElementById(id).value;
+                m.nome = getV('edit-name'); m.idade = getV('edit-age'); m.profissao = getV('edit-profession');
+                m.formacao = getV('edit-formation'); m.bairro = getV('edit-neighborhood'); m.cidade = getV('edit-city');
+                m.instagram = getV('edit-instagram'); m.memoria_estrategica = getV('edit-topics');
             }
             sync(); closeModal();
         }
@@ -589,20 +582,18 @@
         }
 
         function updateStatus(id, s) { 
-            window.matches = window.matches.map(m => m.id == id ? { ...m, status: s } : m); 
-            sync(); 
+            window.matches = window.matches.map(m => m.id == id ? { ...m, status: s } : m); sync(); 
         }
 
         function deleteMatch() {
-            if(confirm("Apagar permanentemente este registo do ranking?")) {
-                window.matches = window.matches.filter(x => x.id != currentEditingId);
-                sync(); closeModal();
+            if(confirm("Deseja apagar este dossiê permanentemente?")) {
+                window.matches = window.matches.filter(x => x.id != currentEditingId); sync(); closeModal();
             }
         }
 
         function createNewMatch() {
             const id = Date.now();
-            window.matches.unshift({ id, nome: "NOVO REGISTO", idade: "", status: 'conheci', data: new Date().toLocaleDateString('pt-PT') });
+            window.matches.unshift({ id, nome: "NOVO REGISTO", status: 'conheci', data: new Date().toLocaleDateString('pt-PT') });
             sync(); openModal(id);
         }
 
@@ -611,7 +602,7 @@
             if(!raw) return;
             const nameM = raw.match(/(?:\]\s*)([A-Z][a-zà-ú]+)(?:\s*:)/);
             const id = Date.now();
-            window.matches.unshift({ id, nome: nameM ? nameM[1].toUpperCase() : "IMPORTADO", status: 'conheci', data: new Date().toLocaleDateString('pt-PT'), memoria_estrategica: raw.substring(0, 200) + "..." });
+            window.matches.unshift({ id, nome: nameM ? nameM[1].toUpperCase() : "IMPORTADO", status: 'conheci', data: new Date().toLocaleDateString('pt-PT'), memoria_estrategica: raw.substring(0, 300) });
             document.getElementById('wa-text-input').value = "";
             sync(); openModal(id);
         }

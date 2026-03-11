@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAP Pro v1.13</title>
+    <title>MAP Pro v1.14 - Com Agenda</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -157,6 +157,88 @@
         }
         
         #login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Calendar Styles */
+        .calendar-day {
+            aspect-ratio: 1;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendar-day:hover {
+            border-color: rgba(244, 63, 94, 0.3);
+            background: rgba(244, 63, 94, 0.05);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            border-color: var(--accent-pink);
+            background: rgba(244, 63, 94, 0.1);
+        }
+
+        .calendar-day.has-event {
+            border-color: var(--accent-pink);
+            background: rgba(244, 63, 94, 0.15);
+        }
+
+        .calendar-day.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent-pink);
+        }
+
+        .calendar-day-number {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .calendar-day-events {
+            font-size: 0.65rem;
+            color: var(--accent-pink);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .event-item {
+            background: rgba(244, 63, 94, 0.1);
+            border-left: 3px solid var(--accent-pink);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .event-time {
+            font-weight: 700;
+            color: var(--accent-pink);
+            font-size: 0.75rem;
+        }
+
+        .event-title {
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .event-lead {
+            font-size: 0.75rem;
+            color: #a1a1a1;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body class="no-scrollbar">
@@ -229,6 +311,45 @@
                 <div id="search-results" class="space-y-4"></div>
             </div>
 
+            <!-- ABA AGENDA -->
+            <div id="tab-agenda" class="tab-content space-y-6">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-2xl font-black italic tracking-tighter">Agenda</h2>
+                        <button onclick="openScheduleModal()" class="text-[10px] font-black bg-rose-500/10 border border-rose-500/20 text-rose-500 px-4 py-2 rounded-xl uppercase italic hover:bg-rose-500/20 transition-all">+ Agendar</button>
+                    </div>
+
+                    <!-- Navegação do Calendário -->
+                    <div class="glass-card p-4 border border-white/5">
+                        <div class="flex items-center justify-between mb-4">
+                            <button onclick="previousMonth()" class="p-2 hover:bg-zinc-800 rounded-lg transition-all"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                            <h3 class="text-[13px] font-black uppercase tracking-widest italic" id="calendar-month">Março 2026</h3>
+                            <button onclick="nextMonth()" class="p-2 hover:bg-zinc-800 rounded-lg transition-all"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                        </div>
+
+                        <!-- Calendário -->
+                        <div class="grid grid-cols-7 gap-2 mb-4">
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Seg</div>
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Ter</div>
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Qua</div>
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Qui</div>
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Sex</div>
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Sab</div>
+                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Dom</div>
+                        </div>
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+                    </div>
+
+                    <!-- Eventos do Dia Selecionado -->
+                    <div class="glass-card p-6 border border-white/5">
+                        <h4 class="text-[11px] font-black text-zinc-100 uppercase tracking-widest italic mb-4">Encontros Agendados</h4>
+                        <div id="agenda-events" class="space-y-3">
+                            <p class="text-[12px] text-zinc-600 italic">Seleciona um dia no calendário para ver os encontros agendados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ABA MÉTRICAS -->
             <div id="tab-stats" class="tab-content space-y-8">
                 <h2 class="text-2xl font-black italic tracking-tighter">Performance de Campo</h2>
@@ -280,6 +401,7 @@
             <div class="bottom-nav-container">
                 <button onclick="switchTab('home')" id="nav-home" class="nav-btn nav-active"><i data-lucide="layout-grid" class="w-6 h-6"></i></button>
                 <button onclick="switchTab('search')" id="nav-search" class="nav-btn"><i data-lucide="search" class="w-6 h-6"></i></button>
+                <button onclick="switchTab('agenda')" id="nav-agenda" class="nav-btn"><i data-lucide="calendar" class="w-6 h-6"></i></button>
                 <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn"><i data-lucide="bar-chart-2" class="w-6 h-6"></i></button>
                 <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn"><i data-lucide="user" class="w-6 h-6"></i></button>
             </div>
@@ -362,6 +484,42 @@
         </div>
     </div>
 
+    <!-- Modal Agendar Encontro -->
+    <div id="schedule-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 z-[110]">
+        <div class="glass-card w-full max-w-lg p-8 space-y-6 relative border-t border-white/10 shadow-2xl rounded-3xl">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-black italic tracking-tighter">Agendar Encontro</h3>
+                <button onclick="closeScheduleModal()" class="p-3 bg-zinc-900 rounded-2xl text-zinc-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic block mb-2">Seleciona um Lead</label>
+                    <select id="schedule-lead" class="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none uppercase italic text-white">
+                        <option value="">-- Escolher Lead --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic block mb-2">Data</label>
+                    <input type="date" id="schedule-date" class="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none text-white">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic block mb-2">Hora</label>
+                    <input type="time" id="schedule-time" class="w-full bg-zinc-900/80 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none text-white">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic block mb-2">Local/Notas</label>
+                    <textarea id="schedule-notes" placeholder="Ex: Café da Avenida, Parque Central..." class="w-full h-24 bg-zinc-900/80 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none text-white resize-none italic"></textarea>
+                </div>
+            </div>
+
+            <button onclick="saveSchedule()" class="w-full bg-rose-500 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest italic shadow-lg shadow-rose-500/10 hover:bg-rose-600 transition-all">Agendar Encontro</button>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT
@@ -371,8 +529,11 @@
         let currentUser = null;
         let userData = { role: 'Comum' };
         window.matches = [];
+        window.schedules = [];
         let activeTab = 'home';
         let currentEditingId = null;
+        let currentCalendarDate = new Date();
+        let selectedCalendarDate = new Date();
 
         // --- AUTH ---
         async function handleLogin() {
@@ -392,114 +553,257 @@
 
                 if (result.success) {
                     currentUser = user;
-                    userData = result.userData; // { role: "Master" | "Comum" }
+                    userData = result.userData;
                     initApp();
                 } else {
                     throw new Error(result.message || "Login falhou");
                 }
             } catch (e) {
-                console.error(e);
+                err.textContent = "Falha na Autenticação";
                 err.classList.remove('hidden');
-                btn.textContent = "Entrar no Sistema";
+                btn.textContent = "ENTRAR NO SISTEMA";
                 btn.disabled = false;
             }
         }
 
         function initApp() {
-            document.getElementById('auth-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('real-app').classList.remove('hidden');
-                document.getElementById('display-name').textContent = currentUser;
-                document.getElementById('display-role').textContent = userData.role === 'Master' ? 'Master Profile' : 'Common Account';
-                
-                const seed = (currentUser === 'wevs' || currentUser === 'admin') ? 'Felix' : currentUser;
-                document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-                document.getElementById('profile-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-
-                if(userData.role === 'Master') document.getElementById('master-area').classList.remove('hidden');
-                
-                loadData();
-                lucide.createIcons();
-            }, 500);
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('real-app').classList.remove('hidden');
+            document.getElementById('display-name').textContent = currentUser.toUpperCase();
+            document.getElementById('display-role').textContent = userData.role === 'Master' ? 'ACESSO MASTER' : 'ACESSO COMUM';
+            if(userData.role === 'Master') document.getElementById('master-area').classList.remove('hidden');
+            loadMatches();
+            loadSchedules();
+            renderCalendar();
         }
 
-        async function loadData() {
-            const status = document.getElementById('cloud-status');
+        async function loadMatches() {
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=getMatches&user=${encodeURIComponent(currentUser)}`);
-                const data = await response.json();
-                window.matches = Array.isArray(data) ? data : [];
+                const result = await response.json();
+                window.matches = result.data || [];
                 render();
-                status.classList.replace('bg-zinc-700', 'bg-green-500');
-            } catch(e) { 
-                console.error(e);
-                status.classList.replace('bg-zinc-700', 'bg-red-500'); 
+            } catch (e) {
+                window.matches = [];
+            }
+        }
+
+        async function loadSchedules() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getSchedules&user=${encodeURIComponent(currentUser)}`);
+                const result = await response.json();
+                window.schedules = result.data || [];
+                renderCalendar();
+                populateLeadSelect();
+            } catch (e) {
+                window.schedules = [];
             }
         }
 
         async function sync() {
-            const status = document.getElementById('cloud-status');
-            status.classList.add('bg-blue-500', 'animate-pulse');
             try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: 'saveMatches', user: currentUser, list: window.matches })
-                });
-                setTimeout(() => {
-                    status.classList.replace('bg-blue-500', 'bg-green-500');
-                    status.classList.remove('animate-pulse');
-                    setTimeout(() => status.classList.replace('bg-green-500', 'bg-zinc-700'), 2000);
-                }, 1000);
-            } catch (e) { status.classList.replace('bg-blue-500', 'bg-red-500'); }
+                await fetch(`${SCRIPT_URL}?action=saveMatches&user=${encodeURIComponent(currentUser)}&data=${encodeURIComponent(JSON.stringify(window.matches))}`);
+            } catch (e) {}
         }
 
-        // --- MASTER ADMIN ---
-        async function createNewAccount() {
-            const newUserName = document.getElementById('new-user-name').value.toLowerCase().trim();
-            const newUserPass = document.getElementById('new-user-pass').value.trim();
-            const type = document.getElementById('new-user-type').value;
-
-            if(!newUserName || !newUserPass) return;
+        async function syncSchedules() {
             try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: 'createAccount', newUserName, newUserPass, type })
-                });
-                alert(`Sucesso! Utilizador ${newUserName} ativo na base de dados.`);
-                document.getElementById('new-user-name').value = "";
-                document.getElementById('new-user-pass').value = "";
-            } catch (e) { alert("Erro na criação."); }
+                await fetch(`${SCRIPT_URL}?action=saveSchedules&user=${encodeURIComponent(currentUser)}&data=${encodeURIComponent(JSON.stringify(window.schedules))}`);
+            } catch (e) {}
         }
 
-        // --- TABS & RENDERING ---
-        function switchTab(t) {
-            activeTab = t;
+        // --- AGENDA ---
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            document.getElementById('calendar-month').textContent = currentCalendarDate.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' }).toUpperCase();
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const prevLastDay = new Date(year, month, 0).getDate();
+            const nextDays = 7 - lastDay.getDay();
+            
+            let html = '';
+            
+            // Dias do mês anterior
+            for (let i = firstDay.getDay() - 1; i >= 0; i--) {
+                const day = prevLastDay - i;
+                html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
+            }
+            
+            // Dias do mês atual
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toISOString().split('T')[0];
+                const events = window.schedules.filter(s => s.data === dateStr);
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (events.length > 0) classes += ' has-event';
+                
+                html += `<div class="${classes}" onclick="selectCalendarDay('${dateStr}')">
+                    <span class="calendar-day-number">${day}</span>
+                    ${events.length > 0 ? `<div class="calendar-day-events">${events.length}</div>` : ''}
+                </div>`;
+            }
+            
+            // Dias do próximo mês
+            for (let day = 1; day <= nextDays; day++) {
+                html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
+            }
+            
+            document.getElementById('calendar-grid').innerHTML = html;
+        }
+
+        function previousMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function selectCalendarDay(dateStr) {
+            selectedCalendarDate = new Date(dateStr);
+            renderAgendaEvents(dateStr);
+        }
+
+        function renderAgendaEvents(dateStr) {
+            const events = window.schedules.filter(s => s.data === dateStr);
+            const container = document.getElementById('agenda-events');
+            
+            if (events.length === 0) {
+                container.innerHTML = `<p class="text-[12px] text-zinc-600 italic">Nenhum encontro agendado para este dia</p>`;
+                return;
+            }
+            
+            container.innerHTML = events.map(event => {
+                const lead = window.matches.find(m => m.id == event.leadId);
+                return `
+                    <div class="event-item">
+                        <div class="event-time">${event.hora || '--:--'}</div>
+                        <div class="event-title">${event.titulo || 'Encontro'}</div>
+                        <div class="event-lead">${lead ? lead.nome : 'Lead desconhecido'}</div>
+                        ${event.notas ? `<div class="text-[11px] text-zinc-500 mt-2">${event.notas}</div>` : ''}
+                        <button onclick="deleteSchedule('${event.id}')" class="text-[10px] text-red-500 mt-2 hover:text-red-400">Remover</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function populateLeadSelect() {
+            const select = document.getElementById('schedule-lead');
+            select.innerHTML = '<option value="">-- Escolher Lead --</option>' + 
+                window.matches.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+        }
+
+        function openScheduleModal() {
+            populateLeadSelect();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('schedule-date').value = today;
+            document.getElementById('schedule-time').value = '14:00';
+            document.getElementById('schedule-lead').value = '';
+            document.getElementById('schedule-notes').value = '';
+            document.getElementById('schedule-modal').classList.remove('hidden');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').classList.add('hidden');
+        }
+
+        function saveSchedule() {
+            const leadId = document.getElementById('schedule-lead').value;
+            const data = document.getElementById('schedule-date').value;
+            const hora = document.getElementById('schedule-time').value;
+            const notas = document.getElementById('schedule-notes').value;
+            
+            if (!leadId || !data) {
+                alert('Preenche o Lead e a Data!');
+                return;
+            }
+            
+            const lead = window.matches.find(m => m.id == leadId);
+            const schedule = {
+                id: Date.now().toString(),
+                leadId: leadId,
+                data: data,
+                hora: hora,
+                titulo: `Encontro com ${lead.nome}`,
+                notas: notas
+            };
+            
+            window.schedules.push(schedule);
+            syncSchedules();
+            renderCalendar();
+            closeScheduleModal();
+            selectCalendarDay(data);
+        }
+
+        function deleteSchedule(id) {
+            if (confirm('Deseja remover este encontro?')) {
+                window.schedules = window.schedules.filter(s => s.id !== id);
+                syncSchedules();
+                renderCalendar();
+                const dateStr = selectedCalendarDate.toISOString().split('T')[0];
+                renderAgendaEvents(dateStr);
+            }
+        }
+
+        // --- TABS ---
+        function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${t}`).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById(`nav-${t}`).classList.add('nav-active');
-            render();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('nav-active'));
+            
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`nav-${tab}`).classList.add('nav-active');
+            activeTab = tab;
+            
+            if (tab === 'agenda') {
+                renderCalendar();
+                const today = new Date().toISOString().split('T')[0];
+                selectCalendarDay(today);
+            }
         }
 
         function render() {
-            const stats = { transei: 0 };
-            window.matches.forEach(m => { if(m.status === 'transei') stats.transei++ });
-            document.getElementById('global-score').textContent = (window.matches.length * 5 + stats.transei * 85).toFixed(2);
+            renderRecent();
+            renderSearch();
+            renderStats();
+        }
 
-            const container = activeTab === 'home' ? document.getElementById('recent-list') : 
-                             activeTab === 'search' ? document.getElementById('search-results') : null;
-            
-            if(!container) {
-                if(activeTab === 'stats') renderStats();
-                return;
-            }
+        function renderRecent() {
+            const container = document.getElementById('recent-list');
+            container.innerHTML = window.matches.slice(0, 5).map(m => `
+                <div class="glass-card p-5 flex items-center justify-between border-l-4 status-${m.status || 'conheci'}" onclick="openModal('${m.id}')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-11 h-11 rounded-2xl bg-zinc-900 flex items-center justify-center font-black italic border border-white/5 uppercase overflow-hidden">
+                            ${m.foto ? `<img src="${m.foto}" class="w-full h-full object-cover">` : ((m.nome || "?")[0])}
+                        </div>
+                        <div>
+                            <h3 class="font-black italic text-[13px] tracking-tighter uppercase">${m.nome || "Novo"}</h3>
+                            <p class="text-[8px] text-zinc-600 font-black uppercase tracking-widest italic">${m.data || ""}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                         <select onchange="updateStatus('${m.id}', this.value)" class="text-[9px] bg-zinc-900 rounded-xl px-2 py-2 font-black uppercase text-zinc-500 outline-none italic border border-white/5">
+                            <option value="conheci" ${m.status === 'conheci' ? 'selected' : ''}>Conheci</option>
+                            <option value="sai" ${m.status === 'sai' ? 'selected' : ''}>Saí</option>
+                            <option value="fiquei" ${m.status === 'fiquei' ? 'selected' : ''}>Fiquei</option>
+                            <option value="transei" ${m.status === 'transei' ? 'selected' : ''}>Transei</option>
+                         </select>
+                    </div>
+                </div>`).join('');
+            lucide.createIcons();
+        }
 
-            const query = document.getElementById('search-input')?.value.toLowerCase() || "";
-            const filtered = activeTab === 'search' ? window.matches.filter(m => (m.nome || "").toLowerCase().includes(query)) : window.matches;
+        function renderSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const container = document.getElementById('search-results');
+            const filtered = window.matches.filter(m => (m.nome || "").toLowerCase().includes(query));
 
             container.innerHTML = filtered.map(m => `
                 <div class="glass-card p-5 flex items-center justify-between border-l-4 status-${m.status || 'conheci'}" onclick="openModal('${m.id}')">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAP Pro v1.14 - Com Agenda</title>
+    <title>MAP Pro v10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -158,10 +158,64 @@
         
         #login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* Drawer Menu */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 95;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .drawer-menu {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 90%;
+            max-width: 420px;
+            background: #000000;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 96;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .drawer-menu.active {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .drawer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
         /* Calendar Styles */
         .calendar-day {
             aspect-ratio: 1;
-            border-radius: 1rem;
+            border-radius: 0.8rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
@@ -171,6 +225,8 @@
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         .calendar-day:hover {
@@ -179,7 +235,7 @@
         }
 
         .calendar-day.other-month {
-            opacity: 0.3;
+            opacity: 0.2;
         }
 
         .calendar-day.today {
@@ -195,23 +251,11 @@
         .calendar-day.has-event::after {
             content: '';
             position: absolute;
-            bottom: 4px;
-            width: 4px;
-            height: 4px;
+            bottom: 3px;
+            width: 3px;
+            height: 3px;
             border-radius: 50%;
             background: var(--accent-pink);
-        }
-
-        .calendar-day-number {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .calendar-day-events {
-            font-size: 0.65rem;
-            color: var(--accent-pink);
-            font-weight: 600;
-            margin-top: 2px;
         }
 
         .event-item {
@@ -220,24 +264,45 @@
             border-radius: 0.75rem;
             padding: 0.75rem;
             margin-bottom: 0.5rem;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .event-time {
             font-weight: 700;
             color: var(--accent-pink);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
         .event-title {
             font-weight: 600;
             margin-top: 0.25rem;
+            font-size: 0.85rem;
         }
 
         .event-lead {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #a1a1a1;
             margin-top: 0.25rem;
+        }
+
+        .header-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: rgba(244, 63, 94, 0.3);
+            color: var(--accent-pink);
         }
     </style>
 </head>
@@ -272,9 +337,14 @@
                 </div>
             </div>
             
-            <button onclick="switchTab('profile')" class="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl active:scale-90 transition-transform">
-                <img id="user-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="w-full h-full object-cover">
-            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleDrawer()" class="header-icon-btn" title="Abrir Agenda">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </button>
+                <button onclick="switchTab('profile')" class="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl active:scale-90 transition-transform">
+                    <img id="user-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="w-full h-full object-cover">
+                </button>
+            </div>
         </header>
 
         <main class="max-w-lg mx-auto px-6 space-y-8">
@@ -309,45 +379,6 @@
                     <input type="text" id="search-input" oninput="render()" placeholder="Procurar no seu ranking..." class="w-full bg-zinc-900/60 border border-white/5 rounded-3xl pl-14 pr-8 py-5 outline-none font-bold italic text-white placeholder-zinc-700">
                 </div>
                 <div id="search-results" class="space-y-4"></div>
-            </div>
-
-            <!-- ABA AGENDA -->
-            <div id="tab-agenda" class="tab-content space-y-6">
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-2xl font-black italic tracking-tighter">Agenda</h2>
-                        <button onclick="openScheduleModal()" class="text-[10px] font-black bg-rose-500/10 border border-rose-500/20 text-rose-500 px-4 py-2 rounded-xl uppercase italic hover:bg-rose-500/20 transition-all">+ Agendar</button>
-                    </div>
-
-                    <!-- Navegação do Calendário -->
-                    <div class="glass-card p-4 border border-white/5">
-                        <div class="flex items-center justify-between mb-4">
-                            <button onclick="previousMonth()" class="p-2 hover:bg-zinc-800 rounded-lg transition-all"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                            <h3 class="text-[13px] font-black uppercase tracking-widest italic" id="calendar-month">Março 2026</h3>
-                            <button onclick="nextMonth()" class="p-2 hover:bg-zinc-800 rounded-lg transition-all"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
-                        </div>
-
-                        <!-- Calendário -->
-                        <div class="grid grid-cols-7 gap-2 mb-4">
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Seg</div>
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Ter</div>
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Qua</div>
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Qui</div>
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Sex</div>
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Sab</div>
-                            <div class="text-center text-[10px] font-black text-zinc-600 uppercase py-2">Dom</div>
-                        </div>
-                        <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
-                    </div>
-
-                    <!-- Eventos do Dia Selecionado -->
-                    <div class="glass-card p-6 border border-white/5">
-                        <h4 class="text-[11px] font-black text-zinc-100 uppercase tracking-widest italic mb-4">Encontros Agendados</h4>
-                        <div id="agenda-events" class="space-y-3">
-                            <p class="text-[12px] text-zinc-600 italic">Seleciona um dia no calendário para ver os encontros agendados</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- ABA MÉTRICAS -->
@@ -401,11 +432,58 @@
             <div class="bottom-nav-container">
                 <button onclick="switchTab('home')" id="nav-home" class="nav-btn nav-active"><i data-lucide="layout-grid" class="w-6 h-6"></i></button>
                 <button onclick="switchTab('search')" id="nav-search" class="nav-btn"><i data-lucide="search" class="w-6 h-6"></i></button>
-                <button onclick="switchTab('agenda')" id="nav-agenda" class="nav-btn"><i data-lucide="calendar" class="w-6 h-6"></i></button>
                 <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn"><i data-lucide="bar-chart-2" class="w-6 h-6"></i></button>
                 <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn"><i data-lucide="user" class="w-6 h-6"></i></button>
             </div>
         </nav>
+    </div>
+
+    <!-- Drawer Menu de Agenda -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+    <div id="drawer-menu" class="drawer-menu">
+        <div class="drawer-header">
+            <h3 class="text-lg font-black italic tracking-tighter">AGENDA</h3>
+            <button onclick="toggleDrawer()" class="p-2 hover:bg-zinc-900 rounded-lg transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="drawer-content space-y-6">
+            <!-- Botão Agendar -->
+            <button onclick="openScheduleModal()" class="w-full bg-rose-500 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest italic shadow-lg shadow-rose-500/10 hover:bg-rose-600 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Agendar Encontro
+            </button>
+
+            <!-- Calendário -->
+            <div class="glass-card p-4 border border-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <button onclick="previousMonth()" class="p-2 hover:bg-zinc-800 rounded-lg transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <h3 class="text-[12px] font-black uppercase tracking-widest italic" id="calendar-month">Março 2026</h3>
+                    <button onclick="nextMonth()" class="p-2 hover:bg-zinc-800 rounded-lg transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+
+                <!-- Dias da Semana -->
+                <div class="grid grid-cols-7 gap-1 mb-3">
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Seg</div>
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Ter</div>
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Qua</div>
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Qui</div>
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Sex</div>
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Sab</div>
+                    <div class="text-center text-[8px] font-black text-zinc-600 uppercase py-1">Dom</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+            </div>
+
+            <!-- Eventos do Dia -->
+            <div>
+                <h4 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic mb-3">Encontros de Hoje</h4>
+                <div id="drawer-events" class="space-y-2">
+                    <p class="text-[11px] text-zinc-600 italic">Nenhum encontro agendado</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Dossiê Full -->
@@ -535,6 +613,21 @@
         let currentCalendarDate = new Date();
         let selectedCalendarDate = new Date();
 
+        // --- DRAWER ---
+        function toggleDrawer() {
+            document.getElementById('drawer-overlay').classList.toggle('active');
+            document.getElementById('drawer-menu').classList.toggle('active');
+            if (document.getElementById('drawer-menu').classList.contains('active')) {
+                renderCalendar();
+                updateDrawerEvents();
+            }
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer-overlay').classList.remove('active');
+            document.getElementById('drawer-menu').classList.remove('active');
+        }
+
         // --- AUTH ---
         async function handleLogin() {
             const user = document.getElementById('login-user').value.toLowerCase().trim();
@@ -574,7 +667,6 @@
             if(userData.role === 'Master') document.getElementById('master-area').classList.remove('hidden');
             loadMatches();
             loadSchedules();
-            renderCalendar();
         }
 
         async function loadMatches() {
@@ -593,8 +685,7 @@
                 const response = await fetch(`${SCRIPT_URL}?action=getSchedules&user=${encodeURIComponent(currentUser)}`);
                 const result = await response.json();
                 window.schedules = result.data || [];
-                renderCalendar();
-                populateLeadSelect();
+                updateDrawerEvents();
             } catch (e) {
                 window.schedules = [];
             }
@@ -629,7 +720,7 @@
             // Dias do mês anterior
             for (let i = firstDay.getDay() - 1; i >= 0; i--) {
                 const day = prevLastDay - i;
-                html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
+                html += `<div class="calendar-day other-month"><span>${day}</span></div>`;
             }
             
             // Dias do mês atual
@@ -644,14 +735,13 @@
                 if (events.length > 0) classes += ' has-event';
                 
                 html += `<div class="${classes}" onclick="selectCalendarDay('${dateStr}')">
-                    <span class="calendar-day-number">${day}</span>
-                    ${events.length > 0 ? `<div class="calendar-day-events">${events.length}</div>` : ''}
+                    <span>${day}</span>
                 </div>`;
             }
             
             // Dias do próximo mês
             for (let day = 1; day <= nextDays; day++) {
-                html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
+                html += `<div class="calendar-day other-month"><span>${day}</span></div>`;
             }
             
             document.getElementById('calendar-grid').innerHTML = html;
@@ -669,15 +759,16 @@
 
         function selectCalendarDay(dateStr) {
             selectedCalendarDate = new Date(dateStr);
-            renderAgendaEvents(dateStr);
+            updateDrawerEvents();
         }
 
-        function renderAgendaEvents(dateStr) {
+        function updateDrawerEvents() {
+            const dateStr = selectedCalendarDate.toISOString().split('T')[0];
             const events = window.schedules.filter(s => s.data === dateStr);
-            const container = document.getElementById('agenda-events');
+            const container = document.getElementById('drawer-events');
             
             if (events.length === 0) {
-                container.innerHTML = `<p class="text-[12px] text-zinc-600 italic">Nenhum encontro agendado para este dia</p>`;
+                container.innerHTML = `<p class="text-[11px] text-zinc-600 italic">Nenhum encontro agendado</p>`;
                 return;
             }
             
@@ -686,10 +777,9 @@
                 return `
                     <div class="event-item">
                         <div class="event-time">${event.hora || '--:--'}</div>
-                        <div class="event-title">${event.titulo || 'Encontro'}</div>
-                        <div class="event-lead">${lead ? lead.nome : 'Lead desconhecido'}</div>
-                        ${event.notas ? `<div class="text-[11px] text-zinc-500 mt-2">${event.notas}</div>` : ''}
-                        <button onclick="deleteSchedule('${event.id}')" class="text-[10px] text-red-500 mt-2 hover:text-red-400">Remover</button>
+                        <div class="event-title">${lead ? lead.nome : 'Lead desconhecido'}</div>
+                        ${event.notas ? `<div class="text-[10px] text-zinc-500 mt-1">${event.notas}</div>` : ''}
+                        <button onclick="deleteSchedule('${event.id}')" class="text-[9px] text-red-500 mt-2 hover:text-red-400">Remover</button>
                     </div>
                 `;
             }).join('');
@@ -748,8 +838,7 @@
                 window.schedules = window.schedules.filter(s => s.id !== id);
                 syncSchedules();
                 renderCalendar();
-                const dateStr = selectedCalendarDate.toISOString().split('T')[0];
-                renderAgendaEvents(dateStr);
+                updateDrawerEvents();
             }
         }
 
@@ -761,12 +850,6 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
             document.getElementById(`nav-${tab}`).classList.add('nav-active');
             activeTab = tab;
-            
-            if (tab === 'agenda') {
-                renderCalendar();
-                const today = new Date().toISOString().split('T')[0];
-                selectCalendarDay(today);
-            }
         }
 
         function render() {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub Pro | Encrypted BD</title>
+    <title>Contact Hub Pro | Cloud Upload & Encrypted BD</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
@@ -58,7 +58,6 @@
         .alpha-btn .letter { font-weight: 800; font-size: 1rem; }
         .alpha-btn .count { font-size: 0.65rem; opacity: 0.8; margin-top: 2px; }
 
-        /* Contact Cards - Layout Ajustado com Avatar */
         .contact-card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 12px; border: 1px solid #2d3139; position: relative; }
         .card-header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         
@@ -98,20 +97,25 @@
         .form-full { width: 100%; margin-bottom: 12px; }
         .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3d46; background: var(--input-bg); color: white; outline: none; font-size: 0.85rem; }
         
+        /* Upload Button Styles */
+        .upload-container { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .btn-upload { border: 1px dashed #3a3d46; color: var(--text-muted); background-color: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 10px; font-size: 0.85rem; width: 100%; cursor: pointer; transition: 0.3s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-upload:hover { border-color: var(--color-transei); color: white; }
+        .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; }
+        #fileNameDisplay { font-size: 0.7rem; color: var(--color-conheci); text-align: center; }
+        #uploadProgress { font-size: 0.75rem; color: var(--color-conversando); text-align: center; display: none; font-weight: bold; margin-bottom: 10px; }
+
         .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
         .btn-primary { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--text-main); color: var(--bg-color); font-weight: bold; cursor: pointer; }
         .btn-secondary { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #2d3139; background: transparent; color: var(--text-muted); cursor: pointer; }
 
-        /* Cores Dinâmicas e Bordas do Avatar */
         .status-conheci { border-left: 4px solid var(--color-conheci); }
         .status-conheci .profile-avatar { border-color: var(--color-conheci); }
-        
         .status-conversando { border-left: 4px solid var(--color-conversando); }
         .status-conversando .profile-avatar { border-color: var(--color-conversando); }
-        
         .status-fiquei { border-left: 4px solid var(--color-fiquei); }
         .status-fiquei .profile-avatar { border-color: var(--color-fiquei); }
-        
         .status-transei { border-left: 4px solid var(--color-transei); }
         .status-transei .profile-avatar { border-color: var(--color-transei); }
         
@@ -126,7 +130,7 @@
         <div class="header-title">Contact Hub <span style="color: var(--color-transei);">.</span></div>
         <div class="status-indicator">
             <div class="status-dot"></div>
-            Blackout BD
+            Cloud + Blackout BD
         </div>
     </header>
 
@@ -187,6 +191,16 @@
             <input type="text" id="origin" placeholder="Origem (ex: Tinder)">
         </div>
 
+        <div class="upload-container">
+            <div class="upload-btn-wrapper">
+                <button class="btn-upload">📷 Anexar Foto da Galeria</button>
+                <input type="file" id="photoUpload" accept="image/*" onchange="updateFileName()" />
+            </div>
+            <div id="fileNameDisplay"></div>
+        </div>
+        <input type="hidden" id="photoUrl">
+        <div id="uploadProgress">A enviar foto para a nuvem... ⏳</div>
+
         <div class="form-grid">
             <input type="tel" id="whatsapp" placeholder="WhatsApp (DDD+Num)">
             <input type="text" id="instagram" placeholder="Instagram (@)">
@@ -213,16 +227,17 @@
         
         <div class="modal-btns">
             <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-            <button class="btn-primary" onclick="saveContact()">Gravar BD</button>
+            <button class="btn-primary" id="btnSave" onclick="handleSave()">Gravar BD</button>
         </div>
     </div>
 </div>
 
 <script>
+    // ⚠️ CONFIGURAÇÕES OBRIGATÓRIAS ⚠️
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
     
-    // 🔥 MUDE ESTA SENHA ANTES DE USAR O SISTEMA 🔥
-    const SECRET_KEY = "WeversonCRM_2026_!@#"; 
+    const SECRET_KEY = "WeversonCRM_2026_!@#"; // Sua senha do Google Sheets
+    const IMGBB_API_KEY = "019c10971b4aab9c354e2e8d8681d744"; // Sua chave gerada no api.imgbb.com
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentInitialFilter = 'All';
@@ -256,6 +271,7 @@
                     nome: decryptText(c.nome || c.Nome || c.name),
                     status: decryptText(c.status), 
                     origin: decryptText(c.origin || c.Origem),
+                    photoUrl: decryptText(c.photoUrl || c.Foto), // URL da Foto
                     whatsapp: decryptText(c.whatsapp || c.Whatsapp),
                     instagram: decryptText(c.instagram || c.Instagram),
                     age: decryptText(c.age || c.Idade), 
@@ -276,6 +292,71 @@
             console.error("Erro na API", e);
             document.getElementById('loadingMsg').innerText = "Modo Offline";
         }
+    }
+
+    // --- FUNÇÕES DE UPLOAD DE FOTO (IMGBB) ---
+    function updateFileName() {
+        const fileInput = document.getElementById('photoUpload');
+        const display = document.getElementById('fileNameDisplay');
+        if (fileInput.files.length > 0) {
+            display.innerText = `✅ Foto selecionada: ${fileInput.files[0].name}`;
+            display.style.color = 'var(--color-conheci)';
+        } else {
+            display.innerText = '';
+        }
+    }
+
+    async function uploadImageToImgBB(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if(data && data.data && data.data.url) {
+                return data.data.url;
+            }
+            return null;
+        } catch (e) {
+            console.error("Erro no upload do ImgBB", e);
+            return null;
+        }
+    }
+
+    // Gerenciador de Salvar (Lida com o Upload antes de Salvar no BD)
+    async function handleSave() {
+        const nome = document.getElementById('nome').value;
+        if(!nome) { alert("Nome é obrigatório"); return; }
+
+        const fileInput = document.getElementById('photoUpload');
+        let finalPhotoUrl = document.getElementById('photoUrl').value; // Pega a existente, se houver
+        const btnSave = document.getElementById('btnSave');
+        const progress = document.getElementById('uploadProgress');
+
+        // Se o utilizador escolheu uma foto nova, fazemos upload
+        if (fileInput.files.length > 0) {
+            btnSave.disabled = true;
+            btnSave.innerText = "A Enviar...";
+            progress.style.display = "block";
+            
+            const uploadedUrl = await uploadImageToImgBB(fileInput.files[0]);
+            
+            if (uploadedUrl) {
+                finalPhotoUrl = uploadedUrl;
+            } else {
+                alert("Falha ao enviar a foto para a nuvem. O contacto será guardado sem a foto nova.");
+            }
+            
+            progress.style.display = "none";
+            btnSave.disabled = false;
+            btnSave.innerText = "Gravar BD";
+        }
+
+        // Agora executa a lógica normal de guardar no Sheets com a finalPhotoUrl
+        saveContactToSheets(finalPhotoUrl);
     }
 
     function buildAlphaFiltersUI() {
@@ -326,7 +407,12 @@
         editingId = null;
         document.getElementById('modalTitle').innerText = "Novo Registro";
         
-        document.querySelectorAll('.modal input, .modal textarea').forEach(el => el.value = '');
+        document.querySelectorAll('.modal input[type="text"], .modal input[type="number"], .modal input[type="tel"], .modal textarea, .modal input[type="hidden"]').forEach(el => el.value = '');
+        
+        // Limpar o campo de ficheiro visualmente
+        document.getElementById('photoUpload').value = '';
+        document.getElementById('fileNameDisplay').innerText = '';
+        
         document.getElementById('city').value = 'Fortaleza';
         document.getElementById('state').value = 'CE';
         document.getElementById('status').value = 'conheci';
@@ -344,6 +430,7 @@
         document.getElementById('nome').value = contact.nome || '';
         document.getElementById('status').value = contact.status || 'conheci';
         document.getElementById('origin').value = contact.origin || '';
+        document.getElementById('photoUrl').value = contact.photoUrl || ''; // Mantém o URL antigo escondido
         document.getElementById('whatsapp').value = contact.whatsapp || '';
         document.getElementById('instagram').value = contact.instagram || '';
         document.getElementById('age').value = contact.age || '';
@@ -355,6 +442,10 @@
         document.getElementById('state').value = contact.state || 'CE';
         document.getElementById('notes').value = contact.notes || '';
 
+        // Limpar o campo de ficheiro para não manter fotos antigas presas
+        document.getElementById('photoUpload').value = '';
+        document.getElementById('fileNameDisplay').innerText = contact.photoUrl ? 'Aviso: Este contacto já tem uma foto. Se não escolher nada, a antiga será mantida.' : '';
+
         document.getElementById('modal').style.display = 'flex';
     }
 
@@ -363,17 +454,15 @@
         editingId = null;
     }
 
-    async function saveContact() {
-        const nome = document.getElementById('nome').value;
-        if(!nome) { alert("Nome é obrigatório"); return; }
-
+    async function saveContactToSheets(finalPhotoUrl) {
         const contactId = editingId ? editingId : Date.now();
 
         const localData = {
             id: contactId,
-            nome: nome,
+            nome: document.getElementById('nome').value,
             status: document.getElementById('status').value,
             origin: document.getElementById('origin').value || 'Direto',
+            photoUrl: finalPhotoUrl, 
             whatsapp: document.getElementById('whatsapp').value,
             instagram: document.getElementById('instagram').value,
             age: document.getElementById('age').value,
@@ -393,6 +482,7 @@
             nome: encryptText(localData.nome),
             status: encryptText(localData.status), 
             origin: encryptText(localData.origin),
+            photoUrl: encryptText(localData.photoUrl), 
             whatsapp: encryptText(localData.whatsapp),
             instagram: encryptText(localData.instagram),
             age: encryptText(localData.age), 
@@ -431,7 +521,6 @@
         document.getElementById(`details-${id}`).classList.toggle('active');
     }
 
-    // --- FUNÇÕES DE LIMPEZA E EXTRAÇÃO (IG / WA) ---
     function buildWaLink(num) {
         if(!num) return '';
         let clean = String(num).replace(/\D/g, '');
@@ -441,7 +530,6 @@
 
     function getCleanIg(user) {
         if(!user) return '';
-        // Limpa links inteiros e arrobas para pegar só o username
         let clean = String(user).replace(/https?:\/\/(www\.)?instagram\.com\//i, '');
         clean = clean.replace('@', '').split('/')[0].split('?')[0].trim();
         return clean;
@@ -478,19 +566,17 @@
             const displayStatus = c.status ? c.status.toLowerCase() : 'conheci';
             
             const waLink = buildWaLink(c.whatsapp);
-            const igUsername = getCleanIg(c.instagram);
             const igLink = buildIgLink(c.instagram);
             
-            // Lógica do Avatar: Foto do IG (via unavatar) OU Iniciais geradas (via ui-avatars)
-            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayNome)}&background=25282e&color=fff`;
-            const avatarUrl = igUsername ? `https://unavatar.io/instagram/${igUsername}?fallback=${encodeURIComponent(fallbackAvatar)}` : fallbackAvatar;
+            const initialsAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayNome)}&background=25282e&color=fff&bold=true`;
+            // Usa o link da nuvem do ImgBB se existir, senão usa as iniciais
+            const avatarUrl = c.photoUrl && c.photoUrl.startsWith('http') ? c.photoUrl : initialsAvatar;
             
             const card = document.createElement('div');
             card.className = `contact-card status-${displayStatus}`;
             
             card.innerHTML = `
                 <div class="card-header-flex">
-                    
                     <div class="profile-section">
                         <img src="${avatarUrl}" class="profile-avatar" alt="Avatar">
                         <div class="contact-info-left">
@@ -501,7 +587,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card-actions-right">
                         <button class="btn-icon" onclick="toggleDetails('${c.id}')" title="Ver Detalhes">🔍</button>
                         <button class="btn-icon" onclick="openEditModal('${c.id}')" title="Editar">✏️</button>

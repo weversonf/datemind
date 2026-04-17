@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub v03</title>
+    <title>Contact Hub Pro | BD Connected</title>
     <style>
         :root {
             --bg-color: #0f1012;
@@ -107,7 +107,7 @@
 
 <div class="app-container">
     <header>
-        <div class="header-title">Contact Hub v03<span style="color: var(--color-blue);">.</span></div>
+        <div class="header-title">Contact Hub <span style="color: var(--color-blue);">.</span></div>
         <div class="status-indicator">
             <div class="status-dot"></div>
             Online
@@ -224,7 +224,6 @@
         }
     }
 
-    // --- NOVA LÓGICA DO FILTRO ALFABÉTICO ---
     function buildAlphaFiltersUI() {
         const container = document.getElementById('alphaFilters');
         const alphabet = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -255,23 +254,18 @@
 
     function setInitialFilter(letter) {
         currentInitialFilter = letter;
-        // Atualiza botões visuais
         document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`alpha-btn-${letter}`).classList.add('active');
-        
-        renderList(); // Rerenderiza a lista com o filtro
+        renderList(); 
     }
 
     function updateAlphaCounts() {
-        // Zera contadores
         const counts = { All: contacts.length };
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => counts[l] = 0);
 
-        // Preenche com os dados reais
         contacts.forEach(c => {
             const name = (c.nome || c.Nome || c.name || '').trim();
             if (name) {
-                // Pega a primeira letra ignorando acentos
                 const initial = name.charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
                 if (counts[initial] !== undefined) {
                     counts[initial]++;
@@ -279,15 +273,12 @@
             }
         });
 
-        // Atualiza a tela
         for (const [letter, count] of Object.entries(counts)) {
             const btn = document.getElementById(`alpha-btn-${letter}`);
             const countSpan = document.getElementById(`alpha-count-${letter}`);
             
             if (btn && countSpan) {
                 countSpan.innerText = `(${count})`;
-                
-                // Se a letra não tiver ninguém, deixa ela meio apagada visualmente
                 if (count === 0 && letter !== 'All') {
                     btn.style.opacity = '0.3';
                 } else {
@@ -296,7 +287,6 @@
             }
         }
     }
-    // -----------------------------------------
 
     function toggleModal(show) {
         document.getElementById('modal').style.display = show ? 'flex' : 'none';
@@ -364,7 +354,7 @@
     }
 
     function renderList() {
-        updateAlphaCounts(); // Atualiza a contagem dos botões de letras
+        updateAlphaCounts(); 
 
         const list = document.getElementById('contactList');
         const query = document.getElementById('searchInput').value.toLowerCase();
@@ -375,11 +365,9 @@
             const bairroStr = c.neighborhood || c.Bairro || '';
             const notaStr = c.notes || c.Notas || '';
             
-            // Filtro por digitação (Search Bar)
             const searchStr = `${nomeStr} ${bairroStr} ${notaStr}`.toLowerCase();
             const matchesSearch = searchStr.includes(query);
 
-            // Filtro pela Letra (Botões A-Z)
             let matchesLetter = true;
             if (currentInitialFilter !== 'All') {
                 const initial = nomeStr.charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -391,7 +379,9 @@
 
         filtered.forEach(c => {
             const displayNome = c.nome || c.Nome || c.name || 'Sem Nome';
+            const displayIdade = c.age || c.Idade ? `, ${c.age || c.Idade}` : '';
             const displayStatus = c.status ? c.status.toLowerCase() : 'conheci';
+            
             const waLink = buildWaLink(c.whatsapp || c.Whatsapp);
             const igLink = buildIgLink(c.instagram || c.Instagram);
             
@@ -405,13 +395,12 @@
             card.innerHTML = `
                 <div class="card-main">
                     <div class="contact-info">
-                        <h3>${displayNome}</h3>
+                        <h3>${displayNome}${displayIdade}</h3>
                         <div class="contact-tags">
                             <span class="tag">${displayStatus}</span>
                             <span class="tag">📍 ${c.origin || c.Origem || 'Direto'}</span>
-                            ${c.age || c.Idade ? `<span class="tag">${c.age || c.Idade} anos</span>` : ''}
                         </div>
-                        <button class="expand-btn" onclick="toggleDetails('${c.id}')">Ver Ficha Completa ▼</button>
+                        <button class="expand-btn" onclick="toggleDetails('${c.id}')">Ficha completa ▼</button>
                     </div>
                 </div>
                 

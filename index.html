@@ -1,18 +1,9 @@
-Entendido, Weverson. Segurança máxima e total "blackout" na planilha. 
-
-Nesta versão, **absolutamente todos os campos** (Status, Idade, Filhos e Data de Atualização) passam a ser criptografados antes de irem para o Google Sheets. A única coisa que não é criptografada é o `id` numérico gerado pelo sistema, pois o seu código `.gs` precisa desse número para saber qual linha ele deve editar quando você usar o botão de lápis.
-
-O mais legal dessa arquitetura é que, como o seu aplicativo puxa e desembaralha os dados *antes* de renderizar a tela, **os seus dashboards e gráficos vão continuar funcionando perfeitamente no seu celular/PC**, mesmo com a planilha 100% ilegível.
-
-Aqui está o código `index.html` definitivo com "Blindagem Total":
-
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub Pro | Total Encryption</title>
+    <title>Contact Hub Pro | Encrypted BD</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
@@ -24,18 +15,17 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
             --text-main: #ffffff;
             --text-muted: #94a3b8;
             
-            /* CORES DEFINIDAS */
-            --color-conheci: #10b981;      /* Verde */
-            --color-conversando: #eab308;  /* Amarelo */
-            --color-fiquei: #ef4444;       /* Vermelho */
-            --color-transei: #3b82f6;      /* Azul */
+            --color-conheci: #10b981;      
+            --color-conversando: #eab308;  
+            --color-fiquei: #ef4444;       
+            --color-transei: #3b82f6;      
             
             --color-whatsapp: #25D366;
             --color-instagram: #E1306C;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; padding-bottom: 100px; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; padding-bottom: 100px; overflow-x: hidden; }
         .app-container { width: 100%; max-width: 450px; padding: 20px; }
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
@@ -43,7 +33,6 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
         .status-indicator { font-size: 0.7rem; color: var(--color-conheci); display: flex; align-items: center; gap: 5px; }
         .status-dot { width: 8px; height: 8px; background: var(--color-conheci); border-radius: 50%; box-shadow: 0 0 8px var(--color-conheci); }
 
-        /* Dashboard Card */
         .dashboard-card { background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 1px solid #2d3139; }
         .charts-row { display: flex; align-items: center; gap: 20px; }
         .chart-container { position: relative; width: 100px; height: 100px; }
@@ -58,29 +47,31 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
         .funnel-bar { height: 4px; background: #2d3139; border-radius: 2px; margin-top: 15px; display: flex; overflow: hidden; }
         .funnel-segment { height: 100%; transition: width 0.5s ease; }
 
-        /* Search & Filters */
         .search-bar { background: var(--input-bg); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; margin-bottom: 15px; border: 1px solid transparent; transition: 0.3s; }
         .search-bar:focus-within { border-color: var(--color-transei); }
         .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem; }
 
-        .alpha-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; scrollbar-width: none; }
+        /* Correção do Filtro Alfabético */
+        .alpha-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; scrollbar-width: none; width: 100%; }
         .alpha-filters::-webkit-scrollbar { display: none; }
         .alpha-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 12px; padding: 8px 12px; cursor: pointer; text-align: center; min-width: 48px; flex-shrink: 0; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
         .alpha-btn.active { background: #333; color: white; border-color: #555; }
         .alpha-btn .letter { font-weight: 800; font-size: 1rem; }
         .alpha-btn .count { font-size: 0.65rem; opacity: 0.8; margin-top: 2px; }
 
-        /* Contact Cards */
+        /* Contact Cards - Layout Ajustado */
         .contact-card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 12px; border: 1px solid #2d3139; position: relative; }
-        .card-main { display: flex; justify-content: space-between; align-items: flex-start; }
-        .contact-info h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .btn-edit-icon { background: none; border: none; cursor: pointer; font-size: 1rem; opacity: 0.7; transition: 0.2s; }
-        .btn-edit-icon:hover { opacity: 1; transform: scale(1.1); }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .contact-info-left { flex: 1; }
+        .contact-info-left h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
         
-        .contact-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .card-actions-right { display: flex; gap: 10px; align-items: flex-start; }
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.7; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { opacity: 1; transform: scale(1.1); }
+        
+        .contact-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #2d3139; color: var(--text-muted); text-transform: capitalize; }
         
-        /* Expansible Details */
         .card-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2d3139; display: none; }
         .card-details.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
@@ -93,10 +84,7 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
         .btn-social { flex: 1; padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; font-size: 0.8rem; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; gap: 5px; }
         .btn-wa { background: rgba(37, 211, 102, 0.1); border: 1px solid var(--color-whatsapp); color: var(--color-whatsapp); }
         .btn-ig { background: rgba(225, 48, 108, 0.1); border: 1px solid var(--color-instagram); color: var(--color-instagram); }
-        
-        .expand-btn { font-size: 0.7rem; color: var(--text-muted); cursor: pointer; margin-top: 5px; display: inline-block; background: none; border: none; text-decoration: underline; }
 
-        /* Floating Button & Modal */
         .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--text-main); color: var(--bg-color); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2); cursor: pointer; z-index: 100; transition: 0.3s; }
         
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; overflow-y: auto; }
@@ -111,7 +99,6 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
         .btn-primary { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--text-main); color: var(--bg-color); font-weight: bold; cursor: pointer; }
         .btn-secondary { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #2d3139; background: transparent; color: var(--text-muted); cursor: pointer; }
 
-        /* Cores Dinâmicas por Status */
         .status-conheci { border-left: 4px solid var(--color-conheci); }
         .status-conversando { border-left: 4px solid var(--color-conversando); }
         .status-fiquei { border-left: 4px solid var(--color-fiquei); }
@@ -222,15 +209,12 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
-    
-    // 🔥 MUDE ESTA SENHA ANTES DE USAR O SISTEMA 🔥
     const SECRET_KEY = "WeversonCRM_2026_!@#"; 
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentInitialFilter = 'All';
     let editingId = null;
 
-    // --- FUNÇÕES DE CRIPTOGRAFIA ---
     function encryptText(text) {
         if (!text && text !== 0) return ""; 
         return CryptoJS.AES.encrypt(text.toString(), SECRET_KEY).toString();
@@ -245,7 +229,6 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
         } catch(e) { return "Erro: Senha Incorreta"; }
     }
 
-    // --- INICIALIZAÇÃO E SINCRONIZAÇÃO ---
     async function init() {
         buildAlphaFiltersUI(); 
         if(contacts.length > 0) renderList(); 
@@ -255,23 +238,22 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
             const data = await res.json();
             
             if(Array.isArray(data) && data.length > 0) {
-                // TUDO DESEMBARALHADO AO RECEBER
                 contacts = data.map(c => ({
                     id: c.id,
                     nome: decryptText(c.nome || c.Nome || c.name),
-                    status: decryptText(c.status), // Agora Status é destrancado
+                    status: decryptText(c.status), 
                     origin: decryptText(c.origin || c.Origem),
                     whatsapp: decryptText(c.whatsapp || c.Whatsapp),
                     instagram: decryptText(c.instagram || c.Instagram),
-                    age: decryptText(c.age || c.Idade), // Idade destrancada
+                    age: decryptText(c.age || c.Idade), 
                     profession: decryptText(c.profession || c.Profissao),
                     college: decryptText(c.college || c.Faculdade),
-                    children: decryptText(c.children || c.Filhos), // Filhos destrancado
+                    children: decryptText(c.children || c.Filhos), 
                     neighborhood: decryptText(c.neighborhood || c.Bairro),
                     city: decryptText(c.city || c.Cidade),
                     state: decryptText(c.state || c.Estado),
                     notes: decryptText(c.notes || c.Notas),
-                    updated: decryptText(c.updated || c.Atualizado) // Updated destrancado
+                    updated: decryptText(c.updated || c.Atualizado) 
                 }));
                 localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
             }
@@ -374,7 +356,6 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
 
         const contactId = editingId ? editingId : Date.now();
 
-        // Dados puros para o App local (sem criptografia na tela)
         const localData = {
             id: contactId,
             nome: nome,
@@ -393,7 +374,6 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
             updated: new Date().toLocaleDateString('pt-BR')
         };
 
-        // TODOS OS DADOS CRIPTOGRAFADOS PARA A NUVEM (Exceto Action e ID)
         const encryptedPayload = {
             action: editingId ? "update" : "create",
             id: localData.id,
@@ -483,17 +463,17 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
             card.className = `contact-card status-${displayStatus}`;
             
             card.innerHTML = `
-                <div class="card-main">
-                    <div style="width: 100%;">
-                        <h3>
-                            ${displayNome}${displayIdade}
-                            <button class="btn-edit-icon" onclick="openEditModal('${c.id}')" title="Editar">✏️</button>
-                        </h3>
+                <div class="card-header-flex">
+                    <div class="contact-info-left">
+                        <h3>${displayNome}${displayIdade}</h3>
                         <div class="contact-tags">
                             <span class="tag" style="border: 1px solid var(--color-${displayStatus});">${displayStatus}</span>
                             <span class="tag">📍 ${c.origin || 'Direto'}</span>
                         </div>
-                        <button class="expand-btn" onclick="toggleDetails('${c.id}')">Ficha completa ▼</button>
+                    </div>
+                    <div class="card-actions-right">
+                        <button class="btn-icon" onclick="toggleDetails('${c.id}')" title="Ver Detalhes">🔍</button>
+                        <button class="btn-icon" onclick="openEditModal('${c.id}')" title="Editar">✏️</button>
                     </div>
                 </div>
                 
@@ -555,4 +535,3 @@ Aqui está o código `index.html` definitivo com "Blindagem Total":
 </script>
 </body>
 </html>
-```

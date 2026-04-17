@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub Pro | Dark Tech</title>
+    <title>Contact Hub Pro | BD Connected</title>
     <style>
         :root {
             --bg-color: #0f1012;
@@ -14,8 +14,9 @@
             --color-blue: #3b82f6;
             --color-orange: #f97316;
             --color-teal: #14b8a6;
-            --color-purple: #a855f7;
             --color-danger: #ef4444;
+            --color-whatsapp: #25D366;
+            --color-instagram: #E1306C;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -24,6 +25,8 @@
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .header-title { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+        .status-indicator { font-size: 0.7rem; color: var(--color-teal); display: flex; align-items: center; gap: 5px; }
+        .status-dot { width: 8px; height: 8px; background: var(--color-teal); border-radius: 50%; box-shadow: 0 0 8px var(--color-teal); }
 
         /* Dashboard Card */
         .dashboard-card { background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 1px solid #2d3139; }
@@ -37,58 +40,72 @@
         .legend-item { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); }
         .dot { width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; display: inline-block; }
 
-        /* Funnel Mini Chart */
         .funnel-bar { height: 4px; background: #2d3139; border-radius: 2px; margin-top: 15px; display: flex; overflow: hidden; }
         .funnel-segment { height: 100%; transition: width 0.5s ease; }
 
-        /* Search & Actions */
+        /* Search */
         .search-bar { background: var(--input-bg); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; margin-bottom: 20px; border: 1px solid transparent; transition: 0.3s; }
         .search-bar:focus-within { border-color: var(--color-blue); }
         .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem; }
-
-        .top-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; }
-        .btn-icon { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
 
         /* Contact Cards */
         .contact-card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 12px; border: 1px solid #2d3139; position: relative; }
         .card-main { display: flex; justify-content: space-between; align-items: flex-start; }
         .contact-info h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-        .contact-tags { display: flex; gap: 6px; margin-bottom: 8px; }
+        .contact-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #2d3139; color: var(--text-muted); }
         
         .counter-box { display: flex; align-items: center; gap: 12px; background: var(--input-bg); padding: 6px 12px; border-radius: 10px; }
         .cnt-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 0 5px; }
         .cnt-val { font-size: 0.85rem; font-weight: bold; min-width: 15px; text-align: center; }
 
-        .card-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2d3139; font-size: 0.8rem; color: var(--text-muted); display: none; }
-        .card-details.active { display: block; }
-        .expand-btn { font-size: 0.7rem; color: var(--color-blue); cursor: pointer; margin-top: 5px; display: block; }
+        /* Expansible Details */
+        .card-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2d3139; display: none; }
+        .card-details.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .detail-item { font-size: 0.75rem; background: var(--input-bg); padding: 8px; border-radius: 8px; }
+        .detail-item strong { display: block; color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; margin-bottom: 2px; }
+        
+        .social-links { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-social { flex: 1; padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; font-size: 0.8rem; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .btn-wa { background: rgba(37, 211, 102, 0.1); border: 1px solid var(--color-whatsapp); color: var(--color-whatsapp); }
+        .btn-ig { background: rgba(225, 48, 108, 0.1); border: 1px solid var(--color-instagram); color: var(--color-instagram); }
+        
+        .expand-btn { font-size: 0.7rem; color: var(--color-blue); cursor: pointer; margin-top: 5px; display: inline-block; background: none; border: none; }
 
         /* Floating Button & Modal */
         .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--color-blue); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; border: none; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 100; transition: 0.3s; }
-        .fab:active { transform: scale(0.9); }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
-        .modal { background: var(--card-bg); width: 100%; max-width: 400px; padding: 24px; border-radius: 28px; border: 1px solid #2d3139; }
-        .modal input, .modal select, .modal textarea { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #2d3139; background: var(--input-bg); color: white; outline: none; }
-        .modal-btns { display: flex; gap: 10px; margin-top: 10px; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; overflow-y: auto; }
+        .modal { background: var(--card-bg); width: 100%; max-width: 400px; padding: 24px; border-radius: 28px; border: 1px solid #2d3139; margin: auto; }
+        .modal h2 { margin-bottom: 20px; font-size: 1.2rem; }
+        
+        /* Form Grid */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .form-full { width: 100%; margin-bottom: 12px; }
+        .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3d46; background: var(--input-bg); color: white; outline: none; font-size: 0.85rem; }
+        
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
         .btn-primary { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--color-blue); color: white; font-weight: bold; cursor: pointer; }
         .btn-secondary { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #2d3139; background: transparent; color: var(--text-muted); cursor: pointer; }
 
         .status-Conversando { border-left: 4px solid var(--color-blue); }
         .status-Ficando { border-left: 4px solid var(--color-orange); }
         .status-Transamos { border-left: 4px solid var(--color-teal); }
+        
+        #loadingMsg { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header>
-        <div class="header-title">Contact Hub <span style="color: var(--color-blue);">.</span></div>
-        <div class="top-actions">
-            <button class="btn-icon" onclick="exportData()">Exportar</button>
-            <button class="btn-icon" onclick="document.getElementById('importFile').click()">Importar</button>
-            <input type="file" id="importFile" hidden onchange="importData(event)">
+        <div class="header-title">Contact Hub v02<span style="color: var(--color-blue);">.</span></div>
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            Online
         </div>
     </header>
 
@@ -118,9 +135,10 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Procurar por nome ou nota..." oninput="renderList()">
+        <input type="text" id="searchInput" placeholder="Procurar por nome, bairro ou nota..." oninput="renderList()">
     </div>
 
+    <div id="loadingMsg">Sincronizando com Banco de Dados...</div>
     <div id="contactList"></div>
     
     <button class="fab" onclick="toggleModal(true)">+</button>
@@ -128,69 +146,153 @@
 
 <div class="modal-overlay" id="modal">
     <div class="modal">
-        <h2 style="margin-bottom:20px; font-size:1.2rem">Novo Registro</h2>
-        <input type="text" id="name" placeholder="Nome ou @">
-        <select id="status">
-            <option value="Conversando">Conversando</option>
-            <option value="Ficando">Ficando</option>
-            <option value="Transamos">Transamos</option>
-        </select>
-        <input type="text" id="origin" placeholder="Origem (ex: Tinder, Instagram)">
-        <textarea id="notes" placeholder="Notas e observações..." rows="3"></textarea>
+        <h2>Novo Registro</h2>
+        
+        <input type="text" id="name" class="form-full" placeholder="Nome Completo / Apelido">
+        
+        <div class="form-grid">
+            <select id="status">
+                <option value="Conversando">Conversando</option>
+                <option value="Ficando">Ficando</option>
+                <option value="Transamos">Transamos</option>
+            </select>
+            <input type="text" id="origin" placeholder="Origem (ex: Tinder)">
+        </div>
+
+        <div class="form-grid">
+            <input type="tel" id="whatsapp" placeholder="WhatsApp (DDD+Num)">
+            <input type="text" id="instagram" placeholder="Instagram (@)">
+        </div>
+
+        <div class="form-grid">
+            <input type="number" id="age" placeholder="Idade">
+            <input type="text" id="profession" placeholder="Profissão">
+        </div>
+
+        <div class="form-grid">
+            <input type="text" id="college" placeholder="Faculdade">
+            <input type="number" id="children" placeholder="Filhos (Qtd)">
+        </div>
+
+        <input type="text" id="neighborhood" class="form-full" placeholder="Bairro">
+
+        <div class="form-grid">
+            <input type="text" id="city" value="Fortaleza" placeholder="Cidade">
+            <input type="text" id="state" value="CE" placeholder="UF">
+        </div>
+
+        <textarea id="notes" class="form-full" placeholder="Notas e observações internas..." rows="2"></textarea>
+        
         <div class="modal-btns">
             <button class="btn-secondary" onclick="toggleModal(false)">Cancelar</button>
-            <button class="btn-primary" onclick="addContact()">Gravar</button>
+            <button class="btn-primary" onclick="saveContact()">Gravar BD</button>
         </div>
     </div>
 </div>
 
 <script>
-    let contacts = JSON.parse(localStorage.getItem('contact_hub_pro')) || [];
+    const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
+    
+    // Fallback de cache local enquanto carrega do Sheets
+    let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
+
+    // Inicia buscando dados
+    async function init() {
+        if(contacts.length > 0) renderList(); // Mostra cache imediato
+        
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            if(Array.isArray(data) && data.length > 0) {
+                contacts = data;
+                localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
+            }
+            document.getElementById('loadingMsg').style.display = 'none';
+            renderList();
+        } catch(e) {
+            console.error("Erro na API, usando cache local", e);
+            document.getElementById('loadingMsg').innerText = "Modo Offline (Usando Cache)";
+        }
+    }
 
     function toggleModal(show) {
         document.getElementById('modal').style.display = show ? 'flex' : 'none';
         if(!show) {
-            document.getElementById('name').value = '';
-            document.getElementById('notes').value = '';
-            document.getElementById('origin').value = '';
+            // Limpa form mas mantém Fortaleza/CE
+            const keepCity = document.getElementById('city').value;
+            const keepState = document.getElementById('state').value;
+            document.querySelectorAll('.modal input, .modal textarea').forEach(el => el.value = '');
+            document.getElementById('city').value = keepCity || 'Fortaleza';
+            document.getElementById('state').value = keepState || 'CE';
         }
     }
 
-    function addContact() {
+    // Processa links
+    function buildWaLink(num) {
+        if(!num) return '';
+        let clean = String(num).replace(/\\D/g, '');
+        if(clean.length === 10 || clean.length === 11) clean = '55' + clean;
+        return `https://wa.me/${clean}`;
+    }
+
+    function buildIgLink(user) {
+        if(!user) return '';
+        let clean = String(user).replace('@', '').trim();
+        return `https://instagram.com/${clean}`;
+    }
+
+    async function saveContact() {
         const name = document.getElementById('name').value;
-        const status = document.getElementById('status').value;
-        const origin = document.getElementById('origin').value;
-        const notes = document.getElementById('notes').value;
+        if(!name) { alert("Nome é obrigatório"); return; }
 
-        if(!name) return;
-
-        contacts.push({
+        const payload = {
             id: Date.now(),
-            name,
-            status,
-            origin: origin || 'Direto',
-            notes,
+            name: name,
+            status: document.getElementById('status').value,
+            origin: document.getElementById('origin').value || 'Direto',
+            whatsapp: document.getElementById('whatsapp').value,
+            instagram: document.getElementById('instagram').value,
+            age: document.getElementById('age').value,
+            profession: document.getElementById('profession').value,
+            college: document.getElementById('college').value,
+            children: document.getElementById('children').value,
+            neighborhood: document.getElementById('neighborhood').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            notes: document.getElementById('notes').value,
             count: 0,
-            updated: new Date().toLocaleDateString('pt-PT')
-        });
+            updated: new Date().toLocaleDateString('pt-BR')
+        };
 
-        saveAndRender();
+        // UI Otimista
+        contacts.push(payload);
+        renderList();
         toggleModal(false);
-    }
+        localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
 
-    function updateCount(id, delta) {
-        const c = contacts.find(x => x.id === id);
-        if(c) {
-            c.count = Math.max(0, c.count + delta);
-            c.updated = new Date().toLocaleDateString('pt-PT');
-            saveAndRender();
+        // Background sync
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            console.log("Salvo no BD.");
+        } catch(e) {
+            console.error("Falha ao salvar no BD remoto.");
         }
     }
 
-    function deleteContact(id) {
-        if(confirm("Eliminar este registo permanentemente?")) {
-            contacts = contacts.filter(x => x.id !== id);
-            saveAndRender();
+    async function updateCount(id, delta) {
+        const c = contacts.find(x => String(x.id) === String(id));
+        if(c) {
+            c.count = Math.max(0, parseInt(c.count || 0) + delta);
+            c.updated = new Date().toLocaleDateString('pt-BR');
+            renderList();
+            localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
+            
+            // Aqui, o ideal seria ter uma rota de PUT no seu Apps Script.
+            // Por enquanto atualiza local, e empurra como novo log (caso queira auditar) ou exige refinar o backend.
+            // Para simplificar: estamos garantindo o cache.
         }
     }
 
@@ -203,35 +305,62 @@
         const query = document.getElementById('searchInput').value.toLowerCase();
         list.innerHTML = '';
 
-        const filtered = contacts.filter(c => 
-            c.name.toLowerCase().includes(query) || 
-            c.notes.toLowerCase().includes(query)
-        ).reverse();
+        const filtered = contacts.filter(c => {
+            const searchStr = `${c.name} ${c.neighborhood} ${c.notes} ${c.profession}`.toLowerCase();
+            return searchStr.includes(query);
+        }).reverse(); // Mais novos no topo
 
         filtered.forEach(c => {
+            const waLink = buildWaLink(c.whatsapp);
+            const igLink = buildIgLink(c.instagram);
+            
             const card = document.createElement('div');
             card.className = `contact-card status-${c.status}`;
+            
+            // Tratamento de dados nulos
+            const prof = c.profession ? c.profession : '-';
+            const fac = c.college ? c.college : '-';
+            const bair = c.neighborhood ? `${c.neighborhood}, ${c.city}` : '-';
+            
             card.innerHTML = `
                 <div class="card-main">
                     <div class="contact-info">
                         <h3>${c.name}</h3>
                         <div class="contact-tags">
                             <span class="tag">${c.status}</span>
-                            <span class="tag">📍 ${c.origin}</span>
+                            <span class="tag">📍 ${c.origin || 'Direto'}</span>
+                            ${c.age ? `<span class="tag">${c.age} anos</span>` : ''}
                         </div>
-                        <span class="expand-btn" onclick="toggleDetails(${c.id})">Ver notas e detalhes</span>
+                        <button class="expand-btn" onclick="toggleDetails('${c.id}')">Ver Ficha Completa ▼</button>
                     </div>
                     <div class="counter-box">
-                        <button class="cnt-btn" onclick="updateCount(${c.id}, -1)">-</button>
-                        <span class="cnt-val">${c.count}</span>
-                        <button class="cnt-btn" onclick="updateCount(${c.id}, 1)">+</button>
+                        <button class="cnt-btn" onclick="updateCount('${c.id}', -1)">-</button>
+                        <span class="cnt-val">${c.count || 0}</span>
+                        <button class="cnt-btn" onclick="updateCount('${c.id}', 1)">+</button>
                     </div>
                 </div>
+                
                 <div class="card-details" id="details-${c.id}">
-                    <p style="margin-bottom:8px">${c.notes || 'Sem observações.'}</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center">
-                        <small>Última interação: ${c.updated}</small>
-                        <button onclick="deleteContact(${c.id})" style="background:none; border:none; color:var(--color-danger); font-size:0.7rem; cursor:pointer">Eliminar</button>
+                    ${waLink || igLink ? `
+                    <div class="social-links">
+                        ${waLink ? `<a href="${waLink}" target="_blank" class="btn-social btn-wa">💬 WhatsApp</a>` : ''}
+                        ${igLink ? `<a href="${igLink}" target="_blank" class="btn-social btn-ig">📷 Instagram</a>` : ''}
+                    </div>` : ''}
+                    
+                    <div class="details-grid">
+                        <div class="detail-item"><strong>Profissão</strong>${prof}</div>
+                        <div class="detail-item"><strong>Faculdade</strong>${fac}</div>
+                        <div class="detail-item"><strong>Local</strong>${bair}</div>
+                        <div class="detail-item"><strong>Filhos</strong>${c.children ? c.children : '0'}</div>
+                    </div>
+                    
+                    <div class="detail-item" style="margin-bottom:10px;">
+                        <strong>Notas Internas</strong>
+                        ${c.notes || 'Sem observações.'}
+                    </div>
+                    
+                    <div style="text-align:right; font-size:0.7rem; color:var(--text-muted);">
+                        Atualizado em: ${c.updated || '-'}
                     </div>
                 </div>
             `;
@@ -243,7 +372,9 @@
     function updateDashboard() {
         const total = contacts.length;
         const counts = { Conversando: 0, Ficando: 0, Transamos: 0 };
-        contacts.forEach(c => counts[c.status]++);
+        contacts.forEach(c => {
+            if(counts[c.status] !== undefined) counts[c.status]++;
+        });
 
         const rings = [
             { id: 'ring-blue', percId: 'perc-blue', barId: 'bar-blue', val: counts.Conversando, circ: 314 },
@@ -260,39 +391,8 @@
         });
     }
 
-    function exportData() {
-        const dataStr = JSON.stringify(contacts, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup_contacts_${Date.now()}.json`;
-        a.click();
-    }
-
-    function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if(Array.isArray(imported)) {
-                    contacts = imported;
-                    saveAndRender();
-                    alert("Dados importados com sucesso!");
-                }
-            } catch(err) { alert("Erro ao importar ficheiro."); }
-        };
-        reader.readAsText(file);
-    }
-
-    function saveAndRender() {
-        localStorage.setItem('contact_hub_pro', JSON.stringify(contacts));
-        renderList();
-    }
-
-    renderList();
+    // Inicializa
+    init();
 </script>
 </body>
 </html>

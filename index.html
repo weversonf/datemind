@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Hub Pro | Encrypted BD</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
@@ -13,10 +14,13 @@
             --input-bg: #25282e;
             --text-main: #ffffff;
             --text-muted: #94a3b8;
-            --color-conheci: #10b981;
-            --color-conversando: #eab308;
-            --color-fiquei: #ef4444;
-            --color-transei: #3b82f6;
+            
+            /* CORES DEFINIDAS */
+            --color-conheci: #10b981;      /* Verde */
+            --color-conversando: #eab308;  /* Amarelo */
+            --color-fiquei: #ef4444;       /* Vermelho */
+            --color-transei: #3b82f6;      /* Azul */
+            
             --color-whatsapp: #25D366;
             --color-instagram: #E1306C;
         }
@@ -30,6 +34,7 @@
         .status-indicator { font-size: 0.7rem; color: var(--color-conheci); display: flex; align-items: center; gap: 5px; }
         .status-dot { width: 8px; height: 8px; background: var(--color-conheci); border-radius: 50%; box-shadow: 0 0 8px var(--color-conheci); }
 
+        /* Dashboard Card */
         .dashboard-card { background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 1px solid #2d3139; }
         .charts-row { display: flex; align-items: center; gap: 20px; }
         .chart-container { position: relative; width: 100px; height: 100px; }
@@ -44,6 +49,7 @@
         .funnel-bar { height: 4px; background: #2d3139; border-radius: 2px; margin-top: 15px; display: flex; overflow: hidden; }
         .funnel-segment { height: 100%; transition: width 0.5s ease; }
 
+        /* Search & Filters */
         .search-bar { background: var(--input-bg); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; margin-bottom: 15px; border: 1px solid transparent; transition: 0.3s; }
         .search-bar:focus-within { border-color: var(--color-transei); }
         .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem; }
@@ -55,6 +61,7 @@
         .alpha-btn .letter { font-weight: 800; font-size: 1rem; }
         .alpha-btn .count { font-size: 0.65rem; opacity: 0.8; margin-top: 2px; }
 
+        /* Contact Cards */
         .contact-card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 12px; border: 1px solid #2d3139; position: relative; }
         .card-main { display: flex; justify-content: space-between; align-items: flex-start; }
         .contact-info h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
@@ -64,6 +71,7 @@
         .contact-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #2d3139; color: var(--text-muted); text-transform: capitalize; }
         
+        /* Expansible Details */
         .card-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2d3139; display: none; }
         .card-details.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
@@ -79,6 +87,7 @@
         
         .expand-btn { font-size: 0.7rem; color: var(--text-muted); cursor: pointer; margin-top: 5px; display: inline-block; background: none; border: none; text-decoration: underline; }
 
+        /* Floating Button & Modal */
         .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--text-main); color: var(--bg-color); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2); cursor: pointer; z-index: 100; transition: 0.3s; }
         
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; overflow-y: auto; }
@@ -93,6 +102,7 @@
         .btn-primary { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--text-main); color: var(--bg-color); font-weight: bold; cursor: pointer; }
         .btn-secondary { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #2d3139; background: transparent; color: var(--text-muted); cursor: pointer; }
 
+        /* Cores Dinâmicas por Status */
         .status-conheci { border-left: 4px solid var(--color-conheci); }
         .status-conversando { border-left: 4px solid var(--color-conversando); }
         .status-fiquei { border-left: 4px solid var(--color-fiquei); }
@@ -119,10 +129,13 @@
                 <svg viewBox="0 0 120 120">
                     <circle class="bg-circle" cx="60" cy="60" r="50"></circle>
                     <circle id="ring-conheci" stroke="var(--color-conheci)" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                    
                     <circle class="bg-circle" cx="60" cy="60" r="38"></circle>
                     <circle id="ring-conversando" stroke="var(--color-conversando)" cx="60" cy="60" r="38" stroke-dasharray="238" stroke-dashoffset="238"></circle>
+                    
                     <circle class="bg-circle" cx="60" cy="60" r="26"></circle>
                     <circle id="ring-fiquei" stroke="var(--color-fiquei)" cx="60" cy="60" r="26" stroke-dasharray="163" stroke-dashoffset="163"></circle>
+                    
                     <circle class="bg-circle" cx="60" cy="60" r="14"></circle>
                     <circle id="ring-transei" stroke="var(--color-transei)" cx="60" cy="60" r="14" stroke-dasharray="88" stroke-dashoffset="88"></circle>
                 </svg>
@@ -146,7 +159,9 @@
         <input type="text" id="searchInput" placeholder="Procurar por nome, bairro ou nota..." oninput="renderList()">
     </div>
 
-    <div class="alpha-filters" id="alphaFilters"></div>
+    <div class="alpha-filters" id="alphaFilters">
+        </div>
+
     <div id="loadingMsg">Sincronizando com Banco de Dados...</div>
     <div id="contactList"></div>
     
@@ -202,13 +217,17 @@
 </div>
 
 <script>
+    // ⚠️ CONFIGURAÇÕES DE SEGURANÇA E CONEXÃO ⚠️
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
+    
+    // 🔥 MUDE ESTA SENHA ANTES DE USAR O SISTEMA 🔥
     const SECRET_KEY = "WeversonCRM_2026_!@#"; 
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentInitialFilter = 'All';
     let editingId = null; // Variável para rastrear se estamos criando ou editando
 
+    // --- FUNÇÕES DE CRIPTOGRAFIA ---
     function encryptText(text) {
         if (!text) return "";
         return CryptoJS.AES.encrypt(text.toString(), SECRET_KEY).toString();
@@ -223,6 +242,7 @@
         } catch(e) { return "Erro: Senha Incorreta"; }
     }
 
+    // --- INICIALIZAÇÃO E SINCRONIZAÇÃO ---
     async function init() {
         buildAlphaFiltersUI(); 
         if(contacts.length > 0) renderList(); 
@@ -259,6 +279,7 @@
         }
     }
 
+    // --- FILTROS ALFABÉTICOS ---
     function buildAlphaFiltersUI() {
         const container = document.getElementById('alphaFilters');
         const alphabet = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -308,7 +329,7 @@
         editingId = null;
         document.getElementById('modalTitle').innerText = "Novo Registro";
         
-        // Limpar os campos (mantendo cidade e estado)
+        // Limpar os campos (mantendo cidade e estado padrão)
         document.querySelectorAll('.modal input, .modal textarea').forEach(el => el.value = '');
         document.getElementById('city').value = 'Fortaleza';
         document.getElementById('state').value = 'CE';
@@ -351,9 +372,10 @@
         const nome = document.getElementById('nome').value;
         if(!nome) { alert("Nome é obrigatório"); return; }
 
-        // Mantém o ID se estiver a editar, ou cria um novo se for novo contacto
+        // Mantém o ID se estiver a editar, ou cria um novo
         const contactId = editingId ? editingId : Date.now();
 
+        // Dados puros para a tela
         const localData = {
             id: contactId,
             nome: nome,
@@ -372,15 +394,16 @@
             updated: new Date().toLocaleDateString('pt-BR')
         };
 
+        // Dados protegidos para o banco (Google Sheets)
         const encryptedPayload = {
-            action: editingId ? "update" : "create", // Diz à planilha o que fazer
+            action: editingId ? "update" : "create",
             id: localData.id,
             nome: encryptText(localData.nome),
-            status: localData.status, 
+            status: localData.status, // Aberto para métricas
             origin: encryptText(localData.origin),
             whatsapp: encryptText(localData.whatsapp),
             instagram: encryptText(localData.instagram),
-            age: localData.age, 
+            age: localData.age, // Aberto para métricas
             profession: encryptText(localData.profession),
             college: encryptText(localData.college),
             children: localData.children,
@@ -403,7 +426,7 @@
         closeModal();
         localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
 
-        // Envia para o Google Sheets
+        // Background Sync com a Planilha
         try {
             await fetch(API_URL, {
                 method: 'POST',
@@ -414,6 +437,7 @@
         }
     }
 
+    // --- UI HELPERS ---
     function toggleDetails(id) {
         document.getElementById(`details-${id}`).classList.toggle('active');
     }
@@ -431,6 +455,7 @@
         return `https://instagram.com/${clean}`;
     }
 
+    // --- RENDERIZAÇÃO ---
     function renderList() {
         updateAlphaCounts(); 
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,6 +51,17 @@
         .search-bar:focus-within { border-color: var(--color-transei); }
         .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem; }
 
+        /* NOVA BARRA DE FILTRO DE ESTADO (STATUS) */
+        .status-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; scrollbar-width: none; width: 100%; }
+        .status-filters::-webkit-scrollbar { display: none; }
+        .status-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 20px; padding: 8px 14px; cursor: pointer; font-size: 0.75rem; white-space: nowrap; transition: 0.3s; display: flex; align-items: center; gap: 6px; outline: none; }
+        .status-btn:hover { border-color: #555; }
+        .status-btn.active { background: #333; color: white; border-color: #555; }
+        .status-btn.active#btn-filter-conheci { border-color: var(--color-conheci); }
+        .status-btn.active#btn-filter-conversando { border-color: var(--color-conversando); }
+        .status-btn.active#btn-filter-fiquei { border-color: var(--color-fiquei); }
+        .status-btn.active#btn-filter-transei { border-color: var(--color-transei); }
+
         .alpha-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; scrollbar-width: none; width: 100%; }
         .alpha-filters::-webkit-scrollbar { display: none; }
         .alpha-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 12px; padding: 8px 12px; cursor: pointer; text-align: center; min-width: 48px; flex-shrink: 0; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
@@ -97,7 +108,6 @@
         .form-full { width: 100%; margin-bottom: 12px; }
         .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3d46; background: var(--input-bg); color: white; outline: none; font-size: 0.85rem; }
         
-        /* Upload Button Styles */
         .upload-container { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
         .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
         .btn-upload { border: 1px dashed #3a3d46; color: var(--text-muted); background-color: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 10px; font-size: 0.85rem; width: 100%; cursor: pointer; transition: 0.3s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -167,8 +177,16 @@
         <input type="text" id="searchInput" placeholder="Procurar por nome, bairro ou nota..." oninput="renderList()">
     </div>
 
+    <div class="status-filters" id="statusFilters">
+        <button class="status-btn active" id="btn-filter-All" onclick="setStatusFilter('All')">Todos</button>
+        <button class="status-btn" id="btn-filter-conheci" onclick="setStatusFilter('conheci')"><i class="dot" style="background:var(--color-conheci)"></i>Conheci</button>
+        <button class="status-btn" id="btn-filter-conversando" onclick="setStatusFilter('conversando')"><i class="dot" style="background:var(--color-conversando)"></i>Conversando</button>
+        <button class="status-btn" id="btn-filter-fiquei" onclick="setStatusFilter('fiquei')"><i class="dot" style="background:var(--color-fiquei)"></i>Fiquei</button>
+        <button class="status-btn" id="btn-filter-transei" onclick="setStatusFilter('transei')"><i class="dot" style="background:var(--color-transei)"></i>Transei</button>
+    </div>
+
     <div class="alpha-filters" id="alphaFilters"></div>
-    <div id="loadingMsg">Sincronizando com Banco de Dados...</div>
+    <div id="loadingMsg">A sincronizar com a Base de Dados...</div>
     <div id="contactList"></div>
     
     <button class="fab" onclick="openNewModal()">+</button>
@@ -176,8 +194,8 @@
 
 <div class="modal-overlay" id="modal">
     <div class="modal">
-        <h2 id="modalTitle">Novo Registro</h2>
-        <div class="security-badge">🔒 Planilha 100% Blindada</div>
+        <h2 id="modalTitle">Novo Registo</h2>
+        <div class="security-badge">🔒 Folha de Cálculo 100% Blindada</div>
         
         <input type="text" id="nome" class="form-full" placeholder="Nome Completo / Apelido">
         
@@ -233,14 +251,16 @@
 </div>
 
 <script>
-    // ⚠️ CONFIGURAÇÕES OBRIGATÓRIAS ⚠️
-    const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
-    
-    const SECRET_KEY = "WeversonCRM_2026_!@#"; // Sua senha do Google Sheets
-    const IMGBB_API_KEY = "019c10971b4aab9c354e2e8d8681d744"; // Sua chave gerada no api.imgbb.com
+    // ⚠️ CONFIGURAÇÕES OBRIGATÓRIAS ⚠️
+    const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
+    
+    const SECRET_KEY = "WeversonCRM_2026_!@#"; // Sua senha do Google Sheets
+    const IMGBB_API_KEY = "019c10971b4aab9c354e2e8d8681d744"; // Sua chave gerada no api.imgbb.com
+
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentInitialFilter = 'All';
+    let currentStatusFilter = 'All'; // Nova variável para o filtro de estado
     let editingId = null;
 
     function encryptText(text) {
@@ -254,7 +274,7 @@
         try {
             const bytes = CryptoJS.AES.decrypt(ciphertext.toString(), SECRET_KEY);
             return bytes.toString(CryptoJS.enc.Utf8);
-        } catch(e) { return "Erro: Senha Incorreta"; }
+        } catch(e) { return "Erro: Palavra-passe Incorreta"; }
     }
 
     async function init() {
@@ -271,7 +291,7 @@
                     nome: decryptText(c.nome || c.Nome || c.name),
                     status: decryptText(c.status), 
                     origin: decryptText(c.origin || c.Origem),
-                    photoUrl: decryptText(c.photoUrl || c.Foto), // URL da Foto
+                    photoUrl: decryptText(c.photoUrl || c.Foto),
                     whatsapp: decryptText(c.whatsapp || c.Whatsapp),
                     instagram: decryptText(c.instagram || c.Instagram),
                     age: decryptText(c.age || c.Idade), 
@@ -290,7 +310,7 @@
             renderList();
         } catch(e) {
             console.error("Erro na API", e);
-            document.getElementById('loadingMsg').innerText = "Modo Offline";
+            document.getElementById('loadingMsg').innerText = "Modo Offline (A usar cache)";
         }
     }
 
@@ -326,17 +346,15 @@
         }
     }
 
-    // Gerenciador de Salvar (Lida com o Upload antes de Salvar no BD)
     async function handleSave() {
         const nome = document.getElementById('nome').value;
-        if(!nome) { alert("Nome é obrigatório"); return; }
+        if(!nome) { alert("O nome é obrigatório"); return; }
 
         const fileInput = document.getElementById('photoUpload');
-        let finalPhotoUrl = document.getElementById('photoUrl').value; // Pega a existente, se houver
+        let finalPhotoUrl = document.getElementById('photoUrl').value; 
         const btnSave = document.getElementById('btnSave');
         const progress = document.getElementById('uploadProgress');
 
-        // Se o utilizador escolheu uma foto nova, fazemos upload
         if (fileInput.files.length > 0) {
             btnSave.disabled = true;
             btnSave.innerText = "A Enviar...";
@@ -355,10 +373,10 @@
             btnSave.innerText = "Gravar BD";
         }
 
-        // Agora executa a lógica normal de guardar no Sheets com a finalPhotoUrl
         saveContactToSheets(finalPhotoUrl);
     }
 
+    // --- FILTROS (ALFABETO & ESTADO) ---
     function buildAlphaFiltersUI() {
         const container = document.getElementById('alphaFilters');
         const alphabet = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -379,6 +397,13 @@
         document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`alpha-btn-${letter}`).classList.add('active');
         renderList(); 
+    }
+
+    function setStatusFilter(status) {
+        currentStatusFilter = status;
+        document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-filter-${status}`).classList.add('active');
+        renderList();
     }
 
     function updateAlphaCounts() {
@@ -403,13 +428,13 @@
         }
     }
 
+    // --- MODAIS ---
     function openNewModal() {
         editingId = null;
-        document.getElementById('modalTitle').innerText = "Novo Registro";
+        document.getElementById('modalTitle').innerText = "Novo Registo";
         
         document.querySelectorAll('.modal input[type="text"], .modal input[type="number"], .modal input[type="tel"], .modal textarea, .modal input[type="hidden"]').forEach(el => el.value = '');
         
-        // Limpar o campo de ficheiro visualmente
         document.getElementById('photoUpload').value = '';
         document.getElementById('fileNameDisplay').innerText = '';
         
@@ -425,12 +450,12 @@
         if(!contact) return;
 
         editingId = contact.id;
-        document.getElementById('modalTitle').innerText = "Editar Registro";
+        document.getElementById('modalTitle').innerText = "Editar Registo";
 
         document.getElementById('nome').value = contact.nome || '';
         document.getElementById('status').value = contact.status || 'conheci';
         document.getElementById('origin').value = contact.origin || '';
-        document.getElementById('photoUrl').value = contact.photoUrl || ''; // Mantém o URL antigo escondido
+        document.getElementById('photoUrl').value = contact.photoUrl || ''; 
         document.getElementById('whatsapp').value = contact.whatsapp || '';
         document.getElementById('instagram').value = contact.instagram || '';
         document.getElementById('age').value = contact.age || '';
@@ -442,9 +467,8 @@
         document.getElementById('state').value = contact.state || 'CE';
         document.getElementById('notes').value = contact.notes || '';
 
-        // Limpar o campo de ficheiro para não manter fotos antigas presas
         document.getElementById('photoUpload').value = '';
-        document.getElementById('fileNameDisplay').innerText = contact.photoUrl ? 'Aviso: Este contacto já tem uma foto. Se não escolher nada, a antiga será mantida.' : '';
+        document.getElementById('fileNameDisplay').innerText = contact.photoUrl ? 'Aviso: Este contacto já tem uma foto. Se não escolher outra, a antiga será mantida.' : '';
 
         document.getElementById('modal').style.display = 'flex';
     }
@@ -473,7 +497,7 @@
             city: document.getElementById('city').value,
             state: document.getElementById('state').value,
             notes: document.getElementById('notes').value,
-            updated: new Date().toLocaleDateString('pt-BR')
+            updated: new Date().toLocaleDateString('pt-PT')
         };
 
         const encryptedPayload = {
@@ -556,8 +580,15 @@
                 const initial = (c.nome || '').charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
                 matchesLetter = (initial === currentInitialFilter);
             }
+            
+            // Lógica do Novo Filtro de Estado
+            let matchesStatus = true;
+            if (currentStatusFilter !== 'All') {
+                const st = c.status ? c.status.toLowerCase() : 'conheci';
+                matchesStatus = (st === currentStatusFilter);
+            }
 
-            return matchesSearch && matchesLetter;
+            return matchesSearch && matchesLetter && matchesStatus;
         }).reverse(); 
 
         filtered.forEach(c => {
@@ -569,7 +600,6 @@
             const igLink = buildIgLink(c.instagram);
             
             const initialsAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayNome)}&background=25282e&color=fff&bold=true`;
-            // Usa o link da nuvem do ImgBB se existir, senão usa as iniciais
             const avatarUrl = c.photoUrl && c.photoUrl.startsWith('http') ? c.photoUrl : initialsAvatar;
             
             const card = document.createElement('div');

@@ -1,9 +1,18 @@
+Entendido, Weverson. Segurança máxima e total "blackout" na planilha. 
+
+Nesta versão, **absolutamente todos os campos** (Status, Idade, Filhos e Data de Atualização) passam a ser criptografados antes de irem para o Google Sheets. A única coisa que não é criptografada é o `id` numérico gerado pelo sistema, pois o seu código `.gs` precisa desse número para saber qual linha ele deve editar quando você usar o botão de lápis.
+
+O mais legal dessa arquitetura é que, como o seu aplicativo puxa e desembaralha os dados *antes* de renderizar a tela, **os seus dashboards e gráficos vão continuar funcionando perfeitamente no seu celular/PC**, mesmo com a planilha 100% ilegível.
+
+Aqui está o código `index.html` definitivo com "Blindagem Total":
+
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub Pro | Encrypted BD</title>
+    <title>Contact Hub Pro | Total Encryption</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
@@ -119,7 +128,7 @@
         <div class="header-title">Contact Hub <span style="color: var(--color-transei);">.</span></div>
         <div class="status-indicator">
             <div class="status-dot"></div>
-            Seguro & Sincronizado
+            Blackout BD
         </div>
     </header>
 
@@ -129,13 +138,10 @@
                 <svg viewBox="0 0 120 120">
                     <circle class="bg-circle" cx="60" cy="60" r="50"></circle>
                     <circle id="ring-conheci" stroke="var(--color-conheci)" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                    
                     <circle class="bg-circle" cx="60" cy="60" r="38"></circle>
                     <circle id="ring-conversando" stroke="var(--color-conversando)" cx="60" cy="60" r="38" stroke-dasharray="238" stroke-dashoffset="238"></circle>
-                    
                     <circle class="bg-circle" cx="60" cy="60" r="26"></circle>
                     <circle id="ring-fiquei" stroke="var(--color-fiquei)" cx="60" cy="60" r="26" stroke-dasharray="163" stroke-dashoffset="163"></circle>
-                    
                     <circle class="bg-circle" cx="60" cy="60" r="14"></circle>
                     <circle id="ring-transei" stroke="var(--color-transei)" cx="60" cy="60" r="14" stroke-dasharray="88" stroke-dashoffset="88"></circle>
                 </svg>
@@ -159,9 +165,7 @@
         <input type="text" id="searchInput" placeholder="Procurar por nome, bairro ou nota..." oninput="renderList()">
     </div>
 
-    <div class="alpha-filters" id="alphaFilters">
-        </div>
-
+    <div class="alpha-filters" id="alphaFilters"></div>
     <div id="loadingMsg">Sincronizando com Banco de Dados...</div>
     <div id="contactList"></div>
     
@@ -171,7 +175,7 @@
 <div class="modal-overlay" id="modal">
     <div class="modal">
         <h2 id="modalTitle">Novo Registro</h2>
-        <div class="security-badge">🔒 Dados Criptografados de Ponta a Ponta</div>
+        <div class="security-badge">🔒 Planilha 100% Blindada</div>
         
         <input type="text" id="nome" class="form-full" placeholder="Nome Completo / Apelido">
         
@@ -217,7 +221,6 @@
 </div>
 
 <script>
-    // ⚠️ CONFIGURAÇÕES DE SEGURANÇA E CONEXÃO ⚠️
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
     
     // 🔥 MUDE ESTA SENHA ANTES DE USAR O SISTEMA 🔥
@@ -225,11 +228,11 @@
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentInitialFilter = 'All';
-    let editingId = null; // Variável para rastrear se estamos criando ou editando
+    let editingId = null;
 
     // --- FUNÇÕES DE CRIPTOGRAFIA ---
     function encryptText(text) {
-        if (!text) return "";
+        if (!text && text !== 0) return ""; 
         return CryptoJS.AES.encrypt(text.toString(), SECRET_KEY).toString();
     }
 
@@ -252,22 +255,23 @@
             const data = await res.json();
             
             if(Array.isArray(data) && data.length > 0) {
+                // TUDO DESEMBARALHADO AO RECEBER
                 contacts = data.map(c => ({
                     id: c.id,
                     nome: decryptText(c.nome || c.Nome || c.name),
-                    status: c.status,
+                    status: decryptText(c.status), // Agora Status é destrancado
                     origin: decryptText(c.origin || c.Origem),
                     whatsapp: decryptText(c.whatsapp || c.Whatsapp),
                     instagram: decryptText(c.instagram || c.Instagram),
-                    age: c.age || c.Idade, 
+                    age: decryptText(c.age || c.Idade), // Idade destrancada
                     profession: decryptText(c.profession || c.Profissao),
                     college: decryptText(c.college || c.Faculdade),
-                    children: c.children || c.Filhos,
+                    children: decryptText(c.children || c.Filhos), // Filhos destrancado
                     neighborhood: decryptText(c.neighborhood || c.Bairro),
                     city: decryptText(c.city || c.Cidade),
                     state: decryptText(c.state || c.Estado),
                     notes: decryptText(c.notes || c.Notas),
-                    updated: c.updated || c.Atualizado
+                    updated: decryptText(c.updated || c.Atualizado) // Updated destrancado
                 }));
                 localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
             }
@@ -279,7 +283,6 @@
         }
     }
 
-    // --- FILTROS ALFABÉTICOS ---
     function buildAlphaFiltersUI() {
         const container = document.getElementById('alphaFilters');
         const alphabet = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -324,12 +327,10 @@
         }
     }
 
-    // --- LÓGICA DO MODAL (CRIAR VS EDITAR) ---
     function openNewModal() {
         editingId = null;
         document.getElementById('modalTitle').innerText = "Novo Registro";
         
-        // Limpar os campos (mantendo cidade e estado padrão)
         document.querySelectorAll('.modal input, .modal textarea').forEach(el => el.value = '');
         document.getElementById('city').value = 'Fortaleza';
         document.getElementById('state').value = 'CE';
@@ -345,7 +346,6 @@
         editingId = contact.id;
         document.getElementById('modalTitle').innerText = "Editar Registro";
 
-        // Preenche os campos com os dados existentes
         document.getElementById('nome').value = contact.nome || '';
         document.getElementById('status').value = contact.status || 'conheci';
         document.getElementById('origin').value = contact.origin || '';
@@ -372,10 +372,9 @@
         const nome = document.getElementById('nome').value;
         if(!nome) { alert("Nome é obrigatório"); return; }
 
-        // Mantém o ID se estiver a editar, ou cria um novo
         const contactId = editingId ? editingId : Date.now();
 
-        // Dados puros para a tela
+        // Dados puros para o App local (sem criptografia na tela)
         const localData = {
             id: contactId,
             nome: nome,
@@ -394,27 +393,26 @@
             updated: new Date().toLocaleDateString('pt-BR')
         };
 
-        // Dados protegidos para o banco (Google Sheets)
+        // TODOS OS DADOS CRIPTOGRAFADOS PARA A NUVEM (Exceto Action e ID)
         const encryptedPayload = {
             action: editingId ? "update" : "create",
             id: localData.id,
             nome: encryptText(localData.nome),
-            status: localData.status, // Aberto para métricas
+            status: encryptText(localData.status), 
             origin: encryptText(localData.origin),
             whatsapp: encryptText(localData.whatsapp),
             instagram: encryptText(localData.instagram),
-            age: localData.age, // Aberto para métricas
+            age: encryptText(localData.age), 
             profession: encryptText(localData.profession),
             college: encryptText(localData.college),
-            children: localData.children,
+            children: encryptText(localData.children),
             neighborhood: encryptText(localData.neighborhood),
             city: encryptText(localData.city),
             state: encryptText(localData.state),
             notes: encryptText(localData.notes),
-            updated: localData.updated
+            updated: encryptText(localData.updated)
         };
 
-        // Atualiza a memória local
         if (editingId) {
             const index = contacts.findIndex(c => String(c.id) === String(editingId));
             if (index > -1) contacts[index] = localData;
@@ -426,7 +424,6 @@
         closeModal();
         localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
 
-        // Background Sync com a Planilha
         try {
             await fetch(API_URL, {
                 method: 'POST',
@@ -437,7 +434,6 @@
         }
     }
 
-    // --- UI HELPERS ---
     function toggleDetails(id) {
         document.getElementById(`details-${id}`).classList.toggle('active');
     }
@@ -455,7 +451,6 @@
         return `https://instagram.com/${clean}`;
     }
 
-    // --- RENDERIZAÇÃO ---
     function renderList() {
         updateAlphaCounts(); 
 
@@ -560,3 +555,4 @@
 </script>
 </body>
 </html>
+```

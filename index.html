@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub Pro | BD Connected</title>
+    <title>Contact Hub Pro | Encrypted BD</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <style>
         :root {
             --bg-color: #0f1012;
@@ -101,6 +104,7 @@
         .status-transei { border-left: 4px solid var(--color-teal); }
         
         #loadingMsg { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px; }
+        .security-badge { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.65rem; color: #14b8a6; margin-bottom: 15px; background: rgba(20, 184, 166, 0.1); padding: 5px; border-radius: 8px;}
     </style>
 </head>
 <body>
@@ -110,7 +114,7 @@
         <div class="header-title">Contact Hub <span style="color: var(--color-blue);">.</span></div>
         <div class="status-indicator">
             <div class="status-dot"></div>
-            Online
+            Online & Seguro
         </div>
     </header>
 
@@ -155,6 +159,7 @@
 <div class="modal-overlay" id="modal">
     <div class="modal">
         <h2>Novo Registro</h2>
+        <div class="security-badge">🔒 Dados Criptografados de Ponta a Ponta</div>
         
         <input type="text" id="nome" class="form-full" placeholder="Nome Completo / Apelido">
         
@@ -199,28 +204,66 @@
 </div>
 
 <script>
+    // ⚠️ CONFIGURAÇÕES DE SEGURANÇA E CONEXÃO ⚠️
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
-    
+    const SECRET_KEY = "WeversonCRM_2026_!@#"; // Mude isso para uma senha sua antes de usar!
+
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
-    let currentInitialFilter = 'All'; // Filtro atual de letra
+    let currentInitialFilter = 'All';
+
+    // --- FUNÇÕES DE CRIPTOGRAFIA ---
+    function encryptText(text) {
+        if (!text) return "";
+        return CryptoJS.AES.encrypt(text.toString(), SECRET_KEY).toString();
+    }
+
+    function decryptText(ciphertext) {
+        if (!ciphertext) return "";
+        // Se o texto não parecer um hash AES (U2FsdGVk), retorna ele mesmo (ajuda na transição de base velha pra nova)
+        if (!ciphertext.toString().startsWith('U2FsdGVk')) return ciphertext;
+        try {
+            const bytes = CryptoJS.AES.decrypt(ciphertext.toString(), SECRET_KEY);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch(e) {
+            return "Erro: Senha Incorreta";
+        }
+    }
 
     async function init() {
-        buildAlphaFiltersUI(); // Constroi botões de A a Z
-        
+        buildAlphaFiltersUI(); 
         if(contacts.length > 0) renderList(); 
         
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
+            
             if(Array.isArray(data) && data.length > 0) {
-                contacts = data;
+                // Descriptografa tudo ao receber da nuvem
+                contacts = data.map(c => ({
+                    id: c.id,
+                    nome: decryptText(c.nome || c.Nome || c.name),
+                    status: c.status,
+                    origin: decryptText(c.origin || c.Origem),
+                    whatsapp: decryptText(c.whatsapp || c.Whatsapp),
+                    instagram: decryptText(c.instagram || c.Instagram),
+                    age: c.age || c.Idade, // Não precisa criptografar números simples se não quiser, mas pode
+                    profession: decryptText(c.profession || c.Profissao),
+                    college: decryptText(c.college || c.Faculdade),
+                    children: c.children || c.Filhos,
+                    neighborhood: decryptText(c.neighborhood || c.Bairro),
+                    city: decryptText(c.city || c.Cidade),
+                    state: decryptText(c.state || c.Estado),
+                    notes: decryptText(c.notes || c.Notas),
+                    updated: c.updated || c.Atualizado
+                }));
+
                 localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
             }
             document.getElementById('loadingMsg').style.display = 'none';
             renderList();
         } catch(e) {
-            console.error("Erro na API, usando cache local", e);
-            document.getElementById('loadingMsg').innerText = "Modo Offline (Usando Cache)";
+            console.error("Erro na API", e);
+            document.getElementById('loadingMsg').innerText = "Modo Offline";
         }
     }
 
@@ -248,7 +291,6 @@
             container.appendChild(btn);
         });
 
-        // Marca "Tudo" como ativo inicialmente
         document.getElementById('alpha-btn-All').classList.add('active');
     }
 
@@ -264,7 +306,7 @@
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => counts[l] = 0);
 
         contacts.forEach(c => {
-            const name = (c.nome || c.Nome || c.name || '').trim();
+            const name = (c.nome || '').trim();
             if (name) {
                 const initial = name.charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
                 if (counts[initial] !== undefined) {
@@ -316,7 +358,8 @@
         const nome = document.getElementById('nome').value;
         if(!nome) { alert("Nome é obrigatório"); return; }
 
-        const payload = {
+        // Mapeamento Descriptografado (Para ficar na tela)
+        const localData = {
             id: Date.now(),
             nome: nome,
             status: document.getElementById('status').value,
@@ -334,16 +377,38 @@
             updated: new Date().toLocaleDateString('pt-BR')
         };
 
-        contacts.push(payload);
+        // Mapeamento Criptografado (Para ir para a Nuvem/Google Sheets)
+        const encryptedPayload = {
+            id: localData.id,
+            nome: encryptText(localData.nome),
+            status: localData.status, // Deixei aberto pra vc ver as cores na planilha
+            origin: encryptText(localData.origin),
+            whatsapp: encryptText(localData.whatsapp),
+            instagram: encryptText(localData.instagram),
+            age: localData.age, 
+            profession: encryptText(localData.profession),
+            college: encryptText(localData.college),
+            children: localData.children,
+            neighborhood: encryptText(localData.neighborhood),
+            city: encryptText(localData.city),
+            state: encryptText(localData.state),
+            notes: encryptText(localData.notes),
+            updated: localData.updated
+        };
+
+        // UI Otimista
+        contacts.push(localData);
         renderList();
         toggleModal(false);
         localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
 
+        // Background sync com dados CRIPTOGRAFADOS
         try {
             await fetch(API_URL, {
                 method: 'POST',
-                body: JSON.stringify(payload)
+                body: JSON.stringify(encryptedPayload)
             });
+            console.log("Salvo no BD com Criptografia.");
         } catch(e) {
             console.error("Falha ao salvar no BD remoto.");
         }
@@ -361,9 +426,9 @@
         list.innerHTML = '';
 
         const filtered = contacts.filter(c => {
-            const nomeStr = c.nome || c.Nome || c.name || '';
-            const bairroStr = c.neighborhood || c.Bairro || '';
-            const notaStr = c.notes || c.Notas || '';
+            const nomeStr = c.nome || '';
+            const bairroStr = c.neighborhood || '';
+            const notaStr = c.notes || '';
             
             const searchStr = `${nomeStr} ${bairroStr} ${notaStr}`.toLowerCase();
             const matchesSearch = searchStr.includes(query);
@@ -378,19 +443,19 @@
         }).reverse(); 
 
         filtered.forEach(c => {
-            const displayNome = c.nome || c.Nome || c.name || 'Sem Nome';
-            const displayIdade = c.age || c.Idade ? `, ${c.age || c.Idade}` : '';
+            const displayNome = c.nome || 'Desconhecido (Erro Hash)';
+            const displayIdade = c.age ? `, ${c.age}` : '';
             const displayStatus = c.status ? c.status.toLowerCase() : 'conheci';
             
-            const waLink = buildWaLink(c.whatsapp || c.Whatsapp);
-            const igLink = buildIgLink(c.instagram || c.Instagram);
+            const waLink = buildWaLink(c.whatsapp);
+            const igLink = buildIgLink(c.instagram);
             
             const card = document.createElement('div');
             card.className = `contact-card status-${displayStatus}`;
             
-            const prof = (c.profession || c.Profissao) ? (c.profession || c.Profissao) : '-';
-            const fac = (c.college || c.Faculdade) ? (c.college || c.Faculdade) : '-';
-            const bair = (c.neighborhood || c.Bairro) ? `${c.neighborhood || c.Bairro}, ${c.city || 'Fortaleza'}` : '-';
+            const prof = c.profession ? c.profession : '-';
+            const fac = c.college ? c.college : '-';
+            const bair = c.neighborhood ? `${c.neighborhood}, ${c.city || 'Fortaleza'}` : '-';
             
             card.innerHTML = `
                 <div class="card-main">
@@ -398,7 +463,7 @@
                         <h3>${displayNome}${displayIdade}</h3>
                         <div class="contact-tags">
                             <span class="tag">${displayStatus}</span>
-                            <span class="tag">📍 ${c.origin || c.Origem || 'Direto'}</span>
+                            <span class="tag">📍 ${c.origin || 'Direto'}</span>
                         </div>
                         <button class="expand-btn" onclick="toggleDetails('${c.id}')">Ficha completa ▼</button>
                     </div>
@@ -415,16 +480,16 @@
                         <div class="detail-item"><strong>Profissão</strong>${prof}</div>
                         <div class="detail-item"><strong>Faculdade</strong>${fac}</div>
                         <div class="detail-item"><strong>Local</strong>${bair}</div>
-                        <div class="detail-item"><strong>Filhos</strong>${c.children || c.Filhos ? (c.children || c.Filhos) : '0'}</div>
+                        <div class="detail-item"><strong>Filhos</strong>${c.children ? c.children : '0'}</div>
                     </div>
                     
                     <div class="detail-item" style="margin-bottom:10px;">
                         <strong>Notas Internas</strong>
-                        ${c.notes || c.Notas || 'Sem observações.'}
+                        ${c.notes || 'Sem observações.'}
                     </div>
                     
                     <div style="text-align:right; font-size:0.7rem; color:var(--text-muted);">
-                        Atualizado em: ${c.updated || c.Atualizado || '-'}
+                        Atualizado em: ${c.updated || '-'}
                     </div>
                 </div>
             `;

@@ -51,7 +51,6 @@
         .search-bar:focus-within { border-color: var(--color-transei); }
         .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem; }
 
-        /* Correção do Filtro Alfabético */
         .alpha-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; scrollbar-width: none; width: 100%; }
         .alpha-filters::-webkit-scrollbar { display: none; }
         .alpha-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 12px; padding: 8px 12px; cursor: pointer; text-align: center; min-width: 48px; flex-shrink: 0; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
@@ -59,13 +58,17 @@
         .alpha-btn .letter { font-weight: 800; font-size: 1rem; }
         .alpha-btn .count { font-size: 0.65rem; opacity: 0.8; margin-top: 2px; }
 
-        /* Contact Cards - Layout Ajustado */
+        /* Contact Cards - Layout Ajustado com Avatar */
         .contact-card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 12px; border: 1px solid #2d3139; position: relative; }
         .card-header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .contact-info-left { flex: 1; }
-        .contact-info-left h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
         
-        .card-actions-right { display: flex; gap: 10px; align-items: flex-start; }
+        .profile-section { display: flex; gap: 12px; align-items: center; flex: 1; }
+        .profile-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: var(--input-bg); border: 2px solid #2d3139; }
+        
+        .contact-info-left { flex: 1; display: flex; flex-direction: column; justify-content: center;}
+        .contact-info-left h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        
+        .card-actions-right { display: flex; gap: 10px; align-items: flex-start; margin-left: 10px; }
         .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.7; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         .btn-icon:hover { opacity: 1; transform: scale(1.1); }
         
@@ -99,10 +102,18 @@
         .btn-primary { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--text-main); color: var(--bg-color); font-weight: bold; cursor: pointer; }
         .btn-secondary { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #2d3139; background: transparent; color: var(--text-muted); cursor: pointer; }
 
+        /* Cores Dinâmicas e Bordas do Avatar */
         .status-conheci { border-left: 4px solid var(--color-conheci); }
+        .status-conheci .profile-avatar { border-color: var(--color-conheci); }
+        
         .status-conversando { border-left: 4px solid var(--color-conversando); }
+        .status-conversando .profile-avatar { border-color: var(--color-conversando); }
+        
         .status-fiquei { border-left: 4px solid var(--color-fiquei); }
+        .status-fiquei .profile-avatar { border-color: var(--color-fiquei); }
+        
         .status-transei { border-left: 4px solid var(--color-transei); }
+        .status-transei .profile-avatar { border-color: var(--color-transei); }
         
         #loadingMsg { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px; }
         .security-badge { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.65rem; color: var(--color-conheci); margin-bottom: 15px; background: rgba(16, 185, 129, 0.1); padding: 5px; border-radius: 8px;}
@@ -209,6 +220,8 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
+    
+    // 🔥 MUDE ESTA SENHA ANTES DE USAR O SISTEMA 🔥
     const SECRET_KEY = "WeversonCRM_2026_!@#"; 
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
@@ -418,6 +431,7 @@
         document.getElementById(`details-${id}`).classList.toggle('active');
     }
 
+    // --- FUNÇÕES DE LIMPEZA E EXTRAÇÃO (IG / WA) ---
     function buildWaLink(num) {
         if(!num) return '';
         let clean = String(num).replace(/\D/g, '');
@@ -425,10 +439,17 @@
         return `https://wa.me/${clean}`;
     }
 
-    function buildIgLink(user) {
+    function getCleanIg(user) {
         if(!user) return '';
-        let clean = String(user).replace('@', '').trim();
-        return `https://instagram.com/${clean}`;
+        // Limpa links inteiros e arrobas para pegar só o username
+        let clean = String(user).replace(/https?:\/\/(www\.)?instagram\.com\//i, '');
+        clean = clean.replace('@', '').split('/')[0].split('?')[0].trim();
+        return clean;
+    }
+
+    function buildIgLink(user) {
+        const clean = getCleanIg(user);
+        return clean ? `https://instagram.com/${clean}` : '';
     }
 
     function renderList() {
@@ -457,20 +478,30 @@
             const displayStatus = c.status ? c.status.toLowerCase() : 'conheci';
             
             const waLink = buildWaLink(c.whatsapp);
+            const igUsername = getCleanIg(c.instagram);
             const igLink = buildIgLink(c.instagram);
+            
+            // Lógica do Avatar: Foto do IG (via unavatar) OU Iniciais geradas (via ui-avatars)
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayNome)}&background=25282e&color=fff`;
+            const avatarUrl = igUsername ? `https://unavatar.io/instagram/${igUsername}?fallback=${encodeURIComponent(fallbackAvatar)}` : fallbackAvatar;
             
             const card = document.createElement('div');
             card.className = `contact-card status-${displayStatus}`;
             
             card.innerHTML = `
                 <div class="card-header-flex">
-                    <div class="contact-info-left">
-                        <h3>${displayNome}${displayIdade}</h3>
-                        <div class="contact-tags">
-                            <span class="tag" style="border: 1px solid var(--color-${displayStatus});">${displayStatus}</span>
-                            <span class="tag">📍 ${c.origin || 'Direto'}</span>
+                    
+                    <div class="profile-section">
+                        <img src="${avatarUrl}" class="profile-avatar" alt="Avatar">
+                        <div class="contact-info-left">
+                            <h3>${displayNome}${displayIdade}</h3>
+                            <div class="contact-tags">
+                                <span class="tag" style="border: 1px solid var(--color-${displayStatus});">${displayStatus}</span>
+                                <span class="tag">📍 ${c.origin || 'Direto'}</span>
+                            </div>
                         </div>
                     </div>
+
                     <div class="card-actions-right">
                         <button class="btn-icon" onclick="toggleDetails('${c.id}')" title="Ver Detalhes">🔍</button>
                         <button class="btn-icon" onclick="openEditModal('${c.id}')" title="Editar">✏️</button>

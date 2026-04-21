@@ -236,7 +236,7 @@
 </div>
 
 <script>
-    // [TODO O SEU SCRIPT JAVASCRIPT ORIGINAL FOI MANTIDO AQUI PARA GARANTIR COMPATIBILIDADE TOTAL]
+    // ⚠️ CONFIGURAÇÕES MANTIDAS ⚠️
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
     const SECRET_KEY = "WeversonCRM_2026_!@#"; 
     const IMGBB_API_KEY = "019c10971b4aab9c354e2e8d8681d744"; 
@@ -246,6 +246,7 @@
     let currentStatusFilter = 'All'; 
     let editingId = null;
 
+    // Funções de Criptografia (Mantidas)
     function encryptText(text) {
         if (!text && text !== 0) return ""; 
         return CryptoJS.AES.encrypt(text.toString(), SECRET_KEY).toString();
@@ -287,17 +288,56 @@
                 }));
                 localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
             }
-            document.getElementById('loadingMsg').style.display = 'none';
+            const loading = document.getElementById('loadingMsg');
+            if(loading) loading.style.display = 'none';
             renderList();
         } catch(e) {
-            document.getElementById('loadingMsg').innerText = "Modo Offline";
+            const loading = document.getElementById('loadingMsg');
+            if(loading) loading.innerText = "Modo Offline";
         }
     }
 
+    // --- CORREÇÃO DO BOTÃO DE ADICIONAR ---
+    // Garante que o modal abra independente da visualização
+    function openNewModal() {
+        editingId = null;
+        const modal = document.getElementById('modal');
+        const title = document.getElementById('modalTitle');
+        
+        if (title) title.innerText = "Novo Registo";
+        
+        // Limpa campos
+        document.querySelectorAll('#modal input:not([type="hidden"]), #modal textarea').forEach(el => el.value = '');
+        
+        // Valores padrão
+        const city = document.getElementById('city');
+        const state = document.getElementById('state');
+        const status = document.getElementById('status');
+        const photoUrl = document.getElementById('photoUrl');
+        
+        if(city) city.value = 'Fortaleza';
+        if(state) state.value = 'CE';
+        if(status) status.value = 'conheci';
+        if(photoUrl) photoUrl.value = '';
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            // Scroll para o topo do modal caso esteja em mobile
+            modal.scrollTop = 0;
+        }
+    }
+
+    function closeModal() { 
+        const modal = document.getElementById('modal');
+        if (modal) modal.style.display = 'none'; 
+        editingId = null; 
+    }
+
+    // --- RESTANTE DAS FUNÇÕES (MANTIDAS) ---
     function updateFileName() {
         const fileInput = document.getElementById('photoUpload');
         const display = document.getElementById('fileNameDisplay');
-        if (fileInput.files.length > 0) {
+        if (fileInput && fileInput.files.length > 0) {
             display.innerText = `✅ Foto selecionada: ${fileInput.files[0].name}`;
         }
     }
@@ -316,20 +356,20 @@
     }
 
     async function handleSave() {
-        const nome = document.getElementById('nome').value;
-        if(!nome) return alert("O nome é obrigatório");
+        const nomeEl = document.getElementById('nome');
+        if(!nomeEl || !nomeEl.value) return alert("O nome é obrigatório");
 
         const fileInput = document.getElementById('photoUpload');
         let finalPhotoUrl = document.getElementById('photoUrl').value; 
         const btnSave = document.getElementById('btnSave');
         const progress = document.getElementById('uploadProgress');
 
-        if (fileInput.files.length > 0) {
+        if (fileInput && fileInput.files.length > 0) {
             btnSave.disabled = true;
-            progress.style.display = "block";
+            if(progress) progress.style.display = "block";
             const uploadedUrl = await uploadImageToImgBB(fileInput.files[0]);
             if (uploadedUrl) finalPhotoUrl = uploadedUrl;
-            progress.style.display = "none";
+            if(progress) progress.style.display = "none";
             btnSave.disabled = false;
         }
         saveContactToSheets(finalPhotoUrl);
@@ -337,6 +377,8 @@
 
     function buildAlphaFiltersUI() {
         const container = document.getElementById('alphaFilters');
+        if(!container) return;
+        container.innerHTML = '';
         const alphabet = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
         alphabet.forEach(letter => {
             const btn = document.createElement('button');
@@ -346,20 +388,23 @@
             btn.innerHTML = `<span class="letter">${letter === 'All' ? 'All' : letter}</span><span class="count" id="alpha-count-${letter}">(0)</span>`;
             container.appendChild(btn);
         });
-        document.getElementById('alpha-btn-All').classList.add('active');
+        const btnAll = document.getElementById('alpha-btn-All');
+        if(btnAll) btnAll.classList.add('active');
     }
 
     function setInitialFilter(letter) {
         currentInitialFilter = letter;
         document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`alpha-btn-${letter}`).classList.add('active');
+        const activeBtn = document.getElementById(`alpha-btn-${letter}`);
+        if(activeBtn) activeBtn.classList.add('active');
         renderList(); 
     }
 
     function setStatusFilter(status) {
         currentStatusFilter = status;
         document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-filter-${status}`).classList.add('active');
+        const activeBtn = document.getElementById(`btn-filter-${status}`);
+        if(activeBtn) activeBtn.classList.add('active');
         renderList();
     }
 
@@ -383,20 +428,11 @@
         }
     }
 
-    function openNewModal() {
-        editingId = null;
-        document.getElementById('modalTitle').innerText = "Novo Registo";
-        document.querySelectorAll('.modal input, .modal textarea').forEach(el => el.value = '');
-        document.getElementById('city').value = 'Fortaleza';
-        document.getElementById('state').value = 'CE';
-        document.getElementById('status').value = 'conheci';
-        document.getElementById('modal').style.display = 'flex';
-    }
-
     function openEditModal(id) {
         const contact = contacts.find(c => String(c.id) === String(id));
         if(!contact) return;
         editingId = contact.id;
+        document.getElementById('modalTitle').innerText = "Editar Registo";
         document.getElementById('nome').value = contact.nome || '';
         document.getElementById('status').value = contact.status || 'conheci';
         document.getElementById('origin').value = contact.origin || '';
@@ -411,8 +447,6 @@
         document.getElementById('notes').value = contact.notes || '';
         document.getElementById('modal').style.display = 'flex';
     }
-
-    function closeModal() { document.getElementById('modal').style.display = 'none'; editingId = null; }
 
     async function saveContactToSheets(finalPhotoUrl) {
         const contactId = editingId ? editingId : Date.now();
@@ -465,13 +499,18 @@
         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify(encryptedPayload) }); } catch(e) {}
     }
 
-    function toggleDetails(id) { document.getElementById(`details-${id}`).classList.toggle('active'); }
+    function toggleDetails(id) { 
+        const det = document.getElementById(`details-${id}`);
+        if(det) det.classList.toggle('active'); 
+    }
+    
     function buildWaLink(num) { 
         if(!num) return ''; 
         let clean = String(num).replace(/\D/g, '');
         if(clean.length === 10 || clean.length === 11) clean = '55' + clean;
         return `https://wa.me/${clean}`;
     }
+    
     function buildIgLink(user) { 
         if(!user) return '';
         let clean = String(user).replace(/https?:\/\/(www\.)?instagram\.com\//i, '').replace('@', '').split('/')[0].trim();
@@ -481,6 +520,7 @@
     function renderList() {
         updateAlphaCounts(); 
         const list = document.getElementById('contactList');
+        if(!list) return;
         const query = document.getElementById('searchInput').value.toLowerCase();
         list.innerHTML = '';
         const filtered = contacts.filter(c => {
@@ -547,9 +587,12 @@
         ];
         rings.forEach(r => {
             const p = total ? Math.round((r.val / total) * 100) : 0;
-            document.getElementById(r.id).style.strokeDashoffset = r.circ - (p / 100 * r.circ);
-            document.getElementById(r.percId).innerText = p + '%';
-            document.getElementById(r.barId).style.width = p + '%';
+            const ringEl = document.getElementById(r.id);
+            if(ringEl) ringEl.style.strokeDashoffset = r.circ - (p / 100 * r.circ);
+            const percEl = document.getElementById(r.percId);
+            if(percEl) percEl.innerText = p + '%';
+            const barEl = document.getElementById(r.barId);
+            if(barEl) barEl.style.width = p + '%';
         });
     }
 

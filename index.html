@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub v03</title>
+    <title>Contact Hub v04</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
@@ -27,6 +27,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; overflow-x: hidden; }
 
+        /* ESTRUTURA RESPONSIVA (GRID DESKTOP) */
         .app-container { 
             width: 100%; 
             max-width: 1400px; 
@@ -51,8 +52,8 @@
         .status-indicator { font-size: 0.8rem; color: var(--color-conheci); display: flex; align-items: center; gap: 8px; }
         .status-dot { width: 10px; height: 10px; background: var(--color-conheci); border-radius: 50%; box-shadow: 0 0 12px var(--color-conheci); }
 
-        /* COLUNAS */
-        .dashboard-column { position: sticky; top: 40px; }
+        /* COLUNAS LATERAIS FIXAS */
+        .dashboard-column, .filters-column { position: sticky; top: 40px; }
         .dashboard-card { background: var(--card-bg); border-radius: 24px; padding: 25px; border: 1px solid #2d3139; }
         .charts-row { display: flex; flex-direction: column; align-items: center; gap: 25px; }
         .chart-container { position: relative; width: 160px; height: 160px; }
@@ -70,38 +71,79 @@
         .search-bar:focus-within { border-color: var(--color-transei); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
         .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 1rem; }
 
-        .contact-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #2d3139; transition: transform 0.2s; }
-        .contact-card:hover { transform: translateX(5px); border-color: #444; }
-        
-        .filters-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 20px; }
-        .filter-section-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block;}
+        /* VISUAL DO CARD ATRATIVO */
+        .contact-card { 
+            background: linear-gradient(145deg, #1c1e22, #16171a); 
+            border-radius: 16px; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            border: 1px solid #2d3139; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
 
+        .contact-card:hover { 
+            transform: translateY(-4px); 
+            border-color: #444; 
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+        }
+
+        .contact-card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+        .contact-card:hover::after { transform: translateX(100%); }
+
+        .card-tag-pill {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+        }
+
+        .btn-action-round {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 1px solid #333; background: #1c1e22; color: white;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-action-round:hover { background: #333; transform: scale(1.1); }
+
+        /* FILTROS */
+        .filter-section-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; display: block;}
         .status-filters { display: grid; grid-template-columns: 1fr; gap: 8px; }
         .status-btn { width: 100%; justify-content: flex-start; padding: 12px 16px; background: var(--card-bg); border: 1px solid #2d3139; border-radius: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-        .status-btn.active { background: #333; color: white; border-color: #555; transform: scale(1.02); }
+        .status-btn.active { background: #333; color: white; border-color: #555; }
 
         .alpha-filters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .alpha-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 12px; padding: 8px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .alpha-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 12px; padding: 8px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }
         .alpha-btn.active { background: #333; color: white; }
 
-        .fab { position: fixed; bottom: 40px; right: 40px; width: 70px; height: 70px; font-size: 32px; border-radius: 24px; background: white; color: black; border: none; cursor: pointer; z-index: 999; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .fab { position: fixed; bottom: 40px; right: 40px; width: 70px; height: 70px; font-size: 32px; border-radius: 24px; background: white; color: black; border: none; cursor: pointer; z-index: 9999; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
 
-        /* MODAL FIX - PRIORIDADE MÁXIMA */
+        /* MODAL OVERLAY FIX */
         .modal-overlay { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); 
-            backdrop-filter: blur(8px); 
-            display: none; /* Controlado pelo JS */
-            align-items: center; 
-            justify-content: center; 
-            z-index: 10000; 
-            padding: 20px;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); 
+            display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;
         }
         .modal { background: var(--card-bg); width: 100%; max-width: 600px; padding: 35px; border-radius: 32px; border: 1px solid #2d3139; max-height: 90vh; overflow-y: auto; }
-        .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3d46; background: var(--input-bg); color: white; margin-bottom: 12px; outline: none; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3d46; background: var(--input-bg); color: white; margin-bottom: 12px; outline: none; }
+
+        /* STATUS COLORS */
+        .status-conheci { border-left: 6px solid var(--color-conheci); }
+        .status-conversando { border-left: 6px solid var(--color-conversando); }
+        .status-fiquei { border-left: 6px solid var(--color-fiquei); }
+        .status-transei { border-left: 6px solid var(--color-transei); }
 
         @media (max-width: 1024px) {
             .app-container { display: flex; flex-direction: column; max-width: 450px; margin: 0 auto; }
@@ -109,11 +151,6 @@
             .alpha-filters, .status-filters { display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
             .fab { bottom: 20px; right: 20px; width: 60px; height: 60px; }
         }
-
-        .status-conheci { border-left: 6px solid var(--color-conheci); }
-        .status-conversando { border-left: 6px solid var(--color-conversando); }
-        .status-fiquei { border-left: 6px solid var(--color-fiquei); }
-        .status-transei { border-left: 6px solid var(--color-transei); }
     </style>
 </head>
 <body>
@@ -163,13 +200,13 @@
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Pesquisar contatos..." oninput="renderList()">
         </div>
-        <div id="loadingMsg" style="text-align: center; color: var(--text-muted);">Sincronizando BD...</div>
+        <div id="loadingMsg" style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 10px;">Sincronizando BD...</div>
         <div id="contactList"></div>
     </main>
 
     <aside class="filters-column">
         <div>
-            <span class="filter-section-title">Filtrar por Status</span>
+            <span class="filter-section-title">Filtrar Status</span>
             <div class="status-filters" id="statusFilters">
                 <button class="status-btn active" id="btn-filter-All" onclick="setStatusFilter('All')">Todos</button>
                 <button class="status-btn" id="btn-filter-conheci" onclick="setStatusFilter('conheci')"><i class="dot" style="background:var(--color-conheci)"></i>Conheci</button>
@@ -178,7 +215,7 @@
                 <button class="status-btn" id="btn-filter-transei" onclick="setStatusFilter('transei')"><i class="dot" style="background:var(--color-transei)"></i>Transei</button>
             </div>
         </div>
-        <div>
+        <div style="margin-top:20px;">
             <span class="filter-section-title">Alfabeto</span>
             <div class="alpha-filters" id="alphaFilters"></div>
         </div>
@@ -189,7 +226,7 @@
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-        <h2 id="modalTitle" style="margin-bottom: 20px;">Novo Registro</h2>
+        <h2 id="modalTitle" style="margin-bottom: 25px;">Novo Registro</h2>
         <input type="text" id="nome" placeholder="Nome Completo">
         <div class="form-grid">
             <select id="status">
@@ -214,8 +251,6 @@
         <input type="hidden" id="photoUrl">
         <input type="hidden" id="city" value="Fortaleza">
         <input type="hidden" id="state" value="CE">
-        <input type="hidden" id="college" value="">
-        <input type="hidden" id="children" value="">
 
         <div style="display: flex; gap: 10px; margin-top: 10px;">
             <button onclick="closeModal()" style="flex: 1; padding: 15px; border-radius: 12px; border: 1px solid #333; background: transparent; color: white; cursor: pointer;">Cancelar</button>
@@ -227,7 +262,6 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
     const SECRET_KEY = "WeversonCRM_2026_!@#"; 
-    const IMGBB_API_KEY = "019c10971b4aab9c354e2e8d8681d744"; 
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentInitialFilter = 'All';
@@ -248,17 +282,11 @@
         } catch(e) { return "Erro"; }
     }
 
-    // MODAL FUNCTIONS
     function openNewModal() {
         editingId = null;
         document.getElementById('modalTitle').innerText = "Novo Registro";
-        // Limpa todos os campos do modal
-        document.querySelectorAll('#modalOverlay input:not([type="hidden"]), #modalOverlay textarea, #modalOverlay select').forEach(el => el.value = '');
-        // Restaura padrões escondidos
-        document.getElementById('city').value = 'Fortaleza';
-        document.getElementById('state').value = 'CE';
+        document.querySelectorAll('#modalOverlay input:not([type="hidden"]), #modalOverlay textarea').forEach(el => el.value = '');
         document.getElementById('status').value = 'conheci';
-        
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
@@ -281,34 +309,26 @@
         document.getElementById('profession').value = c.profession || '';
         document.getElementById('neighborhood').value = c.neighborhood || '';
         document.getElementById('notes').value = c.notes || '';
-        document.getElementById('photoUrl').value = c.photoUrl || '';
-        
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
     async function handleSave() {
         const nome = document.getElementById('nome').value;
         if(!nome) return alert("Nome é obrigatório");
-
         const btn = document.getElementById('btnSave');
-        btn.innerText = "Gravando...";
-        btn.disabled = true;
+        btn.innerText = "Gravando..."; btn.disabled = true;
 
-        const contactId = editingId ? editingId : Date.now();
         const localData = {
-            id: contactId,
+            id: editingId || Date.now(),
             nome: nome,
             status: document.getElementById('status').value,
-            origin: document.getElementById('origin').value || 'Direto',
+            origin: document.getElementById('origin').value || 'Tinder',
             whatsapp: document.getElementById('whatsapp').value,
             instagram: document.getElementById('instagram').value,
             age: document.getElementById('age').value,
             profession: document.getElementById('profession').value,
             neighborhood: document.getElementById('neighborhood').value,
             notes: document.getElementById('notes').value,
-            photoUrl: document.getElementById('photoUrl').value,
-            city: 'Fortaleza',
-            state: 'CE',
             updated: new Date().toLocaleDateString('pt-PT')
         };
 
@@ -330,22 +350,80 @@
         if (editingId) {
             const index = contacts.findIndex(item => String(item.id) === String(editingId));
             if (index > -1) contacts[index] = localData;
-        } else {
-            contacts.push(localData);
-        }
+        } else { contacts.push(localData); }
 
         localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
-        renderList();
-        closeModal();
-        btn.innerText = "Gravar";
-        btn.disabled = false;
+        renderList(); closeModal();
+        btn.innerText = "Gravar"; btn.disabled = false;
 
-        try {
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(encryptedPayload) });
-        } catch(e) { console.error("Erro ao sincronizar nuvem"); }
+        try { await fetch(API_URL, { method: 'POST', body: JSON.stringify(encryptedPayload) }); } catch(e) {}
     }
 
-    // LIST & FILTERS
+    function renderList() {
+        const list = document.getElementById('contactList');
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        list.innerHTML = '';
+        const filtered = contacts.filter(c => {
+            const searchStr = `${c.nome} ${c.neighborhood} ${c.notes}`.toLowerCase();
+            const matchesSearch = searchStr.includes(query);
+            const matchesLetter = currentInitialFilter === 'All' || (c.nome || '').charAt(0).toUpperCase() === currentInitialFilter;
+            const matchesStatus = currentStatusFilter === 'All' || (c.status || 'conheci').toLowerCase() === currentStatusFilter;
+            return matchesSearch && matchesLetter && matchesStatus;
+        }).reverse();
+
+        filtered.forEach(c => {
+            const st = (c.status || 'conheci').toLowerCase();
+            const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nome)}&background=25282e&color=fff&bold=true`;
+            const card = document.createElement('div');
+            card.className = `contact-card status-${st}`;
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <img src="${avatar}" style="width:45px; height:45px; border-radius:50%; border:2px solid var(--color-${st}); padding:2px;">
+                        <div>
+                            <h3 style="font-size:1.1rem;">${c.nome}${c.age ? '<span style="opacity:0.4; font-size:0.9rem;">, '+c.age+'</span>' : ''}</h3>
+                            <div style="display:flex; gap:6px; margin-top:4px;">
+                                <span class="card-tag-pill" style="color:var(--color-${st}); border-color:var(--color-${st})">${st}</span>
+                                <span class="card-tag-pill">📍 ${c.origin}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-action-round" onclick="toggleDetails('${c.id}')">🔍</button>
+                        <button class="btn-action-round" onclick="openEditModal('${c.id}')">✏️</button>
+                    </div>
+                </div>
+                <div id="details-${c.id}" style="display:none; margin-top:18px; border-top:1px solid #2d3139; padding-top:15px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                            <small style="color:var(--text-muted); display:block; font-size:0.6rem; text-transform:uppercase;">Local</small>
+                            <span style="font-size:0.85rem;">${c.neighborhood || '-'}</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                            <small style="color:var(--text-muted); display:block; font-size:0.6rem; text-transform:uppercase;">Profissão</small>
+                            <span style="font-size:0.85rem;">${c.profession || '-'}</span>
+                        </div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:15px;">
+                        <small style="color:var(--text-muted); display:block; font-size:0.6rem; text-transform:uppercase;">Notas</small>
+                        <p style="font-size:0.85rem;">${c.notes || '-'}</p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        ${c.whatsapp ? `<a href="https://wa.me/55${c.whatsapp.replace(/\D/g,'')}" target="_blank" style="flex:1; background:rgba(37,211,102,0.1); color:#25D366; text-align:center; padding:10px; border-radius:8px; text-decoration:none; font-size:0.75rem; font-weight:700; border:1px solid #25D366;">WHATSAPP</a>` : ''}
+                        ${c.instagram ? `<a href="https://instagram.com/${c.instagram.replace('@','')}" target="_blank" style="flex:1; background:rgba(225,48,108,0.1); color:#E1306C; text-align:center; padding:10px; border-radius:8px; text-decoration:none; font-size:0.75rem; font-weight:700; border:1px solid #E1306C;">INSTAGRAM</a>` : ''}
+                    </div>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+        updateDashboard();
+    }
+
+    function toggleDetails(id) {
+        const d = document.getElementById(`details-${id}`);
+        d.style.display = d.style.display === 'none' ? 'block' : 'none';
+    }
+
     function setStatusFilter(s) {
         currentStatusFilter = s;
         document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
@@ -362,12 +440,10 @@
 
     function buildAlphaFiltersUI() {
         const container = document.getElementById('alphaFilters');
-        container.innerHTML = '';
         const alphabet = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
         alphabet.forEach(l => {
             const btn = document.createElement('button');
-            btn.className = 'alpha-btn';
-            btn.id = `alpha-btn-${l}`;
+            btn.className = 'alpha-btn'; btn.id = `alpha-btn-${l}`;
             btn.innerText = l === 'All' ? 'Tudo' : l;
             btn.onclick = () => setInitialFilter(l);
             container.appendChild(btn);
@@ -375,65 +451,16 @@
         document.getElementById('alpha-btn-All').classList.add('active');
     }
 
-    function renderList() {
-        const list = document.getElementById('contactList');
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        list.innerHTML = '';
-
-        const filtered = contacts.filter(c => {
-            const searchStr = `${c.nome} ${c.neighborhood} ${c.notes}`.toLowerCase();
-            const matchesSearch = searchStr.includes(query);
-            const matchesLetter = currentInitialFilter === 'All' || (c.nome || '').charAt(0).toUpperCase() === currentInitialFilter;
-            const matchesStatus = currentStatusFilter === 'All' || (c.status || 'conheci').toLowerCase() === currentStatusFilter;
-            return matchesSearch && matchesLetter && matchesStatus;
-        }).reverse();
-
-        filtered.forEach(c => {
-            const st = (c.status || 'conheci').toLowerCase();
-            const card = document.createElement('div');
-            card.className = `contact-card status-${st}`;
-            card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h3 style="font-size:1.1rem;">${c.nome}${c.age ? ', '+c.age : ''}</h3>
-                        <small style="color:var(--text-muted)">${st} • ${c.origin}</small>
-                    </div>
-                    <div>
-                        <button onclick="toggleDetails('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">🔍</button>
-                        <button onclick="openEditModal('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-left:10px;">✏️</button>
-                    </div>
-                </div>
-                <div id="details-${c.id}" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-                    <p style="font-size:0.9rem; margin-bottom:5px;"><strong>Local:</strong> ${c.neighborhood || '-'}</p>
-                    <p style="font-size:0.9rem; margin-bottom:10px;"><strong>Notas:</strong> ${c.notes || '-'}</p>
-                    <div style="display:flex; gap:10px;">
-                        ${c.whatsapp ? `<a href="https://wa.me/55${c.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:var(--color-whatsapp); text-decoration:none; font-size:0.8rem;">WhatsApp</a>` : ''}
-                        ${c.instagram ? `<a href="https://instagram.com/${c.instagram.replace('@','')}" target="_blank" style="color:var(--color-instagram); text-decoration:none; font-size:0.8rem;">Instagram</a>` : ''}
-                    </div>
-                </div>
-            `;
-            list.appendChild(card);
-        });
-        updateDashboard();
-    }
-
-    function toggleDetails(id) {
-        const d = document.getElementById(`details-${id}`);
-        d.style.display = d.style.display === 'none' ? 'block' : 'none';
-    }
-
     function updateDashboard() {
         const total = contacts.length;
         const counts = { conheci: 0, conversando: 0, fiquei: 0, transei: 0 };
         contacts.forEach(c => { let s = (c.status || '').toLowerCase(); if(counts[s] !== undefined) counts[s]++; });
-        
         const rings = [
             { id: 'ring-conheci', percId: 'perc-conheci', barId: 'bar-conheci', val: counts.conheci, circ: 314 },
             { id: 'ring-conversando', percId: 'perc-conversando', barId: 'bar-conversando', val: counts.conversando, circ: 238 },
             { id: 'ring-fiquei', percId: 'perc-fiquei', barId: 'bar-fiquei', val: counts.fiquei, circ: 163 },
             { id: 'ring-transei', percId: 'perc-transei', barId: 'bar-transei', val: counts.transei, circ: 88 }
         ];
-
         rings.forEach(r => {
             const p = total ? Math.round((r.val / total) * 100) : 0;
             const el = document.getElementById(r.id);
@@ -446,8 +473,7 @@
     }
 
     async function init() {
-        buildAlphaFiltersUI();
-        renderList();
+        buildAlphaFiltersUI(); renderList();
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
@@ -469,9 +495,7 @@
             document.getElementById('loadingMsg').style.display = 'none';
         } catch(e) { document.getElementById('loadingMsg').innerText = "Offline"; }
     }
-
     init();
 </script>
-
 </body>
 </html>

@@ -3,170 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Hub v05</title>
-    
+    <title>DATEMIND // Professional CRM</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-color: #0f1012;
-            --card-bg: #1c1e22;
-            --input-bg: #25282e;
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
+            --bg-deep: #08090a;
+            --bg-surface: #111316;
+            --bg-card: #1a1d21;
+            --border: #2d3139;
+            --text-main: #e2e8f0;
+            --text-dim: #64748b;
+            --accent: #ffb300;
+            
             --color-conheci: #10b981;      
             --color-conversando: #eab308;  
-            --color-fiquei: #ef4444;       
+            --color-fiquei: #f43f5e;       
             --color-transei: #3b82f6;      
-            --color-whatsapp: #25D366;
-            --color-instagram: #E1306C;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; overflow-x: hidden; }
-
-        /* HEADER & LAYOUT */
-        .app-container { 
-            width: 100%; max-width: 1400px; margin: 0 auto; padding: 20px;
-            display: grid; grid-template-columns: 320px 1fr; gap: 30px;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-deep); 
+            color: var(--text-main); 
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 0%, #1a1d21 0%, var(--bg-deep) 70%);
         }
 
+        /* --- UI COMPONENTS --- */
         header { 
-            grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; 
-            padding: 20px 10px; border-bottom: 1px solid #2d3139; margin-bottom: 20px;
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(8, 9, 10, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .header-title { font-size: 1.8rem; font-weight: 800; }
-        .view-toggle { display: flex; background: var(--card-bg); border-radius: 12px; padding: 5px; border: 1px solid #2d3139; }
-        .view-btn { padding: 8px 16px; border: none; background: none; color: var(--text-muted); cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.3s; }
-        .view-btn.active { background: #333; color: white; }
+        .logo { font-weight: 800; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+        .logo span { color: var(--text-main); font-weight: 300; }
 
-        /* KANBAN BOARD */
-        .kanban-board { 
-            display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; align-items: start;
-            grid-column: 1 / -1; width: 100%;
+        .view-switcher { 
+            display: flex; background: #000; padding: 4px; border-radius: 10px; border: 1px solid var(--border);
         }
-        .kanban-board.active { display: grid; }
-
-        .kanban-column { 
-            background: #121417; border-radius: 16px; border: 1px solid #2d3139; min-height: 70vh;
-            padding: 15px; transition: 0.3s;
+        .v-btn { 
+            padding: 8px 20px; border: none; background: none; color: var(--text-dim); 
+            font-size: 0.75rem; font-weight: 700; cursor: pointer; border-radius: 7px; transition: 0.3s;
         }
-        .kanban-column.drag-over { background: #1a1d21; border-color: var(--text-muted); }
-        .column-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 5px; }
-        .column-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .v-btn.active { background: var(--bg-card); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
-        /* CARDS NOIR */
-        .contact-card { 
-            background: linear-gradient(145deg, #1c1e22, #16171a); border-radius: 12px; 
-            padding: 15px; margin-bottom: 12px; border: 1px solid #2d3139; 
-            cursor: grab; transition: 0.2s; position: relative;
+        /* --- LAYOUT --- */
+        .app-grid { 
+            display: grid; grid-template-columns: 320px 1fr; gap: 30px; 
+            max-width: 1600px; margin: 30px auto; padding: 0 40px; 
         }
-        .contact-card:active { cursor: grabbing; }
-        .contact-card.dragging { opacity: 0.4; border: 1px dashed var(--text-muted); }
-        .card-tag { font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
 
-        /* DASHBOARD & FILTERS */
-        .side-panel { display: flex; flex-direction: column; gap: 25px; }
-        .dashboard-card { background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid #2d3139; }
-        .alpha-filters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .alpha-btn { background: var(--card-bg); border: 1px solid #2d3139; color: var(--text-muted); border-radius: 8px; padding: 8px; cursor: pointer; font-size: 0.7rem; text-align: center; }
-        .alpha-btn.active { background: #333; color: white; border-color: var(--color-transei); }
-        .alpha-btn .count { font-size: 0.6rem; display: block; opacity: 0.5; }
+        /* --- KANBAN VIEW --- */
+        .kanban-container { 
+            display: none; grid-template-columns: repeat(4, 1fr); gap: 20px; 
+            width: 100%; grid-column: 1 / -1; 
+        }
+        .kanban-container.active { display: grid; }
 
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 18px; background: white; color: black; font-size: 24px; border: none; cursor: pointer; z-index: 999; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .kanban-col { 
+            background: rgba(17, 19, 22, 0.4); border-radius: 20px; border: 1px solid var(--border);
+            padding: 20px; display: flex; flex-direction: column; min-height: 75vh;
+        }
+        .col-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .col-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+        .col-count { background: var(--border); padding: 2px 8px; border-radius: 5px; font-size: 0.65rem; }
 
-        /* MODAL */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
-        .modal { background: var(--card-bg); width: 100%; max-width: 550px; padding: 30px; border-radius: 24px; border: 1px solid #2d3139; max-height: 90vh; overflow-y: auto; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3a3d46; background: var(--input-bg); color: white; margin-bottom: 12px; outline: none; }
+        /* --- CARDS (UX ENHANCED) --- */
+        .card { 
+            background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border);
+            padding: 16px; margin-bottom: 12px; cursor: grab; transition: all 0.3s ease;
+            position: relative;
+        }
+        .card:hover { border-color: #444; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .card.dragging { opacity: 0.5; transform: scale(0.95); cursor: grabbing; border: 1px dashed var(--accent); }
+
+        .card-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: block; }
+        .card-meta { display: flex; gap: 10px; align-items: center; }
+        .badge { font-size: 0.6rem; font-weight: 800; padding: 3px 8px; border-radius: 5px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); }
+
+        /* --- LIST VIEW --- */
+        .list-container { display: block; }
+        .list-container.hidden { display: none; }
+        
+        .list-item { 
+            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px;
+            padding: 15px 25px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px;
+            transition: 0.2s; cursor: pointer;
+        }
+        .list-item:hover { background: var(--bg-card); border-color: var(--text-dim); }
+
+        .avatar { 
+            width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--border); 
+            display: flex; align-items: center; justify-content: center; font-weight: 800;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .glass-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+
+        .alpha-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 15px; }
+        .a-btn { 
+            background: var(--bg-deep); border: 1px solid var(--border); color: var(--text-dim);
+            border-radius: 8px; padding: 10px 5px; cursor: pointer; font-size: 0.7rem; font-weight: 700;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .a-btn.active { border-color: var(--accent); color: white; background: var(--bg-card); }
+        .a-btn span { font-size: 0.55rem; opacity: 0.5; }
+
+        .fab { 
+            position: fixed; bottom: 40px; right: 40px; width: 65px; height: 65px; 
+            background: white; color: black; border-radius: 20px; border: none;
+            font-size: 28px; font-weight: 800; cursor: pointer; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            transition: 0.3s; z-index: 999;
+        }
+        .fab:hover { transform: scale(1.1) rotate(90deg); }
+
+        /* --- MODAL --- */
+        .modal-overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal { background: var(--bg-surface); border: 1px solid var(--border); width: 100%; max-width: 500px; padding: 35px; border-radius: 28px; }
+        .modal input, .modal select, .modal textarea { 
+            width: 100%; background: var(--bg-deep); border: 1px solid var(--border); 
+            color: white; padding: 14px; border-radius: 12px; margin-bottom: 15px; outline: none;
+        }
+
+        /* --- DRAG OVER STATES --- */
+        .drag-active { border: 2px dashed var(--accent) !important; background: rgba(255, 179, 0, 0.05) !important; }
 
         @media (max-width: 1024px) {
-            .app-container { display: flex; flex-direction: column; }
-            .kanban-board.active { display: flex; overflow-x: auto; padding-bottom: 20px; }
-            .kanban-column { min-width: 280px; }
-            .side-panel { order: -1; }
+            .app-grid { display: flex; flex-direction: column; padding: 0 20px; }
+            .kanban-container.active { display: flex; overflow-x: auto; padding-bottom: 20px; }
+            .kanban-col { min-width: 300px; }
+            header { padding: 15px 20px; }
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <header>
-        <div class="header-title">Contact Hub <span style="color: var(--color-transei);">.</span></div>
-        <div class="view-toggle">
-            <button class="view-btn active" onclick="switchView('list', this)">Lista</button>
-            <button class="view-btn" onclick="switchView('kanban', this)">Kanban</button>
-        </div>
-    </header>
+<header>
+    <div class="logo">DATE<span>MIND</span></div>
+    <div class="view-switcher">
+        <button class="v-btn active" id="btn-list" onclick="setView('list')">LOGBOOK</button>
+        <button class="v-btn" id="btn-kanban" onclick="setView('kanban')">PIPELINE</button>
+    </div>
+</header>
 
-    <aside class="side-panel" id="sidePanel">
-        <div class="dashboard-card">
-            <p style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase;">Resumo do Funil</p>
-            <div id="dashStats" style="display: flex; flex-direction: column; gap: 10px;">
-                </div>
+<div class="app-grid">
+    <aside class="sidebar" id="sidebar">
+        <div class="glass-box">
+            <div class="col-head">
+                <span class="col-title" style="color: var(--accent)">Status Hub</span>
+            </div>
+            <div id="statusList" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
-        <div class="dashboard-card">
-            <p style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase;">Alfabeto</p>
-            <div class="alpha-filters" id="alphaFilters"></div>
+
+        <div class="glass-box">
+            <span class="col-title">Filtro Alfabético</span>
+            <div class="alpha-grid" id="alphaFilters"></div>
         </div>
     </aside>
 
-    <main class="main-column" id="listView">
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Pesquisar em toda a rede..." oninput="renderList()">
+    <main class="list-container" id="listView">
+        <div class="search-bar" style="margin-bottom: 25px;">
+            <input type="text" id="searchInput" placeholder="Procurar alvo ou observação..." 
+                   style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); padding: 18px; border-radius: 16px; color: white; outline: none;" 
+                   oninput="renderList()">
         </div>
         <div id="contactList"></div>
     </main>
 
-    <div class="kanban-board" id="kanbanView">
-        <div class="kanban-column" data-status="conheci" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" ondragenter="dragEnter(event)">
-            <div class="column-header"><span class="column-title" style="color: var(--color-conheci);">Conheci</span></div>
-            <div class="kanban-list" id="kanban-conheci"></div>
+    <div class="kanban-container" id="kanbanView">
+        <div class="kanban-col" data-status="conheci" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            <div class="col-head">
+                <span class="col-title" style="color: var(--color-conheci);">Conheci</span>
+                <span class="col-count" id="count-conheci">0</span>
+            </div>
+            <div class="kanban-list" id="list-conheci"></div>
         </div>
-        <div class="kanban-column" data-status="conversando" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" ondragenter="dragEnter(event)">
-            <div class="column-header"><span class="column-title" style="color: var(--color-conversando);">Conversando</span></div>
-            <div class="kanban-list" id="kanban-conversando"></div>
+        <div class="kanban-col" data-status="conversando" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            <div class="col-head">
+                <span class="col-title" style="color: var(--color-conversando);">Conversando</span>
+                <span class="col-count" id="count-conversando">0</span>
+            </div>
+            <div class="kanban-list" id="list-conversando"></div>
         </div>
-        <div class="kanban-column" data-status="fiquei" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" ondragenter="dragEnter(event)">
-            <div class="column-header"><span class="column-title" style="color: var(--color-fiquei);">Fiquei</span></div>
-            <div class="kanban-list" id="kanban-fiquei"></div>
+        <div class="kanban-col" data-status="fiquei" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            <div class="col-head">
+                <span class="col-title" style="color: var(--color-fiquei);">Fiquei</span>
+                <span class="col-count" id="count-fiquei">0</span>
+            </div>
+            <div class="kanban-list" id="list-fiquei"></div>
         </div>
-        <div class="kanban-column" data-status="transei" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" ondragenter="dragEnter(event)">
-            <div class="column-header"><span class="column-title" style="color: var(--color-transei);">Transei</span></div>
-            <div class="kanban-list" id="kanban-transei"></div>
+        <div class="kanban-col" data-status="transei" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            <div class="col-head">
+                <span class="col-title" style="color: var(--color-transei);">Transei</span>
+                <span class="col-count" id="count-transei">0</span>
+            </div>
+            <div class="kanban-list" id="list-transei"></div>
         </div>
     </div>
-
-    <button class="fab" onclick="openNewModal()">+</button>
 </div>
 
-<div class="modal-overlay" id="modalOverlay">
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal-overlay" id="modal">
     <div class="modal">
-        <h2 id="modalTitle" style="margin-bottom: 20px;">Novo Registro</h2>
-        <input type="text" id="nome" placeholder="Nome">
+        <h2 style="margin-bottom: 25px; font-weight: 800;">ADICIONAR ALVO</h2>
+        <input type="text" id="in-nome" placeholder="Nome / Apelido">
         <div class="form-grid">
-            <select id="status">
+            <select id="in-status">
                 <option value="conheci">Conheci</option>
                 <option value="conversando">Conversando</option>
                 <option value="fiquei">Fiquei</option>
                 <option value="transei">Transei</option>
             </select>
-            <input type="text" id="origin" placeholder="Origem (Tinder, Insta)">
+            <input type="text" id="in-origin" placeholder="Origem (Tinder, Insta)">
         </div>
         <div class="form-grid">
-            <input type="tel" id="whatsapp" placeholder="WhatsApp">
-            <input type="text" id="instagram" placeholder="Instagram">
+            <input type="tel" id="in-whatsapp" placeholder="WhatsApp">
+            <input type="text" id="in-instagram" placeholder="Instagram">
         </div>
-        <div class="form-grid">
-            <input type="number" id="age" placeholder="Idade">
-            <input type="text" id="neighborhood" placeholder="Bairro">
-        </div>
-        <textarea id="notes" placeholder="Notas e observações..." rows="4"></textarea>
+        <textarea id="in-notes" rows="4" placeholder="Notas internas..."></textarea>
         <div style="display: flex; gap: 10px;">
-            <button onclick="closeModal()" style="flex:1; padding:12px; background:none; border:1px solid #333; color:white; border-radius:10px;">Cancelar</button>
-            <button id="btnSave" onclick="handleSave()" style="flex:1; padding:12px; background:white; color:black; font-weight:bold; border-radius:10px;">Gravar</button>
+            <button onclick="closeModal()" style="flex: 1; padding: 15px; background: none; border: 1px solid var(--border); color: white; border-radius: 12px; cursor: pointer;">Sair</button>
+            <button onclick="handleSave()" style="flex: 2; padding: 15px; background: white; color: black; border: none; border-radius: 12px; font-weight: 800; cursor: pointer;">Gravar</button>
         </div>
     </div>
 </div>
@@ -176,216 +246,187 @@
     const SECRET_KEY = "WeversonCRM_2026_!@#"; 
 
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
-    let currentInitialFilter = 'All';
+    let currentInitial = 'All';
+    let activeView = 'list';
     let editingId = null;
 
     // --- CRYPTO ---
-    function encrypt(text) { return text ? CryptoJS.AES.encrypt(text.toString(), SECRET_KEY).toString() : ""; }
-    function decrypt(text) {
-        if (!text || !text.toString().startsWith('U2FsdGVk')) return text || "";
-        try { return CryptoJS.AES.decrypt(text.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8); } catch { return ""; }
+    function enc(t) { return t ? CryptoJS.AES.encrypt(t.toString(), SECRET_KEY).toString() : ""; }
+    function dec(t) {
+        if (!t || !t.toString().startsWith('U2FsdGVk')) return t || "";
+        try { return CryptoJS.AES.decrypt(t.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8); } catch { return ""; }
     }
 
-    // --- VIEW SWITCH ---
-    function switchView(view, btn) {
-        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    // --- VIEW CONTROL ---
+    function setView(v) {
+        activeView = v;
+        document.getElementById('btn-list').classList.toggle('active', v === 'list');
+        document.getElementById('btn-kanban').classList.toggle('active', v === 'kanban');
+        document.getElementById('listView').classList.toggle('hidden', v === 'kanban');
+        document.getElementById('sidebar').style.display = v === 'kanban' ? 'none' : 'flex';
+        document.getElementById('kanbanView').classList.toggle('active', v === 'kanban');
+        document.querySelector('.app-grid').style.gridTemplateColumns = v === 'kanban' ? '1fr' : '320px 1fr';
         
-        if(view === 'kanban') {
-            document.getElementById('listView').style.display = 'none';
-            document.getElementById('sidePanel').style.display = 'none';
-            document.getElementById('kanbanView').classList.add('active');
-            renderKanban();
-        } else {
-            document.getElementById('listView').style.display = 'block';
-            document.getElementById('sidePanel').style.display = 'flex';
-            document.getElementById('kanbanView').classList.remove('active');
-            renderList();
-        }
+        v === 'kanban' ? renderKanban() : renderList();
     }
 
     // --- DRAG & DROP ---
     function allowDrop(e) { e.preventDefault(); }
-    function dragEnter(e) { e.currentTarget.classList.add('drag-over'); }
-    function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-
-    function drag(e) {
-        e.dataTransfer.setData("contactId", e.target.getAttribute('data-id'));
-        e.target.classList.add('dragging');
-    }
+    function drag(e) { e.dataTransfer.setData("id", e.target.id); e.target.classList.add('dragging'); }
+    function dragEnter(e) { e.currentTarget.classList.add('drag-active'); }
+    function dragLeave(e) { e.currentTarget.classList.remove('drag-active'); }
 
     async function drop(e) {
         e.preventDefault();
-        e.currentTarget.classList.remove('drag-over');
-        const id = e.dataTransfer.getData("contactId");
+        e.currentTarget.classList.remove('drag-active');
+        const id = e.dataTransfer.getData("id").split('-')[1];
         const newStatus = e.currentTarget.getAttribute('data-status');
         
-        const index = contacts.findIndex(c => String(c.id) === String(id));
-        if (index > -1 && contacts[index].status !== newStatus) {
-            contacts[index].status = newStatus;
-            saveAndSync(contacts[index]);
+        const idx = contacts.findIndex(c => String(c.id) === id);
+        if (idx > -1 && contacts[idx].status !== newStatus) {
+            contacts[idx].status = newStatus;
+            saveAndSync(contacts[idx]);
             renderKanban();
         }
     }
 
-    // --- CORE LOGIC ---
-    async function saveAndSync(contactData) {
+    // --- LOGIC ---
+    async function saveAndSync(c) {
         localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
-        updateDashboard();
-
         const payload = {
-            action: "update",
-            id: contactData.id,
-            nome: encrypt(contactData.nome),
-            status: encrypt(contactData.status),
-            origin: encrypt(contactData.origin),
-            whatsapp: encrypt(contactData.whatsapp),
-            instagram: encrypt(contactData.instagram),
-            age: encrypt(contactData.age),
-            neighborhood: encrypt(contactData.neighborhood),
-            notes: encrypt(contactData.notes),
-            updated: encrypt(new Date().toLocaleDateString('pt-PT'))
+            action: "update", id: c.id, nome: enc(c.nome), status: enc(c.status),
+            origin: enc(c.origin), whatsapp: enc(c.whatsapp), instagram: enc(c.instagram),
+            notes: enc(c.notes), updated: enc(new Date().toLocaleDateString())
         };
-
         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); } catch(e) {}
-    }
-
-    function renderKanban() {
-        const columns = ['conheci', 'conversando', 'fiquei', 'transei'];
-        columns.forEach(st => {
-            const container = document.getElementById(`kanban-${st}`);
-            container.innerHTML = '';
-            contacts.filter(c => c.status === st).forEach(c => {
-                const card = document.createElement('div');
-                card.className = 'contact-card';
-                card.draggable = true;
-                card.setAttribute('data-id', c.id);
-                card.ondragstart = drag;
-                card.ondragend = (e) => e.target.classList.remove('dragging');
-                card.onclick = () => openEditModal(c.id);
-                card.innerHTML = `
-                    <div style="font-weight:700; margin-bottom:5px;">${c.nome}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="card-tag">${c.origin}</span>
-                        <span style="font-size:0.6rem; opacity:0.5;">${c.neighborhood || ''}</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        });
+        updateUI();
     }
 
     function renderList() {
         const list = document.getElementById('contactList');
         const query = document.getElementById('searchInput').value.toLowerCase();
         list.innerHTML = '';
-        
+
         const filtered = contacts.filter(c => {
-            const matchesSearch = `${c.nome} ${c.notes}`.toLowerCase().includes(query);
-            const initial = (c.nome || '').charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-            const matchesLetter = currentInitialFilter === 'All' || initial === currentInitialFilter;
-            return matchesSearch && matchesLetter;
+            const matches = `${c.nome} ${c.notes}`.toLowerCase().includes(query);
+            const ini = c.nome.charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+            return matches && (currentInitial === 'All' || ini === currentInitial);
         }).reverse();
 
         filtered.forEach(c => {
-            const div = document.createElement('div');
-            div.className = `contact-card status-${c.status}`;
-            div.onclick = () => openEditModal(c.id);
-            div.innerHTML = `<div style="font-weight:700;">${c.nome} <span style="opacity:0.4; font-weight:400">, ${c.age || ''}</span></div>
-                             <div style="font-size:0.7rem; color:var(--text-muted); margin-top:5px;">${c.status} • ${c.origin}</div>`;
-            list.appendChild(div);
-        });
-        updateDashboard();
-        updateAlphaCounts();
-    }
-
-    function updateDashboard() {
-        const stats = { conheci: 0, conversando: 0, fiquei: 0, transei: 0 };
-        contacts.forEach(c => { if(stats[c.status] !== undefined) stats[c.status]++; });
-        
-        const container = document.getElementById('dashStats');
-        container.innerHTML = '';
-        Object.entries(stats).forEach(([name, val]) => {
-            container.innerHTML += `
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="text-transform:capitalize; color:var(--color-${name})">${name}</span>
-                    <span style="font-weight:800;">${val}</span>
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.onclick = () => openEdit(c.id);
+            item.innerHTML = `
+                <div class="avatar" style="border-color: var(--color-${c.status})">${c.nome.charAt(0)}</div>
+                <div style="flex: 1;">
+                    <span class="card-name">${c.nome}</span>
+                    <div class="card-meta">
+                        <span class="badge" style="color: var(--color-${c.status})">${c.status}</span>
+                        <span class="badge">📍 ${c.origin}</span>
+                    </div>
                 </div>
-                <div style="height:4px; background:#333; border-radius:2px;"><div style="width:${(val/contacts.length*100) || 0}%; height:100%; background:var(--color-${name}); border-radius:2px;"></div></div>
+                <div style="color: var(--text-dim); font-size: 0.7rem;">${c.updated || ''}</div>
             `;
+            list.appendChild(item);
+        });
+        updateUI();
+    }
+
+    function renderKanban() {
+        const statuses = ['conheci', 'conversando', 'fiquei', 'transei'];
+        statuses.forEach(s => {
+            const col = document.getElementById(`list-${s}`);
+            col.innerHTML = '';
+            const filtered = contacts.filter(c => c.status === s);
+            document.getElementById(`count-${s}`).innerText = filtered.length;
+
+            filtered.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.draggable = true;
+                card.id = `card-${c.id}`;
+                card.ondragstart = drag;
+                card.ondragend = (e) => e.target.classList.remove('dragging');
+                card.onclick = () => openEdit(c.id);
+                card.innerHTML = `
+                    <span class="card-name">${c.nome}</span>
+                    <div class="card-meta"><span class="badge">${c.origin}</span></div>
+                    <div style="height: 3px; width: 30px; background: var(--color-${s}); margin-top: 10px; border-radius: 10px;"></div>
+                `;
+                col.appendChild(card);
+            });
+        });
+        updateUI();
+    }
+
+    function updateUI() {
+        // Status Hub
+        const stats = { conheci: 0, conversando: 0, fiquei: 0, transei: 0 };
+        contacts.forEach(c => stats[c.status]++);
+        const sList = document.getElementById('statusList');
+        sList.innerHTML = '';
+        Object.entries(stats).forEach(([k, v]) => {
+            const perc = (v / contacts.length * 100) || 0;
+            sList.innerHTML += `
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:5px;">
+                        <span style="text-transform:capitalize">${k}</span><span>${v}</span>
+                    </div>
+                    <div style="height:4px; background:var(--border); border-radius:10px; overflow:hidden;">
+                        <div style="width:${perc}%; height:100%; background:var(--color-${k})"></div>
+                    </div>
+                </div>`;
+        });
+
+        // Alpha
+        const alpha = document.getElementById('alphaFilters');
+        alpha.innerHTML = '';
+        ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].forEach(l => {
+            const count = l === 'All' ? contacts.length : contacts.filter(c => c.nome.charAt(0).toUpperCase() === l).length;
+            const btn = document.createElement('div');
+            btn.className = `a-btn ${currentInitial === l ? 'active' : ''}`;
+            btn.style.opacity = count === 0 && l !== 'All' ? 0.2 : 1;
+            btn.onclick = () => { currentInitial = l; renderList(); };
+            btn.innerHTML = `${l === 'All' ? 'TUDO' : l} <span>${count}</span>`;
+            alpha.appendChild(btn);
         });
     }
 
-    function updateAlphaCounts() {
-        const counts = { All: contacts.length };
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => counts[l] = 0);
-        contacts.forEach(c => {
-            const initial = (c.nome || '').charAt(0).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-            if(counts[initial] !== undefined) counts[initial]++;
-        });
-        
-        const container = document.getElementById('alphaFilters');
-        container.innerHTML = '';
-        Object.entries(counts).forEach(([l, count]) => {
-            const active = currentInitialFilter === l ? 'active' : '';
-            container.innerHTML += `<div class="alpha-btn ${active}" onclick="setAlphaFilter('${l}')" style="opacity:${count === 0 && l !== 'All' ? 0.3 : 1}">
-                ${l === 'All' ? 'Tudo' : l} <span class="count">${count}</span>
-            </div>`;
-        });
-    }
-
-    function setAlphaFilter(l) { currentInitialFilter = l; renderList(); }
-
-    // --- MODAL ACTIONS ---
-    function openNewModal() {
-        editingId = null;
-        document.getElementById('modalTitle').innerText = "Novo Registro";
-        document.querySelectorAll('.modal input, .modal textarea').forEach(i => i.value = '');
-        document.getElementById('modalOverlay').style.display = 'flex';
-    }
-
-    function openEditModal(id) {
+    // --- MODAL ---
+    function openModal() { editingId = null; document.getElementById('modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    
+    function openEdit(id) {
         const c = contacts.find(item => String(item.id) === String(id));
-        if(!c) return;
         editingId = c.id;
-        document.getElementById('modalTitle').innerText = "Editar Registro";
-        document.getElementById('nome').value = c.nome;
-        document.getElementById('status').value = c.status;
-        document.getElementById('origin').value = c.origin;
-        document.getElementById('whatsapp').value = c.whatsapp;
-        document.getElementById('instagram').value = c.instagram;
-        document.getElementById('age').value = c.age;
-        document.getElementById('neighborhood').value = c.neighborhood;
-        document.getElementById('notes').value = c.notes;
-        document.getElementById('modalOverlay').style.display = 'flex';
+        document.getElementById('in-nome').value = c.nome;
+        document.getElementById('in-status').value = c.status;
+        document.getElementById('in-origin').value = c.origin;
+        document.getElementById('in-whatsapp').value = c.whatsapp;
+        document.getElementById('in-instagram').value = c.instagram;
+        document.getElementById('in-notes').value = c.notes;
+        document.getElementById('modal').style.display = 'flex';
     }
-
-    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 
     async function handleSave() {
-        const contact = {
+        const c = {
             id: editingId || Date.now(),
-            nome: document.getElementById('nome').value,
-            status: document.getElementById('status').value,
-            origin: document.getElementById('origin').value,
-            whatsapp: document.getElementById('whatsapp').value,
-            instagram: document.getElementById('instagram').value,
-            age: document.getElementById('age').value,
-            neighborhood: document.getElementById('neighborhood').value,
-            notes: document.getElementById('notes').value
+            nome: document.getElementById('in-nome').value,
+            status: document.getElementById('in-status').value,
+            origin: document.getElementById('in-origin').value,
+            whatsapp: document.getElementById('in-whatsapp').value,
+            instagram: document.getElementById('in-instagram').value,
+            notes: document.getElementById('in-notes').value
         };
-
         if(editingId) {
-            const idx = contacts.findIndex(c => String(c.id) === String(editingId));
-            contacts[idx] = contact;
-        } else {
-            contacts.push(contact);
-        }
-
-        saveAndSync(contact);
+            const idx = contacts.findIndex(i => String(i.id) === String(editingId));
+            contacts[idx] = c;
+        } else { contacts.push(c); }
+        
+        saveAndSync(c);
         closeModal();
-        renderList();
-        if(document.getElementById('kanbanView').classList.contains('active')) renderKanban();
+        activeView === 'list' ? renderList() : renderKanban();
     }
 
     async function init() {
@@ -395,22 +436,14 @@
             const data = await res.json();
             if(Array.isArray(data)) {
                 contacts = data.map(c => ({
-                    id: c.id,
-                    nome: decrypt(c.nome),
-                    status: decrypt(c.status),
-                    origin: decrypt(c.origin),
-                    whatsapp: decrypt(c.whatsapp),
-                    instagram: decrypt(c.instagram),
-                    age: decrypt(c.age),
-                    neighborhood: decrypt(c.neighborhood),
-                    notes: decrypt(c.notes)
+                    id: c.id, nome: dec(c.nome), status: dec(c.status), origin: dec(c.origin),
+                    whatsapp: dec(c.whatsapp), instagram: dec(c.instagram), notes: dec(c.notes)
                 }));
                 localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
                 renderList();
             }
         } catch(e) {}
     }
-
     init();
 </script>
 </body>

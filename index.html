@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATEMIND // v07 Industrial CRM</title>
+    <title>DATEMIND // v09 Industrial CRM</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
@@ -16,10 +16,19 @@
             --text-main: #e2e8f0;
             --text-dim: #64748b;
             --accent: #ffb300;
-            --color-conheci: #10b981;      
-            --color-conversando: #eab308;  
-            --color-fiquei: #f43f5e;       
-            --color-transei: #3b82f6;      
+            
+            /* Cores do Funil */
+            --color-conheci: #64748b;     
+            --color-conversando: #3b82f6; 
+            --color-agendado: #a855f7;    
+            --color-fiquei: #f59e0b;      
+            --color-intimidade: #ef4444;  
+            --color-recorrente: #10b981;  
+
+            /* Cores da Temperatura */
+            --temp-frio: #60a5fa;
+            --temp-morno: #facc15;
+            --temp-quente: #f87171;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -38,9 +47,9 @@
         .app-grid { display: grid; grid-template-columns: 320px 1fr; gap: 30px; max-width: 1600px; margin: 30px auto; padding: 0 40px; }
 
         /* KANBAN */
-        .kanban-container { display: none; grid-template-columns: repeat(4, 1fr); gap: 20px; grid-column: 1 / -1; }
-        .kanban-container.active { display: grid; }
-        .kanban-col { background: rgba(17, 19, 22, 0.4); border-radius: 20px; border: 1px solid var(--border); padding: 20px; min-height: 75vh; }
+        .kanban-container { display: none; gap: 20px; grid-column: 1 / -1; overflow-x: auto; padding-bottom: 15px; }
+        .kanban-container.active { display: flex; }
+        .kanban-col { background: rgba(17, 19, 22, 0.4); border-radius: 20px; border: 1px solid var(--border); padding: 20px; min-height: 75vh; min-width: 280px; flex: 1; }
         .col-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: block; }
 
         /* CARDS */
@@ -49,6 +58,12 @@
         .card-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: block; }
         .card-loc { font-size: 0.7rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
         
+        /* TEMPERATURA BADGES */
+        .temp-badge { font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+        .t-frio { color: var(--temp-frio); border: 1px solid rgba(96, 165, 250, 0.3); }
+        .t-morno { color: var(--temp-morno); border: 1px solid rgba(250, 204, 21, 0.3); }
+        .t-quente { color: var(--temp-quente); border: 1px solid rgba(248, 113, 113, 0.3); }
+
         /* LIST VIEW */
         .list-item { 
             background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px;
@@ -71,17 +86,20 @@
         .modal input, .modal select, .modal textarea { width: 100%; background: var(--bg-deep); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; outline: none; font-size: 0.85rem; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
         @media (max-width: 1024px) {
             .app-grid { display: flex; flex-direction: column; padding: 0 20px; }
-            .kanban-container.active { display: flex; overflow-x: auto; }
-            .kanban-col { min-width: 300px; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">DATE<span>MIND</span> v07</div>
+    <div class="logo">DATE<span>MIND</span> v09</div>
     <div class="view-switcher">
         <button class="v-btn active" id="btn-list" onclick="setView('list')">LISTA</button>
         <button class="v-btn" id="btn-kanban" onclick="setView('kanban')">KANBAN</button>
@@ -111,20 +129,28 @@
 
     <div class="kanban-container" id="kanbanView">
         <div class="kanban-col" data-status="conheci" ondragover="allowDrop(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-conheci);">Conheci</span>
+            <span class="col-title" style="color: var(--color-conheci);">1. Conheci</span>
             <div id="list-conheci"></div>
         </div>
         <div class="kanban-col" data-status="conversando" ondragover="allowDrop(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-conversando);">Conversando</span>
+            <span class="col-title" style="color: var(--color-conversando);">2. Conversando</span>
             <div id="list-conversando"></div>
         </div>
+        <div class="kanban-col" data-status="agendado" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-agendado);">3. Date Marcado</span>
+            <div id="list-agendado"></div>
+        </div>
         <div class="kanban-col" data-status="fiquei" ondragover="allowDrop(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-fiquei);">Fiquei</span>
+            <span class="col-title" style="color: var(--color-fiquei);">4. Fiquei</span>
             <div id="list-fiquei"></div>
         </div>
-        <div class="kanban-col" data-status="transei" ondragover="allowDrop(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-transei);">Transei</span>
-            <div id="list-transei"></div>
+        <div class="kanban-col" data-status="intimidade" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-intimidade);">5. Intimidade</span>
+            <div id="list-intimidade"></div>
+        </div>
+        <div class="kanban-col" data-status="recorrente" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-recorrente);">6. Recorrente</span>
+            <div id="list-recorrente"></div>
         </div>
     </div>
 </div>
@@ -141,13 +167,20 @@
         </div>
         <div class="form-row">
             <select id="in-status">
-                <option value="conheci">Conheci</option>
+                <option value="conheci">Conheci (Contato Inicial)</option>
                 <option value="conversando">Conversando</option>
+                <option value="agendado">Date Marcado</option>
                 <option value="fiquei">Fiquei</option>
-                <option value="transei">Transei</option>
+                <option value="intimidade">Intimidade</option>
+                <option value="recorrente">Recorrente (Fixo)</option>
             </select>
-            <input type="text" id="in-origin" placeholder="Origem (Tinder, Bumble)">
+            <select id="in-temperatura">
+                <option value="frio">🧊 Frio (Interesse Baixo)</option>
+                <option value="morno" selected>⚡ Morno (Fluindo)</option>
+                <option value="quente">🔥 Quente (Alto Interesse)</option>
+            </select>
         </div>
+        <input type="text" id="in-origin" placeholder="Origem (Tinder, Bumble, etc)">
         <input type="text" id="in-photo" placeholder="URL da Foto (opcional)">
         <div class="form-row">
             <input type="tel" id="in-whatsapp" placeholder="WhatsApp">
@@ -168,6 +201,13 @@
     let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
     let currentAlpha = 'All';
     let editingId = null;
+
+    // Configuração de exibição da temperatura
+    const tempConfig = {
+        'frio': { label: '🧊 Frio', class: 't-frio' },
+        'morno': { label: '⚡ Morno', class: 't-morno' },
+        'quente': { label: '🔥 Quente', class: 't-quente' }
+    };
 
     const enc = (t) => t ? CryptoJS.AES.encrypt(t.toString(), SECRET_KEY).toString() : "";
     const dec = (t) => {
@@ -205,7 +245,8 @@
         const p = {
             action: "update", id: c.id, nome: enc(c.nome), status: enc(c.status),
             origin: enc(c.origin), whatsapp: enc(c.whatsapp), instagram: enc(c.instagram),
-            notes: enc(c.notes), idade: enc(c.idade), bairro: enc(c.bairro), photo: enc(c.photo)
+            notes: enc(c.notes), idade: enc(c.idade), bairro: enc(c.bairro), photo: enc(c.photo),
+            temperatura: enc(c.temperatura) // Nova linha de temperatura para o GSheets
         };
         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) }); } catch(e) {}
         updateUI();
@@ -222,14 +263,20 @@
             return m && (currentAlpha === 'All' || init === currentAlpha);
         }).reverse().forEach(c => {
             const avatar = c.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nome)}&background=25282e&color=fff&bold=true`;
+            const tempValue = c.temperatura || 'morno';
+            const temp = tempConfig[tempValue];
+
             const item = document.createElement('div');
             item.className = 'list-item';
             item.onclick = () => openEdit(c.id);
             item.innerHTML = `
                 <img src="${avatar}" class="avatar" style="border-color: var(--color-${c.status})">
                 <div style="flex: 1;">
-                    <span class="card-name">${c.nome}${c.idade ? ', '+c.idade : ''}</span>
-                    <div class="card-loc">📍 ${c.bairro || 'Local não definido'} • <span style="color:var(--color-${c.status})">${c.status}</span></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="card-name">${c.nome}${c.idade ? ', '+c.idade : ''}</span>
+                        <span class="temp-badge ${temp.class}">${temp.label}</span>
+                    </div>
+                    <div class="card-loc" style="margin-top: 4px;">📍 ${c.bairro || 'Local não definido'} • <span style="color:var(--color-${c.status}); text-transform: capitalize;">${c.status}</span></div>
                 </div>
             `;
             list.appendChild(item);
@@ -238,23 +285,33 @@
     }
 
     function renderKanban() {
-        ['conheci', 'conversando', 'fiquei', 'transei'].forEach(s => {
+        ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'].forEach(s => {
             const col = document.getElementById(`list-${s}`);
-            col.innerHTML = '';
+            if(col) col.innerHTML = '';
             contacts.filter(c => c.status === s).forEach(c => {
+                const tempValue = c.temperatura || 'morno';
+                const temp = tempConfig[tempValue];
+
                 const card = document.createElement('div');
                 card.className = 'card'; card.draggable = true; card.id = `c-${c.id}`;
                 card.ondragstart = drag; card.onclick = () => openEdit(c.id);
-                card.innerHTML = `<span class="card-name">${c.nome}${c.idade ? ', '+c.idade : ''}</span>
-                                  <div class="card-loc">📍 ${c.bairro || '-'}</div>`;
+                card.innerHTML = `
+                    <span class="card-name">${c.nome}${c.idade ? ', '+c.idade : ''}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                        <div class="card-loc">📍 ${c.bairro || '-'}</div>
+                        <span class="temp-badge ${temp.class}">${temp.label}</span>
+                    </div>
+                `;
                 col.appendChild(card);
             });
         });
     }
 
     function updateUI() {
-        const stats = { conheci: 0, conversando: 0, fiquei: 0, transei: 0 };
-        contacts.forEach(c => stats[c.status]++);
+        const stats = { conheci: 0, conversando: 0, agendado: 0, fiquei: 0, intimidade: 0, recorrente: 0 };
+        contacts.forEach(c => {
+            if (stats[c.status] !== undefined) stats[c.status]++;
+        });
         const sDiv = document.getElementById('statusStats');
         sDiv.innerHTML = '';
         Object.entries(stats).forEach(([k, v]) => {
@@ -277,7 +334,12 @@
         });
     }
 
-    function openModal() { editingId = null; document.getElementById('modal').style.display = 'flex'; }
+    function openModal() { 
+        editingId = null; 
+        document.getElementById('in-temperatura').value = 'morno'; // Reset default
+        document.getElementById('modal').style.display = 'flex'; 
+    }
+    
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
     
     function openEdit(id) {
@@ -287,6 +349,7 @@
         document.getElementById('in-idade').value = c.idade || '';
         document.getElementById('in-bairro').value = c.bairro || '';
         document.getElementById('in-status').value = c.status;
+        document.getElementById('in-temperatura').value = c.temperatura || 'morno';
         document.getElementById('in-origin').value = c.origin;
         document.getElementById('in-photo').value = c.photo || '';
         document.getElementById('in-whatsapp').value = c.whatsapp;
@@ -302,6 +365,7 @@
             idade: document.getElementById('in-idade').value,
             bairro: document.getElementById('in-bairro').value,
             status: document.getElementById('in-status').value,
+            temperatura: document.getElementById('in-temperatura').value,
             origin: document.getElementById('in-origin').value,
             photo: document.getElementById('in-photo').value,
             whatsapp: document.getElementById('in-whatsapp').value,
@@ -316,16 +380,28 @@
     }
 
     async function init() {
+        contacts = contacts.map(c => {
+            if(c.status === 'transei') c.status = 'intimidade';
+            if(!c.temperatura) c.temperatura = 'morno'; // Auto-define antigos como morno
+            return c;
+        });
+
         renderList();
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
             if(Array.isArray(data)) {
-                contacts = data.map(c => ({
-                    id: c.id, nome: dec(c.nome), status: dec(c.status), origin: dec(c.origin),
-                    whatsapp: dec(c.whatsapp), instagram: dec(c.instagram), notes: dec(c.notes),
-                    idade: dec(c.idade), bairro: dec(c.bairro), photo: dec(c.photo)
-                }));
+                contacts = data.map(c => {
+                    let statusDecrypted = dec(c.status);
+                    if (statusDecrypted === 'transei') statusDecrypted = 'intimidade';
+                    
+                    return {
+                        id: c.id, nome: dec(c.nome), status: statusDecrypted, origin: dec(c.origin),
+                        whatsapp: dec(c.whatsapp), instagram: dec(c.instagram), notes: dec(c.notes),
+                        idade: dec(c.idade), bairro: dec(c.bairro), photo: dec(c.photo),
+                        temperatura: dec(c.temperatura) || 'morno'
+                    };
+                });
                 localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
                 renderList();
             }

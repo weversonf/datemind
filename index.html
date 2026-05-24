@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DateMind v10</title>
+<title>DateMind v11</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
@@ -14,9 +14,7 @@
     --bg:#07090c;
     --bg2:#0f1115;
     --card:#151922;
-    --card-hover:#1a1f2b;
     --line:#232938;
-    --line2:#2d3445;
 
     --text:#f8fafc;
     --muted:#94a3b8;
@@ -30,10 +28,9 @@
     --red:#ef4444;
     --yellow:#f59e0b;
 
-    --shadow:0 10px 40px rgba(0,0,0,.45);
-    --blur:blur(14px);
+    --radius:15px;
 
-    --radius:24px;
+    --shadow:0 10px 40px rgba(0,0,0,.45);
 }
 
 *{
@@ -45,9 +42,9 @@
 
 body{
     background:
-        radial-gradient(circle at top left, rgba(255,183,3,.08), transparent 25%),
-        radial-gradient(circle at top right, rgba(139,92,246,.08), transparent 25%),
-        var(--bg);
+    radial-gradient(circle at top left, rgba(255,183,3,.08), transparent 25%),
+    radial-gradient(circle at top right, rgba(139,92,246,.08), transparent 25%),
+    var(--bg);
 
     color:var(--text);
     min-height:100vh;
@@ -66,8 +63,8 @@ header{
 
     padding:20px 35px;
 
-    background:rgba(7,9,12,.75);
-    backdrop-filter:blur(18px);
+    background:rgba(7,9,12,.8);
+    backdrop-filter:blur(16px);
 
     border-bottom:1px solid rgba(255,255,255,.05);
 }
@@ -81,7 +78,8 @@ header{
 .logo-icon{
     width:46px;
     height:46px;
-    border-radius:16px;
+
+    border-radius:15px;
 
     background:linear-gradient(135deg,var(--accent),var(--accent2));
 
@@ -91,29 +89,19 @@ header{
 
     font-size:1.1rem;
     font-weight:800;
+
     color:black;
-
-    box-shadow:
-        0 10px 30px rgba(255,183,3,.35);
-}
-
-.logo-text{
-    display:flex;
-    flex-direction:column;
 }
 
 .logo-text strong{
-    font-size:1rem;
+    display:block;
     letter-spacing:2px;
 }
 
 .logo-text span{
-    font-size:.7rem;
     color:var(--muted);
-    margin-top:2px;
+    font-size:.75rem;
 }
-
-/* TOP ACTIONS */
 
 .top-actions{
     display:flex;
@@ -122,12 +110,14 @@ header{
 }
 
 .search-top{
-    width:320px;
+    width:300px;
+
     background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.05);
 
     padding:14px 16px;
-    border-radius:16px;
+
+    border-radius:15px;
 
     color:white;
     outline:none;
@@ -138,8 +128,10 @@ header{
     gap:8px;
 
     background:rgba(255,255,255,.04);
+
     padding:6px;
-    border-radius:16px;
+
+    border-radius:15px;
 }
 
 .v-btn{
@@ -149,12 +141,14 @@ header{
     color:var(--muted);
 
     padding:12px 18px;
+
     border-radius:12px;
+
+    font-weight:700;
 
     cursor:pointer;
 
     transition:.25s;
-    font-weight:700;
 }
 
 .v-btn.active{
@@ -166,7 +160,7 @@ header{
 
 .app{
     display:grid;
-    grid-template-columns:340px 1fr;
+    grid-template-columns:320px 1fr;
     gap:24px;
 
     padding:24px;
@@ -183,13 +177,11 @@ header{
 .panel{
     background:rgba(255,255,255,.03);
 
-    border:1px solid rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.05);
 
-    border-radius:var(--radius);
+    border-radius:15px;
 
     padding:22px;
-
-    backdrop-filter:var(--blur);
 
     box-shadow:var(--shadow);
 }
@@ -200,10 +192,9 @@ header{
     letter-spacing:2px;
 
     color:var(--muted);
+
     margin-bottom:20px;
 }
-
-/* PROFILE */
 
 .profile{
     display:flex;
@@ -212,9 +203,10 @@ header{
 }
 
 .profile-avatar{
-    width:64px;
-    height:64px;
-    border-radius:20px;
+    width:60px;
+    height:60px;
+
+    border-radius:15px;
 
     background:linear-gradient(135deg,var(--accent),var(--accent2));
 
@@ -222,19 +214,16 @@ header{
     align-items:center;
     justify-content:center;
 
-    font-size:1.4rem;
+    font-size:1.3rem;
     font-weight:800;
+
     color:black;
 }
 
-.profile h2{
-    font-size:1rem;
-}
-
 .profile p{
+    margin-top:4px;
     color:var(--muted);
     font-size:.82rem;
-    margin-top:5px;
 }
 
 /* STATS */
@@ -242,26 +231,27 @@ header{
 .stats-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:14px;
+    gap:12px;
 }
 
 .stat-card{
     background:rgba(255,255,255,.03);
+
     border:1px solid rgba(255,255,255,.05);
 
-    border-radius:18px;
+    border-radius:15px;
 
-    padding:18px;
+    padding:16px;
 }
 
 .stat-card h3{
-    font-size:1.4rem;
+    font-size:1.5rem;
 }
 
 .stat-card p{
-    font-size:.75rem;
+    margin-top:5px;
     color:var(--muted);
-    margin-top:6px;
+    font-size:.75rem;
 }
 
 /* FILTERS */
@@ -269,28 +259,29 @@ header{
 .filter-grid{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:8px;
+    gap:10px;
 }
 
 .filter-btn{
     background:rgba(255,255,255,.03);
+
     border:1px solid rgba(255,255,255,.06);
 
-    border-radius:12px;
+    color:var(--muted);
 
-    padding:10px;
+    border-radius:15px;
+
+    padding:12px;
 
     cursor:pointer;
 
     transition:.25s;
 
-    color:var(--muted);
-    font-size:.72rem;
     text-align:center;
 }
 
 .filter-btn:hover{
-    background:rgba(255,255,255,.06);
+    background:rgba(255,255,255,.05);
 }
 
 .filter-btn.active{
@@ -319,12 +310,9 @@ header{
 
     border:1px solid rgba(255,255,255,.05);
 
-    border-radius:22px;
+    border-radius:15px;
 
     padding:22px;
-
-    position:relative;
-    overflow:hidden;
 
     transition:.25s;
 }
@@ -334,26 +322,10 @@ header{
     background:rgba(255,255,255,.05);
 }
 
-.dash-card::before{
-    content:'';
-    position:absolute;
-
-    width:120px;
-    height:120px;
-
-    background:rgba(255,255,255,.03);
-
-    border-radius:50%;
-
-    top:-50px;
-    right:-50px;
-}
-
 .dash-label{
     color:var(--muted);
     font-size:.72rem;
     text-transform:uppercase;
-    letter-spacing:1px;
 }
 
 .dash-value{
@@ -362,7 +334,7 @@ header{
     font-weight:800;
 }
 
-/* LIST */
+/* CONTACTS */
 
 .contact-list{
     display:flex;
@@ -375,7 +347,7 @@ header{
 
     border:1px solid rgba(255,255,255,.06);
 
-    border-radius:24px;
+    border-radius:15px;
 
     padding:20px;
 
@@ -384,38 +356,11 @@ header{
     justify-content:space-between;
 
     transition:.25s;
-
-    cursor:pointer;
-
-    position:relative;
-    overflow:hidden;
-}
-
-.contact-card::before{
-    content:'';
-    position:absolute;
-
-    inset:0;
-
-    background:linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,.03),
-        transparent
-    );
-
-    transform:translateX(-100%);
-    transition:1s;
-}
-
-.contact-card:hover::before{
-    transform:translateX(100%);
 }
 
 .contact-card:hover{
     transform:translateY(-4px);
     background:rgba(255,255,255,.05);
-    border-color:rgba(255,255,255,.12);
 }
 
 .contact-left{
@@ -425,13 +370,11 @@ header{
 }
 
 .avatar{
-    width:72px;
-    height:72px;
+    width:70px;
+    height:70px;
 
-    border-radius:24px;
+    border-radius:15px;
     object-fit:cover;
-
-    border:2px solid rgba(255,255,255,.08);
 }
 
 .contact-info h2{
@@ -439,104 +382,103 @@ header{
 }
 
 .contact-info p{
+    margin-top:6px;
     color:var(--muted);
     font-size:.82rem;
-    margin-top:7px;
 }
-
-/* BADGES */
 
 .badges{
     display:flex;
-    align-items:center;
     gap:10px;
     margin-top:12px;
 }
 
 .badge{
     padding:7px 12px;
+
     border-radius:999px;
+
     font-size:.72rem;
     font-weight:700;
 }
 
 .hot{
     background:rgba(239,68,68,.12);
-    color:#ff8d8d;
-    border:1px solid rgba(239,68,68,.25);
+    color:#ff9a9a;
 }
 
 .warm{
     background:rgba(245,158,11,.12);
-    color:#ffcf75;
-    border:1px solid rgba(245,158,11,.25);
+    color:#ffd27d;
 }
 
 .cold{
     background:rgba(59,130,246,.12);
-    color:#8ec5ff;
-    border:1px solid rgba(59,130,246,.25);
+    color:#91c8ff;
 }
 
 .status{
     background:rgba(139,92,246,.12);
-    color:#c7adff;
-    border:1px solid rgba(139,92,246,.25);
+    color:#ceb5ff;
 }
 
-/* RIGHT */
+/* KANBAN */
 
-.contact-right{
-    display:flex;
-    align-items:center;
-    gap:16px;
+#kanbanView{
+    display:none;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
 }
 
-.next-action{
-    text-align:right;
+#kanbanView.active{
+    display:grid;
 }
 
-.next-action span{
-    display:block;
-    font-size:.7rem;
-    color:var(--muted);
+.kanban-col{
+    background:rgba(255,255,255,.03);
+
+    border:1px solid rgba(255,255,255,.05);
+
+    border-radius:15px;
+
+    padding:18px;
+
+    min-height:500px;
 }
 
-.next-action strong{
-    margin-top:5px;
-    display:block;
-    font-size:.9rem;
+.kanban-title{
+    margin-bottom:18px;
+
+    font-size:.8rem;
+    font-weight:800;
+
+    color:var(--accent);
 }
 
 /* FAB */
 
 .fab{
     position:fixed;
+
     right:30px;
     bottom:30px;
 
-    width:70px;
-    height:70px;
+    width:68px;
+    height:68px;
 
     border:none;
-    border-radius:24px;
+    border-radius:15px;
 
     background:linear-gradient(135deg,var(--accent),var(--accent2));
 
     color:black;
+
     font-size:2rem;
-    font-weight:700;
+    font-weight:800;
 
     cursor:pointer;
 
-    box-shadow:
-        0 20px 40px rgba(255,183,3,.3);
-
-    transition:.25s;
-}
-
-.fab:hover{
-    transform:translateY(-5px) scale(1.04);
+    box-shadow:0 20px 40px rgba(255,183,3,.25);
 }
 
 /* MODAL */
@@ -547,7 +489,7 @@ header{
 
     background:rgba(0,0,0,.8);
 
-    backdrop-filter:blur(16px);
+    backdrop-filter:blur(14px);
 
     display:none;
     align-items:center;
@@ -557,18 +499,16 @@ header{
 }
 
 .modal{
-    width:95%;
-    max-width:780px;
+    width:90%;
+    max-width:560px;
 
     background:#0f1218;
 
     border:1px solid rgba(255,255,255,.08);
 
-    border-radius:32px;
+    border-radius:15px;
 
-    padding:34px;
-
-    box-shadow:0 40px 80px rgba(0,0,0,.6);
+    padding:28px;
 }
 
 .modal-top{
@@ -576,28 +516,26 @@ header{
     justify-content:space-between;
     align-items:center;
 
-    margin-bottom:30px;
-}
-
-.modal-title h2{
-    font-size:1.5rem;
+    margin-bottom:25px;
 }
 
 .modal-title p{
+    margin-top:6px;
     color:var(--muted);
-    margin-top:8px;
 }
 
 .close-btn{
-    width:44px;
-    height:44px;
+    width:42px;
+    height:42px;
 
     border:none;
-    border-radius:14px;
+
+    border-radius:12px;
 
     background:rgba(255,255,255,.05);
 
     color:white;
+
     cursor:pointer;
 }
 
@@ -626,22 +564,20 @@ header{
 .input-group select,
 .input-group textarea{
     background:#151922;
+
     border:1px solid rgba(255,255,255,.06);
 
     color:white;
 
-    padding:16px;
-    border-radius:16px;
+    padding:15px;
+
+    border-radius:15px;
 
     outline:none;
 }
 
-.input-group textarea{
-    resize:none;
-}
-
 .modal-actions{
-    margin-top:30px;
+    margin-top:24px;
 
     display:flex;
     justify-content:flex-end;
@@ -650,9 +586,10 @@ header{
 
 .btn{
     border:none;
-    border-radius:16px;
 
-    padding:16px 24px;
+    border-radius:15px;
+
+    padding:14px 22px;
 
     font-weight:700;
 
@@ -665,18 +602,13 @@ header{
 }
 
 .btn.primary{
-    background:linear-gradient(
-        135deg,
-        var(--accent),
-        var(--accent2)
-    );
-
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
     color:black;
 }
 
 /* RESPONSIVO */
 
-@media(max-width:1200px){
+@media(max-width:1100px){
 
     .dashboard{
         grid-template-columns:1fr 1fr;
@@ -684,37 +616,31 @@ header{
 
 }
 
-@media(max-width:980px){
+@media(max-width:900px){
 
     .app{
         grid-template-columns:1fr;
     }
 
-    .sidebar{
-        order:2;
-    }
-
-    .main{
-        order:1;
-    }
-
 }
 
-@media(max-width:720px){
+@media(max-width:700px){
 
     .dashboard{
+        grid-template-columns:1fr;
+    }
+
+    #kanbanView{
+        grid-template-columns:1fr;
+    }
+
+    .form-grid{
         grid-template-columns:1fr;
     }
 
     .contact-card{
         flex-direction:column;
         align-items:flex-start;
-        gap:20px;
-    }
-
-    .contact-right{
-        width:100%;
-        justify-content:space-between;
     }
 
     .top-actions{
@@ -724,10 +650,6 @@ header{
 
     .search-top{
         width:100%;
-    }
-
-    .form-grid{
-        grid-template-columns:1fr;
     }
 
 }
@@ -740,12 +662,16 @@ header{
 <header>
 
     <div class="logo">
-        <div class="logo-icon">D</div>
+
+        <div class="logo-icon">
+            D
+        </div>
 
         <div class="logo-text">
             <strong>DATEMIND</strong>
             <span>Premium Relationship CRM</span>
         </div>
+
     </div>
 
     <div class="top-actions">
@@ -757,8 +683,15 @@ header{
         >
 
         <div class="view-switch">
-            <button class="v-btn active">LISTA</button>
-            <button class="v-btn">KANBAN</button>
+
+            <button class="v-btn active">
+                LISTA
+            </button>
+
+            <button class="v-btn">
+                KANBAN
+            </button>
+
         </div>
 
     </div>
@@ -780,8 +713,8 @@ header{
                 </div>
 
                 <div>
-                    <h2>Weverson</h2>
-                    <p>Relationship Intelligence System</p>
+                    <h3>Weverson</h3>
+                    <p>Relationship Intelligence</p>
                 </div>
 
             </div>
@@ -847,188 +780,53 @@ header{
 
     <main class="main">
 
+        <!-- DASHBOARD -->
+
         <section class="dashboard">
 
             <div class="dash-card">
-                <div class="dash-label">
-                    Leads Quentes
-                </div>
-
-                <div class="dash-value">
-                    11
-                </div>
+                <div class="dash-label">Leads Quentes</div>
+                <div class="dash-value">11</div>
             </div>
 
             <div class="dash-card">
-                <div class="dash-label">
-                    Conversões
-                </div>
-
-                <div class="dash-value">
-                    68%
-                </div>
+                <div class="dash-label">Conversões</div>
+                <div class="dash-value">68%</div>
             </div>
 
             <div class="dash-card">
-                <div class="dash-label">
-                    Últimos Dates
-                </div>
-
-                <div class="dash-value">
-                    5
-                </div>
+                <div class="dash-label">Últimos Dates</div>
+                <div class="dash-value">5</div>
             </div>
 
             <div class="dash-card">
-                <div class="dash-label">
-                    Follow-ups
-                </div>
-
-                <div class="dash-value">
-                    8
-                </div>
+                <div class="dash-label">Follow-ups</div>
+                <div class="dash-value">8</div>
             </div>
 
         </section>
 
-        <section class="contact-list">
+        <!-- LISTA -->
 
-            <!-- CARD -->
+        <section class="contact-list" id="listView"></section>
 
-            <div class="contact-card">
+        <!-- KANBAN -->
 
-                <div class="contact-left">
+        <section id="kanbanView">
 
-                    <img
-                        class="avatar"
-                        src="https://i.pravatar.cc/300?img=11"
-                    >
-
-                    <div class="contact-info">
-
-                        <h2>Jessica Aquino, 32</h2>
-
-                        <p>
-                            📍 Natal • Fisioterapeuta
-                        </p>
-
-                        <div class="badges">
-
-                            <div class="badge hot">
-                                🔥 Quente
-                            </div>
-
-                            <div class="badge status">
-                                Conversando
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="contact-right">
-
-                    <div class="next-action">
-                        <span>Próxima ação</span>
-                        <strong>Café amanhã</strong>
-                    </div>
-
-                </div>
-
+            <div class="kanban-col">
+                <div class="kanban-title">Conheci</div>
+                <div id="kb-conheci"></div>
             </div>
 
-            <!-- CARD -->
-
-            <div class="contact-card">
-
-                <div class="contact-left">
-
-                    <img
-                        class="avatar"
-                        src="https://i.pravatar.cc/300?img=24"
-                    >
-
-                    <div class="contact-info">
-
-                        <h2>Radassa, 29</h2>
-
-                        <p>
-                            📍 Siqueira • Cinema & Praia
-                        </p>
-
-                        <div class="badges">
-
-                            <div class="badge warm">
-                                ⚡ Morno
-                            </div>
-
-                            <div class="badge status">
-                                Agendado
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="contact-right">
-
-                    <div class="next-action">
-                        <span>Última interação</span>
-                        <strong>2 dias atrás</strong>
-                    </div>
-
-                </div>
-
+            <div class="kanban-col">
+                <div class="kanban-title">Conversando</div>
+                <div id="kb-conversando"></div>
             </div>
 
-            <!-- CARD -->
-
-            <div class="contact-card">
-
-                <div class="contact-left">
-
-                    <img
-                        class="avatar"
-                        src="https://i.pravatar.cc/300?img=15"
-                    >
-
-                    <div class="contact-info">
-
-                        <h2>Jamile, 21</h2>
-
-                        <p>
-                            📍 Canindé • Pagode & Karaokê
-                        </p>
-
-                        <div class="badges">
-
-                            <div class="badge cold">
-                                🧊 Frio
-                            </div>
-
-                            <div class="badge status">
-                                Conheci
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="contact-right">
-
-                    <div class="next-action">
-                        <span>Lead Status</span>
-                        <strong>Esfriando</strong>
-                    </div>
-
-                </div>
-
+            <div class="kanban-col">
+                <div class="kanban-title">Agendado</div>
+                <div id="kb-agendado"></div>
             </div>
 
         </section>
@@ -1053,7 +851,7 @@ header{
 
             <div class="modal-title">
                 <h2>Nova Conexão</h2>
-                <p>Adicione inteligência ao seu pipeline.</p>
+                <p>Adicione inteligência ao pipeline.</p>
             </div>
 
             <button
@@ -1089,30 +887,12 @@ header{
                     <option>Conheci</option>
                     <option>Conversando</option>
                     <option>Agendado</option>
-                    <option>Fiquei</option>
-                    <option>Recorrente</option>
                 </select>
-            </div>
-
-            <div class="input-group">
-                <label>Temperatura</label>
-
-                <select>
-                    <option>🔥 Quente</option>
-                    <option>⚡ Morno</option>
-                    <option>🧊 Frio</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label>Instagram</label>
-                <input type="text">
             </div>
 
             <div class="input-group full">
-                <label>Observações estratégicas</label>
-
-                <textarea rows="5"></textarea>
+                <label>Observações</label>
+                <textarea rows="4"></textarea>
             </div>
 
         </div>
@@ -1127,7 +907,7 @@ header{
             </button>
 
             <button class="btn primary">
-                Salvar Conexão
+                Salvar
             </button>
 
         </div>
@@ -1138,13 +918,239 @@ header{
 
 <script>
 
+const contacts = [
+
+{
+    nome:'Jessica Aquino',
+    idade:32,
+    bairro:'Natal',
+    status:'Conversando',
+    temperatura:'quente',
+    avatar:'https://i.pravatar.cc/300?img=11'
+},
+
+{
+    nome:'Radassa',
+    idade:29,
+    bairro:'Siqueira',
+    status:'Agendado',
+    temperatura:'morno',
+    avatar:'https://i.pravatar.cc/300?img=24'
+},
+
+{
+    nome:'Jamile',
+    idade:21,
+    bairro:'Canindé',
+    status:'Conheci',
+    temperatura:'frio',
+    avatar:'https://i.pravatar.cc/300?img=15'
+}
+
+];
+
+let currentFilter = 'ALL';
+
+/* RENDER LIST */
+
+function renderContacts(){
+
+    const list = document.getElementById('listView');
+
+    list.innerHTML = '';
+
+    contacts
+    .filter(c => {
+
+        if(currentFilter === 'ALL') return true;
+
+        return c.nome.charAt(0).toUpperCase() === currentFilter;
+
+    })
+
+    .forEach(c => {
+
+        const tempClass =
+            c.temperatura === 'quente'
+            ? 'hot'
+            : c.temperatura === 'morno'
+            ? 'warm'
+            : 'cold';
+
+        const tempText =
+            c.temperatura === 'quente'
+            ? '🔥 Quente'
+            : c.temperatura === 'morno'
+            ? '⚡ Morno'
+            : '🧊 Frio';
+
+        list.innerHTML += `
+
+        <div class="contact-card">
+
+            <div class="contact-left">
+
+                <img
+                    class="avatar"
+                    src="${c.avatar}"
+                >
+
+                <div class="contact-info">
+
+                    <h2>${c.nome}, ${c.idade}</h2>
+
+                    <p>
+                        📍 ${c.bairro}
+                    </p>
+
+                    <div class="badges">
+
+                        <div class="badge ${tempClass}">
+                            ${tempText}
+                        </div>
+
+                        <div class="badge status">
+                            ${c.status}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        `;
+
+    });
+
+}
+
+/* FILTROS */
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+
+    btn.addEventListener('click', () => {
+
+        document.querySelectorAll('.filter-btn')
+        .forEach(b => b.classList.remove('active'));
+
+        btn.classList.add('active');
+
+        currentFilter = btn.innerText.trim();
+
+        renderContacts();
+
+    });
+
+});
+
+/* LISTA / KANBAN */
+
+const viewButtons = document.querySelectorAll('.v-btn');
+
+viewButtons.forEach(btn => {
+
+    btn.addEventListener('click', () => {
+
+        viewButtons.forEach(b => b.classList.remove('active'));
+
+        btn.classList.add('active');
+
+        const mode = btn.innerText.trim();
+
+        if(mode === 'LISTA'){
+
+            document.getElementById('listView').style.display = 'flex';
+
+            document.getElementById('kanbanView')
+            .classList.remove('active');
+
+        }
+
+        else{
+
+            document.getElementById('listView').style.display = 'none';
+
+            document.getElementById('kanbanView')
+            .classList.add('active');
+
+            renderKanban();
+
+        }
+
+    });
+
+});
+
+/* KANBAN */
+
+function renderKanban(){
+
+    document.getElementById('kb-conheci').innerHTML = '';
+    document.getElementById('kb-conversando').innerHTML = '';
+    document.getElementById('kb-agendado').innerHTML = '';
+
+    contacts.forEach(c => {
+
+        const card = `
+
+        <div class="contact-card" style="margin-bottom:12px;">
+
+            <div class="contact-left">
+
+                <img
+                    class="avatar"
+                    src="${c.avatar}"
+                    style="width:58px;height:58px;"
+                >
+
+                <div class="contact-info">
+
+                    <h2 style="font-size:.9rem;">
+                        ${c.nome}
+                    </h2>
+
+                    <p>${c.bairro}</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        `;
+
+        if(c.status === 'Conheci'){
+            document.getElementById('kb-conheci').innerHTML += card;
+        }
+
+        if(c.status === 'Conversando'){
+            document.getElementById('kb-conversando').innerHTML += card;
+        }
+
+        if(c.status === 'Agendado'){
+            document.getElementById('kb-agendado').innerHTML += card;
+        }
+
+    });
+
+}
+
+/* MODAL */
+
 function openModal(){
-    document.getElementById('modal').style.display='flex'
+    document.getElementById('modal').style.display='flex';
 }
 
 function closeModal(){
-    document.getElementById('modal').style.display='none'
+    document.getElementById('modal').style.display='none';
 }
+
+/* INIT */
+
+renderContacts();
 
 </script>
 

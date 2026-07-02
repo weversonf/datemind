@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATEMIND // v09 Industrial CRM</title>
+    <title>DATEMIND // v011</title>
     <script src="lib/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
@@ -335,10 +335,16 @@
         'quente': { label: '🔥 Quente', class: 't-quente' }
     };
 
+    if (typeof CryptoJS === 'undefined') {
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#08090a;color:#ef4444;font-family:Inter,sans-serif;padding:40px;text-align:center;"><div><h1 style="font-size:1.5rem;margin-bottom:16px;">Erro: CryptoJS não carregou</h1><p style="color:#94a3b8;font-size:0.9rem;">O ficheiro <strong>lib/crypto-js.min.js</strong> não foi encontrado ou não pôde ser carregado.<br>Verifica que a pasta <strong>lib/</strong> existe ao lado deste ficheiro.</p></div></div>';
+    }
     const enc = (t) => t ? CryptoJS.AES.encrypt(t.toString(), SECRET_KEY).toString() : "";
     const dec = (t) => {
         if (!t || !t.toString().startsWith('U2FsdGVk')) return t || "";
-        try { return CryptoJS.AES.decrypt(t.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8); } catch { return ""; }
+        try { return CryptoJS.AES.decrypt(t.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8); } catch (e) {
+            if (typeof CryptoJS === 'undefined') return t || "";
+            return "";
+        }
     };
 
     // --- Helpers de feedback (toast + estado de sincronização) ---

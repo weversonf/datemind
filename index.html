@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATEMIND // v10</title>
+    <title>DATEMIND // v011</title>
     <script src="lib/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
@@ -188,6 +188,16 @@
         <div class="glass-box">
             <span class="col-title">Índice Alfabético</span>
             <div class="alpha-grid" id="alphaFilters"></div>
+        </div>
+        <div class="glass-box">
+            <span class="col-title">Importar / Exportar</span>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+                <button onclick="exportCSV()" style="padding:10px; background:var(--bg-deep); border:1px solid var(--border); color:white; border-radius:10px; cursor:pointer; font-size:0.75rem; font-weight:700;">⬇ Exportar CSV</button>
+                <label style="padding:10px; background:var(--bg-deep); border:1px solid var(--border); color:var(--text-dim); border-radius:10px; cursor:pointer; font-size:0.75rem; font-weight:700; text-align:center;">
+                    ⬆ Importar CSV
+                    <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
+                </label>
+            </div>
         </div>
     </aside>
 
@@ -841,6 +851,66 @@
         closeModal();
         deleteAndSync(id);
         showToast(`"${nome}" foi apagado.`);
+    }
+
+    function exportCSV() {
+        if (contacts.length === 0) { showToast('Nenhum contacto para exportar.', true); return; }
+        const headers = ['id','nome','idade','bairro','status','temperatura','origin','photo','whatsapp','instagram','notes'];
+        const rows = contacts.map(c => headers.map(h => {
+            let val = c[h] || '';
+            if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
+                val = '"' + val.replace(/"/g, '""') + '"';
+            }
+            return val;
+        }).join(','));
+        const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'datemind_export_' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+        showToast(contacts.length + ' contactos exportados para CSV.');
+    }
+
+    function importCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const text = e.target.result.replace(/^\uFEFF/, '');
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            if (lines.length < 2) { showToast('CSV vazio ou inválido.', true); return; }
+            const headers = lines[0].split(',').map(h => h.trim());
+            const expected = ['nome','status'];
+            if (!expected.every(h => headers.includes(h))) {
+                showToast('CSV deve ter colunas: nome, status, idade, bairro, ...', true);
+                return;
+            }
+            const imported = [];
+            for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(',').map(v => v.trim().replace(/^"(.*)"$/, '$1').replace(/""/g, '"'));
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
+                if (!row.nome) continue;
+                row.id = row.id || Date.now() + i;
+                imported.push(row);
+            }
+            if (imported.length === 0) { showToast('Nenhum contacto válido no CSV.', true); return; }
+            const ok = confirm(`Importar ${imported.length} contacto(s)? Os atuais (${contacts.length}) serão SUBSTITUÍDOS.`);
+            if (!ok) return;
+            contacts = imported;
+            localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
+            renderList(); renderKanban();
+            setSyncStatus('busy', 'A sincronizar...');
+            for (const c of contacts) {
+                try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'update', id: c.id, nome: enc(c.nome), status: enc(c.status), origin: enc(c.origin), whatsapp: enc(c.whatsapp), instagram: enc(c.instagram), notes: enc(c.notes), idade: enc(c.idade), bairro: enc(c.bairro), photo: enc(c.photo), temperatura: enc(c.temperatura) }) }); } catch {}
+            }
+            setSyncStatus('ok', 'Sincronizado');
+            showToast(imported.length + ' contactos importados.');
+        };
+        reader.readAsText(file);
+        event.target.value = '';
     }
 
     async function init() {

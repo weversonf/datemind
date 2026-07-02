@@ -1,0 +1,11 @@
+# Sensitive
+.env
+*.key
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATEMIND // v09 Industrial CRM</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #08090a;
+            --bg-surface: #111316;
+            --bg-card: #1a1d21;
+            --border: #2d3139;
+            --text-main: #e2e8f0;
+            --text-dim: #64748b;
+            --accent: #ffb300;
+            
+            /* Cores do Funil */
+            --color-conheci: #64748b;     
+            --color-conversando: #3b82f6; 
+            --color-agendado: #a855f7;    
+            --color-fiquei: #f59e0b;      
+            --color-intimidade: #ef4444;  
+            --color-recorrente: #10b981;  
+
+            /* Cores da Temperatura */
+            --temp-frio: #60a5fa;
+            --temp-morno: #facc15;
+            --temp-quente: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-deep); color: var(--text-main); min-height: 100vh; background-image: radial-gradient(circle at 50% 0%, #1a1d21 0%, var(--bg-deep) 70%); }
+
+        header { 
+            position: sticky; top: 0; z-index: 100; background: rgba(8, 9, 10, 0.85); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .logo { font-weight: 800; font-size: 1.1rem; letter-spacing: 2px; color: var(--accent); }
+        .view-switcher { display: flex; background: #000; padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
+        .v-btn { padding: 8px 20px; border: none; background: none; color: var(--text-dim); font-size: 0.7rem; font-weight: 700; cursor: pointer; border-radius: 7px; }
+        .v-btn.active { background: var(--bg-card); color: white; }
+
+        .app-grid { display: grid; grid-template-columns: 320px 1fr; gap: 30px; max-width: 1600px; margin: 30px auto; padding: 0 40px; }
+
+        /* KANBAN */
+        .kanban-container { display: none; gap: 20px; grid-column: 1 / -1; overflow-x: auto; padding-bottom: 15px; }
+        .kanban-container.active { display: flex; }
+        .kanban-col { background: rgba(17, 19, 22, 0.4); border-radius: 20px; border: 1px solid var(--border); padding: 20px; min-height: 75vh; min-width: 280px; flex: 1; }
+        .col-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: block; }
+
+        /* CARDS */
+        .card { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; cursor: grab; transition: 0.3s; }
+        .card:hover { border-color: var(--text-dim); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .card-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: block; }
+        .card-loc { font-size: 0.7rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+        
+        /* TEMPERATURA BADGES */
+        .temp-badge { font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+        .t-frio { color: var(--temp-frio); border: 1px solid rgba(96, 165, 250, 0.3); }
+        .t-morno { color: var(--temp-morno); border: 1px solid rgba(250, 204, 21, 0.3); }
+        .t-quente { color: var(--temp-quente); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+        /* LIST VIEW */
+        .list-item { 
+            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px;
+            padding: 15px 25px; margin-bottom: 12px; display: flex; align-items: center; gap: 20px; cursor: pointer;
+        }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--bg-deep); }
+
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .glass-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+
+        .alpha-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 15px; }
+        .a-btn { background: var(--bg-deep); border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 8px 2px; cursor: pointer; font-size: 0.65rem; text-align: center; }
+        .a-btn.active { border-color: var(--accent); color: white; }
+
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: white; color: black; border-radius: 18px; border: none; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: var(--bg-surface); border: 1px solid var(--border); width: 100%; max-width: 500px; padding: 30px; border-radius: 24px; }
+        .modal input, .modal select, .modal textarea { width: 100%; background: var(--bg-deep); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; outline: none; font-size: 0.85rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+        @media (max-width: 1024px) {
+            .app-grid { display: flex; flex-direction: column; padding: 0 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">DATE<span>MIND</span> v09</div>
+    <div class="view-switcher">
+        <button class="v-btn active" id="btn-list" onclick="setView('list')">LISTA</button>
+        <button class="v-btn" id="btn-kanban" onclick="setView('kanban')">KANBAN</button>
+    </div>
+</header>
+
+<div class="app-grid">
+    <aside class="sidebar" id="sidebar">
+        <div class="glass-box">
+            <span class="col-title" style="color: var(--accent)">Funil de Conversão</span>
+            <div id="statusStats" style="display: flex; flex-direction: column; gap: 12px; margin-top:15px;"></div>
+        </div>
+        <div class="glass-box">
+            <span class="col-title">Índice Alfabético</span>
+            <div class="alpha-grid" id="alphaFilters"></div>
+        </div>
+    </aside>
+
+    <main id="listView">
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" placeholder="Pesquisar por nome ou bairro..." 
+                   style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); padding: 15px; border-radius: 12px; color: white;" 
+                   oninput="renderList()">
+        </div>
+        <div id="contactList"></div>
+    </main>
+
+    <div class="kanban-container" id="kanbanView">
+        <div class="kanban-col" data-status="conheci" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-conheci);">1. Conheci</span>
+            <div id="list-conheci"></div>
+        </div>
+        <div class="kanban-col" data-status="conversando" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-conversando);">2. Conversando</span>
+            <div id="list-conversando"></div>
+        </div>
+        <div class="kanban-col" data-status="agendado" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-agendado);">3. Date Marcado</span>
+            <div id="list-agendado"></div>
+        </div>
+        <div class="kanban-col" data-status="fiquei" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-fiquei);">4. Fiquei</span>
+            <div id="list-fiquei"></div>
+        </div>
+        <div class="kanban-col" data-status="intimidade" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-intimidade);">5. Intimidade</span>
+            <div id="list-intimidade"></div>
+        </div>
+        <div class="kanban-col" data-status="recorrente" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <span class="col-title" style="color: var(--color-recorrente);">6. Recorrente</span>
+            <div id="list-recorrente"></div>
+        </div>
+    </div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h2 style="margin-bottom: 20px; font-weight: 800; font-size: 1.2rem;">FICHA DE INTELIGÊNCIA</h2>
+        <input type="text" id="in-nome" placeholder="Nome completo">
+        <div class="form-row">
+            <input type="number" id="in-idade" placeholder="Idade">
+            <input type="text" id="in-bairro" placeholder="Bairro / Localização">
+        </div>
+        <div class="form-row">
+            <select id="in-status">
+                <option value="conheci">Conheci (Contato Inicial)</option>
+                <option value="conversando">Conversando</option>
+                <option value="agendado">Date Marcado</option>
+                <option value="fiquei">Fiquei</option>
+                <option value="intimidade">Intimidade</option>
+                <option value="recorrente">Recorrente (Fixo)</option>
+            </select>
+            <select id="in-temperatura">
+                <option value="frio">🧊 Frio (Interesse Baixo)</option>
+                <option value="morno" selected>⚡ Morno (Fluindo)</option>
+                <option value="quente">🔥 Quente (Alto Interesse)</option>
+            </select>
+        </div>
+        <input type="text" id="in-origin" placeholder="Origem (Tinder, Bumble, etc)">
+        <input type="text" id="in-photo" placeholder="URL da Foto (opcional)">
+        <div class="form-row">
+            <input type="tel" id="in-whatsapp" placeholder="WhatsApp">
+            <input type="text" id="in-instagram" placeholder="Instagram">
+        </div>
+        <textarea id="in-notes" rows="3" placeholder="Gostos, restrições, observações..."></textarea>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeModal()" style="flex: 1; padding: 12px; background: none; border: 1px solid var(--border); color: white; border-radius: 10px;">Cancelar</button>
+            <button onclick="handleSave()" style="flex: 2; padding: 12px; background: white; color: black; border: none; border-radius: 10px; font-weight: 800;">Salvar Registro</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
+    const SECRET_KEY = "WeversonCRM_2026_!@#"; 
+
+    let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
+    let currentAlpha = 'All';
+    let editingId = null;
+
+    // Configuração de exibição da temperatura
+    const tempConfig = {
+        'frio': { label: '🧊 Frio', class: 't-frio' },
+        'morno': { label: '⚡ Morno', class: 't-morno' },
+        'quente': { label: '🔥 Quente', class: 't-quente' }
+    };
+
+    const enc = (t) => t ? CryptoJS.AES.encrypt(t.toString(), SECRET_KEY).toString() : "";
+    const dec = (t) => {
+        if (!t || !t.toString().startsWith('U2FsdGVk')) return t || "";
+        try { return CryptoJS.AES.decrypt(t.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8); } catch { return ""; }
+    };
+
+    function setView(v) {
+        document.getElementById('btn-list').classList.toggle('active', v === 'list');
+        document.getElementById('btn-kanban').classList.toggle('active', v === 'kanban');
+        document.getElementById('listView').style.display = v === 'list' ? 'block' : 'none';
+        document.getElementById('sidebar').style.display = v === 'list' ? 'flex' : 'none';
+        document.getElementById('kanbanView').classList.toggle('active', v === 'kanban');
+        document.querySelector('.app-grid').style.gridTemplateColumns = v === 'kanban' ? '1fr' : '320px 1fr';
+        v === 'kanban' ? renderKanban() : renderList();
+    }
+
+    function allowDrop(e) { e.preventDefault(); }
+    function drag(e) { e.dataTransfer.setData("id", e.target.id.split('-')[1]); e.target.style.opacity = "0.4"; }
+
+    async function drop(e) {
+        e.preventDefault();
+        const id = e.dataTransfer.getData("id");
+        const newStatus = e.currentTarget.getAttribute('data-status');
+        const idx = contacts.findIndex(c => String(c.id) === id);
+        if (idx > -1) {
+            contacts[idx].status = newStatus;
+            saveAndSync(contacts[idx]);
+            renderKanban();
+        }
+    }
+
+    async function saveAndSync(c) {
+        localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
+        const p = {
+            action: "update", id: c.id, nome: enc(c.nome), status: enc(c.status),
+            origin: enc(c.origin), whatsapp: enc(c.whatsapp), instagram: enc(c.instagram),
+            notes: enc(c.notes), idade: enc(c.idade), bairro: enc(c.bairro), photo: enc(c.photo),
+            temperatura: enc(c.temperatura)
+        };
+        try { await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) }); } catch(e) {}
+        updateUI();
+    }
+
+    function renderList() {
+        const list = document.getElementById('contactList');
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        list.innerHTML = '';
+
+        contacts.filter(c => {
+            const m = `${c.nome} ${c.bairro}`.toLowerCase().includes(query);
+            const init = c.nome.charAt(0).toUpperCase();
+            return m && (currentAlpha === 'All' || init === currentAlpha);
+        }).reverse().forEach(c => {
+            const avatar = c.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nome)}&background=25282e&color=fff&bold=true`;
+            const tempValue = c.temperatura || 'morno';
+            const temp = tempConfig[tempValue];
+
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.onclick = () => openEdit(c.id);
+            item.innerHTML = `
+                <img src="${avatar}" class="avatar" style="border-color: var(--color-${c.status})">
+                <div style="flex: 1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="card-name">${c.nome}${c.idade ? ', '+c.idade : ''}</span>
+                        <span class="temp-badge ${temp.class}">${temp.label}</span>
+                    </div>
+                    <div class="card-loc" style="margin-top: 4px;">📍 ${c.bairro || 'Local não definido'} • <span style="color:var(--color-${c.status}); text-transform: capitalize;">${c.status}</span></div>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        updateUI();
+    }
+
+    function renderKanban() {
+        ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'].forEach(s => {
+            const col = document.getElementById(`list-${s}`);
+            if(col) col.innerHTML = '';
+            contacts.filter(c => c.status === s).forEach(c => {
+                const tempValue = c.temperatura || 'morno';
+                const temp = tempConfig[tempValue];
+
+                const card = document.createElement('div');
+                card.className = 'card'; card.draggable = true; card.id = `c-${c.id}`;
+                card.ondragstart = drag; card.onclick = () => openEdit(c.id);
+                card.innerHTML = `
+                    <span class="card-name">${c.nome}${c.idade ? ', '+c.idade : ''}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                        <div class="card-loc">📍 ${c.bairro || '-'}</div>
+                        <span class="temp-badge ${temp.class}">${temp.label}</span>
+                    </div>
+                `;
+                col.appendChild(card);
+            });
+        });
+    }
+
+    function updateUI() {
+        const stats = { conheci: 0, conversando: 0, agendado: 0, fiquei: 0, intimidade: 0, recorrente: 0 };
+        contacts.forEach(c => {
+            if (stats[c.status] !== undefined) stats[c.status]++;
+        });
+        const sDiv = document.getElementById('statusStats');
+        sDiv.innerHTML = '';
+        Object.entries(stats).forEach(([k, v]) => {
+            const p = (v / contacts.length * 100) || 0;
+            sDiv.innerHTML += `<div><div style="display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:4px;">
+                <span style="text-transform:capitalize">${k}</span><span>${v}</span></div>
+                <div style="height:3px;background:var(--border);border-radius:10px;"><div style="width:${p}%;height:100%;background:var(--color-${k})"></div></div></div>`;
+        });
+
+        const aDiv = document.getElementById('alphaFilters');
+        aDiv.innerHTML = '';
+        ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].forEach(l => {
+            const count = l === 'All' ? contacts.length : contacts.filter(c => c.nome.charAt(0).toUpperCase() === l).length;
+            const btn = document.createElement('div');
+            btn.className = `a-btn ${currentAlpha === l ? 'active' : ''}`;
+            btn.style.opacity = count === 0 && l !== 'All' ? 0.2 : 1;
+            btn.onclick = () => { currentAlpha = l; renderList(); };
+            btn.innerHTML = `${l === 'All' ? 'TUDO' : l}<br><span>${count}</span>`;
+            aDiv.appendChild(btn);
+        });
+    }
+
+    function openModal() { 
+        editingId = null; 
+        document.getElementById('in-temperatura').value = 'morno';
+        document.getElementById('modal').style.display = 'flex'; 
+    }
+    
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    
+    function openEdit(id) {
+        const c = contacts.find(i => String(i.id) === String(id));
+        editingId = c.id;
+        document.getElementById('in-nome').value = c.nome;
+        document.getElementById('in-idade').value = c.idade || '';
+        document.getElementById('in-bairro').value = c.bairro || '';
+        document.getElementById('in-status').value = c.status;
+        document.getElementById('in-temperatura').value = c.temperatura || 'morno';
+        document.getElementById('in-origin').value = c.origin;
+        document.getElementById('in-photo').value = c.photo || '';
+        document.getElementById('in-whatsapp').value = c.whatsapp;
+        document.getElementById('in-instagram').value = c.instagram;
+        document.getElementById('in-notes').value = c.notes;
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    async function handleSave() {
+        const c = {
+            id: editingId || Date.now(),
+            nome: document.getElementById('in-nome').value,
+            idade: document.getElementById('in-idade').value,
+            bairro: document.getElementById('in-bairro').value,
+            status: document.getElementById('in-status').value,
+            temperatura: document.getElementById('in-temperatura').value,
+            origin: document.getElementById('in-origin').value,
+            photo: document.getElementById('in-photo').value,
+            whatsapp: document.getElementById('in-whatsapp').value,
+            instagram: document.getElementById('in-instagram').value,
+            notes: document.getElementById('in-notes').value
+        };
+        if(editingId) {
+            const idx = contacts.findIndex(i => String(i.id) === String(editingId));
+            contacts[idx] = c;
+        } else { contacts.push(c); }
+        saveAndSync(c); closeModal(); renderList();
+    }
+
+    async function init() {
+        contacts = contacts.map(c => {
+            if(c.status === 'transei') c.status = 'intimidade';
+            if(!c.temperatura) c.temperatura = 'morno';
+            return c;
+        });
+
+        renderList();
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            if(Array.isArray(data)) {
+                contacts = data.map(c => {
+                    let statusDecrypted = dec(c.status);
+                    if (statusDecrypted === 'transei') statusDecrypted = 'intimidade';
+                    
+                    return {
+                        id: c.id, nome: dec(c.nome), status: statusDecrypted, origin: dec(c.origin),
+                        whatsapp: dec(c.whatsapp), instagram: dec(c.instagram), notes: dec(c.notes),
+                        idade: dec(c.idade), bairro: dec(c.bairro), photo: dec(c.photo),
+                        temperatura: dec(c.temperatura) || 'morno'
+                    };
+                });
+                localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
+                renderList();
+            }
+        } catch(e) {}
+    }
+    init();
+</script>
+</body>
+</html>

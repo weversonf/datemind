@@ -1,18 +1,20 @@
 # Datemind
 
-O Datemind é um CRM pessoal de encontros que funciona como aplicação estática no navegador. A versão atual usa `localStorage` para os contatos e `sessionStorage` para a chave de IA. O modo padrão é **local-only**: nenhum dado de contato é enviado para a internet até que uma URL de sincronização seja configurada explicitamente.
+O Datemind é um CRM pessoal de encontros que funciona como aplicação estática no navegador. A versão atual usa `localStorage` para os contatos e `sessionStorage` para a chave de IA. O modo padrão está ligado ao endpoint histórico da planilha Google do projeto; o modo local pode ser reativado apagando a URL no painel de configurações.
 
 ## Executar
 
 Abra `index.html` no navegador. Não há dependência externa obrigatória para iniciar a aplicação. A função de notas de voz requer um navegador com suporte a `SpeechRecognition` e uma chave configurada pelo painel de configurações.
 
-## Sincronização opcional
+## Sincronização com a planilha
 
-Para ativar sincronização, abra o painel de configurações e informe uma URL HTTPS em **Sincronização remota opcional**. O endpoint precisa autenticar o utilizador, autorizar o acesso à sua própria coleção e validar o corpo recebido. A aplicação envia JSON em texto simples com `syncVersion: 2`; ela não tenta cifrar dados no cliente, porque uma chave embutida no JavaScript não é um segredo.
+A aplicação está configurada para ler a planilha histórica pelo endpoint do Google Apps Script associado ao projeto. Ao abrir o `index.html`, ela faz um `GET`, converte `fonte`, `fase` e `status` para o modelo atual e mescla os registros com o cache local sem apagar contactos locais. O estado exibido no cabeçalho informa quantos registros foram lidos.
 
-O endpoint deve aceitar `POST` com `action: "update"` ou `action: "delete"` e responder com status HTTP de sucesso. Um `GET` pode retornar um array de registros. Falhas de rede mantêm as alterações localmente numa fila e fazem nova tentativa quando a aplicação for aberta ou a sincronização for reconfigurada.
+Ao criar ou editar um contacto, o Datemind envia um `POST` com `action: "update"`; ao apagar, envia `action: "delete"`. As colunas adicionais da planilha são preservadas mesmo quando não aparecem na interface. Falhas de rede mantêm as alterações localmente numa fila e fazem nova tentativa na próxima abertura.
 
-> A sincronização remota não deve apontar para uma URL pública sem autenticação. Para dados pessoais, prefira um backend autenticado com autorização por utilizador e transporte HTTPS.
+Para desligar a planilha e trabalhar apenas no dispositivo, abra as configurações, remova a URL e salve. Para substituir o endpoint, informe outra URL HTTPS compatível com o mesmo contrato.
+
+> Atenção: o endpoint histórico é público e não oferece autenticação por utilizador. Qualquer pessoa que tenha acesso à URL pode potencialmente ler ou alterar os dados, dependendo da configuração do Google Apps Script. Para uso real, prefira migrar para um backend autenticado com autorização por utilizador e transporte HTTPS.
 
 ## Importação e exportação
 

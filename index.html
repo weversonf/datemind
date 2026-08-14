@@ -527,7 +527,7 @@
 <div class="modal-overlay" id="settingsModal">
     <div class="modal" style="max-width: 440px;">
         <h2 style="margin-bottom: 6px; font-weight: 800; font-size: 1.35rem;">Notas de voz e sincronização</h2>
-        <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador e é enviada diretamente ao provedor escolhido. A sincronização remota é opcional e fica desativada por padrão.</p>
+        <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador. A planilha original do Datemind está ligada por padrão; o endpoint antigo não oferece autenticação por utilizador.</p>
 
         <div class="settings-grid">
             <span class="settings-label">Provedor</span>
@@ -560,7 +560,9 @@
     const PERSISTED_CONFIG_STORAGE_KEY = 'datemind_settings';
     const SESSION_CONFIG_STORAGE_KEY = 'datemind_session';
     const SYNC_QUEUE_STORAGE_KEY = 'contact_hub_sync_queue';
-    const LEGACY_SYNC_URL = '';
+    // Endpoint histórico do Google Apps Script associado a esta base do Datemind.
+    // A URL não é uma credencial: o endpoint antigo não oferece autenticação por utilizador.
+    const LEGACY_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec';
     const STATUS_VALUES = ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'];
     const TEMPERATURE_VALUES = ['frio', 'morno', 'quente'];
 
@@ -592,7 +594,10 @@
             nextActionAt: c.nextActionAt || '',
             createdAt: c.createdAt || new Date().toISOString(),
             updatedAt: c.updatedAt || new Date().toISOString(),
-            voiceNotes: Array.isArray(c.voiceNotes) ? c.voiceNotes : []
+            voiceNotes: Array.isArray(c.voiceNotes) ? c.voiceNotes : [],
+            legacyPhase: String(c.legacyPhase || c.fase || '').trim(),
+            legacyFields: c.legacyFields && typeof c.legacyFields === 'object' ? c.legacyFields : {},
+            legacyEncrypted: c.legacyEncrypted && typeof c.legacyEncrypted === 'object' ? c.legacyEncrypted : {}
         };
     }
 
@@ -622,7 +627,7 @@
         return `${day}/${month}/${year}`;
     }
 
-    // O modo padrão é local-only. A sincronização remota só é usada após configuração explícita.
+    // A aplicação inicia ligada à planilha histórica; o utilizador pode limpar a URL para voltar ao modo local.
     function getSyncUrl() {
         const cfg = loadAiConfig();
         const url = (cfg.syncUrl || LEGACY_SYNC_URL || '').trim();
@@ -680,7 +685,7 @@
         setProvider(cfg.provider || 'anthropic');
         document.getElementById('in-apikey').value = cfg.apiKey || '';
         document.getElementById('in-model').value = cfg.model || '';
-        document.getElementById('in-sync-url').value = cfg.syncUrl || '';
+        document.getElementById('in-sync-url').value = cfg.syncUrl || LEGACY_SYNC_URL;
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -948,21 +953,42 @@
         }
     }
 
+    const SHEET_PHASE_BY_STATUS = {
+        conheci: 'Orientativo',
+        conversando: 'Negociação',
+        agendado: 'Fechado',
+        fiquei: 'Fechado',
+        intimidade: 'Fechado',
+        recorrente: 'Fechado'
+    };
+    const SHEET_TEMPERATURE_BY_VALUE = { frio: 'Frio', morno: 'Morno', quente: 'Quente' };
+
+    function sheetValue(c, field) {
+        const value = c[field] || '';
+        return value || c.legacyEncrypted?.[field] || '';
+    }
+
     function buildSyncPayload(c, action = 'update') {
         if (action === 'delete') return { action, id: c.id };
+        const phase = c.legacyPhase && !Object.values(SHEET_PHASE_BY_STATUS).includes(c.legacyPhase)
+            ? c.legacyPhase
+            : (SHEET_PHASE_BY_STATUS[c.status] || c.legacyPhase || 'Orientativo');
         return {
             action,
-            syncVersion: 2,
+            syncVersion: 3,
             id: c.id,
-            nome: c.nome,
-            status: c.status,
-            origin: c.origin,
-            whatsapp: c.whatsapp,
-            instagram: c.instagram,
-            notes: c.notes,
-            idade: c.idade,
-            bairro: c.bairro,
-            photo: c.photo,
+            ...c.legacyFields,
+            nome: sheetValue(c, 'nome'),
+            fonte: sheetValue(c, 'origin'),
+            fase: phase,
+            status: SHEET_TEMPERATURE_BY_VALUE[c.temperatura] || 'Morno',
+            origin: sheetValue(c, 'origin'),
+            whatsapp: sheetValue(c, 'whatsapp'),
+            instagram: sheetValue(c, 'instagram'),
+            notes: sheetValue(c, 'notes'),
+            idade: sheetValue(c, 'idade'),
+            bairro: sheetValue(c, 'bairro'),
+            photo: sheetValue(c, 'photo'),
             temperatura: c.temperatura,
             lastContactAt: c.lastContactAt,
             nextActionAt: c.nextActionAt,
@@ -1358,6 +1384,92 @@
         return typeof value === 'string' && value.startsWith('U2FsdGVk');
     }
 
+    function mapSheetPhaseToStatus(phase) {
+        const p = String(phase || '').trim().toLowerCase();
+        if (p === 'negociação' || p === 'negociacao') return 'conversando';
+        if (p === 'fechado') return 'agendado';
+        return 'conheci';
+    }
+
+    function mapSheetTemperature(value) {
+        const v = String(value || '').trim().toLowerCase();
+        if (v === 'frio') return 'frio';
+        if (v === 'quente') return 'quente';
+        return 'morno';
+    }
+
+    function parseRemoteVoiceNotes(value) {
+        if (!value) return [];
+        if (Array.isArray(value)) return value;
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function normalizeRemoteContact(raw) {
+        const source = raw || {};
+        const encryptedFields = {};
+        const legacyFields = {};
+        ['favorito', 'profissao', 'formacao', 'cidade', 'estado', 'bebe', 'fuma', 'pets', 'sexo', 'qtde_filhos', 'idade_filhos'].forEach(field => {
+            if (source[field] !== undefined) legacyFields[field] = source[field];
+        });
+        ['nome', 'fonte', 'origin', 'whatsapp', 'instagram', 'notes', 'idade', 'bairro', 'photo'].forEach(field => {
+            if (hasLegacyEncryptedValue(source[field])) {
+                encryptedFields[field === 'fonte' ? 'origin' : field] = source[field];
+            }
+        });
+        const rawPhase = String(source.fase || '').trim();
+        const sourceStatus = String(source.status || '').trim().toLowerCase();
+        return normalizeContact({
+            id: source.id,
+            nome: hasLegacyEncryptedValue(source.nome) ? '' : source.nome,
+            idade: hasLegacyEncryptedValue(source.idade) ? '' : source.idade,
+            bairro: hasLegacyEncryptedValue(source.bairro) ? '' : source.bairro,
+            status: STATUS_VALUES.includes(sourceStatus) ? sourceStatus : mapSheetPhaseToStatus(rawPhase),
+            temperatura: mapSheetTemperature(source.temperatura || source.status),
+            origin: hasLegacyEncryptedValue(source.origin || source.fonte) ? '' : (source.origin || source.fonte || ''),
+            photo: hasLegacyEncryptedValue(source.photo) ? '' : (source.photo || ''),
+            whatsapp: hasLegacyEncryptedValue(source.whatsapp) ? '' : (source.whatsapp || ''),
+            instagram: hasLegacyEncryptedValue(source.instagram) ? '' : (source.instagram || ''),
+            notes: hasLegacyEncryptedValue(source.notes) ? '' : (source.notes || ''),
+            lastContactAt: source.lastContactAt || '',
+            nextActionAt: source.nextActionAt || '',
+            createdAt: source.createdAt || '',
+            updatedAt: source.updatedAt || '',
+            voiceNotes: parseRemoteVoiceNotes(source.notasvoz || source.voiceNotes),
+            legacyPhase: rawPhase,
+            legacyFields,
+            legacyEncrypted: encryptedFields
+        });
+    }
+
+    function mergeRemoteContacts(remoteContacts) {
+        const byId = new Map(remoteContacts.map(c => [String(c.id), c]));
+        contacts.forEach(local => {
+            const remote = byId.get(String(local.id));
+            if (!remote) {
+                byId.set(String(local.id), local);
+                return;
+            }
+            const localValues = Object.fromEntries(Object.entries(local).filter(([key, value]) => {
+                if (key === 'id' || key === 'legacyEncrypted' || key === 'legacyFields' || key === 'voiceNotes') return false;
+                return value !== '' && value !== null && value !== undefined;
+            }));
+            byId.set(String(local.id), normalizeContact({
+                ...remote,
+                ...localValues,
+                voiceNotes: local.voiceNotes?.length ? local.voiceNotes : remote.voiceNotes,
+                legacyFields: { ...(remote.legacyFields || {}), ...(local.legacyFields || {}) },
+                legacyEncrypted: { ...(remote.legacyEncrypted || {}), ...(local.legacyEncrypted || {}) }
+            }));
+        });
+        contacts = Array.from(byId.values()).map(normalizeContact).filter(c => c.nome);
+        persistContacts();
+    }
+
     async function init() {
         try { localStorage.removeItem('ai_config'); } catch (e) {}
         contacts = contacts.map(normalizeContact).filter(c => c.nome);
@@ -1372,26 +1484,17 @@
             return;
         }
 
-        setSyncStatus('busy', 'A carregar…');
+        setSyncStatus('busy', 'A carregar planilha…');
         try {
             const res = await fetch(syncUrl, { credentials: 'omit' });
             if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`);
             const data = await res.json();
             if (!Array.isArray(data)) throw new Error('Resposta remota inválida.');
-            const legacy = data.some(c => Object.values(c || {}).some(hasLegacyEncryptedValue));
-            if (legacy) {
-                setSyncStatus('err', 'Migração necessária');
-                showToast('A fonte remota contém dados do formato criptografado antigo. Eles não foram sobrescritos.', true);
-                return;
-            }
-            const remoteContacts = data.map(normalizeContact).filter(c => c.nome);
-            if (remoteContacts.length > 0 && contacts.length === 0) {
-                contacts = remoteContacts;
-                persistContacts();
-            }
+            const remoteContacts = data.map(normalizeRemoteContact).filter(c => c.nome);
+            mergeRemoteContacts(remoteContacts);
             await flushSyncQueue();
             renderList(); renderKanban();
-            setSyncStatus('ok', 'Sincronizado');
+            setSyncStatus('ok', `Planilha · ${remoteContacts.length} registos`);
         } catch (e) {
             setSyncStatus('err', 'Offline — dados locais');
             showToast('Não foi possível sincronizar; os dados locais continuam disponíveis.', true);

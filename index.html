@@ -254,6 +254,23 @@
         .contact-total { align-self: flex-end; padding: 9px 11px; color: var(--plum); border: 1px solid #e4dbe5; border-radius: 999px; background: #fbf8fb; font-size: .68rem; font-weight: 800; white-space: nowrap; }
         .search-field { position: relative; margin-bottom: 17px; }
         .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-52%); color: var(--muted); font-size: 1.15rem; pointer-events: none; }
+        .bulk-bar { display: none; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 10px 12px; color: var(--ink-soft); border: 1px solid #e3d6e3; border-radius: 14px; background: #fbf8fb; box-shadow: var(--shadow-sm); }
+        .bulk-bar.active { display: flex; }
+        .bulk-summary { display: flex; align-items: center; gap: 7px; min-width: max-content; font-size: .72rem; }
+        .bulk-summary strong { color: var(--plum); font-size: .82rem; }
+        .bulk-controls { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
+        .bulk-select { min-height: 35px; padding: 7px 28px 7px 10px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: .69rem; font-weight: 700; }
+        .bulk-apply, .bulk-select-all, .bulk-clear { min-height: 35px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 9px; background: #fff; cursor: pointer; font-size: .68rem; font-weight: 800; transition: .18s ease; }
+        .bulk-apply { color: #fff; border-color: var(--plum); background: var(--plum); }
+        .bulk-apply:hover { background: var(--plum-dark); }
+        .bulk-select-all, .bulk-clear { color: var(--plum); }
+        .bulk-select-all:hover, .bulk-clear:hover { border-color: #cfc4d0; background: #fdfafd; }
+        .bulk-clear { padding: 3px 6px; min-height: 24px; font-size: .62rem; }
+        .bulk-select:focus-visible, .bulk-apply:focus-visible, .bulk-select-all:focus-visible, .bulk-clear:focus-visible, .select-contact:focus-visible { outline: 3px solid rgba(94,60,93,.24); outline-offset: 2px; }
+        .select-control { flex: 0 0 auto; width: 22px; display: grid; place-items: center; }
+        .select-contact { width: 17px; height: 17px; accent-color: var(--plum); cursor: pointer; }
+        .list-item.is-selected { border-color: #c7b0c8; background: #fcf8fc; box-shadow: 0 0 0 2px rgba(94,60,93,.08), var(--shadow-sm); }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
         #searchInput { width: 100%; min-height: 48px; padding: 0 18px 0 42px !important; color: var(--ink) !important; border: 1px solid var(--line) !important; border-radius: 14px !important; outline: none; background: rgba(255,255,255,.9) !important; box-shadow: var(--shadow-sm); font-size: .8rem; transition: .2s ease; }
         #searchInput::placeholder { color: #a3a9b1; }
         #searchInput:focus { border-color: #c9b5ca !important; box-shadow: 0 0 0 4px rgba(94,60,93,.09); }
@@ -346,6 +363,9 @@
             .main-header { align-items: flex-start; flex-direction: column; gap: 12px; }
             .contact-total { align-self: auto; }
             .list-item { min-height: 74px; padding: 12px; gap: 11px; }
+            .bulk-bar { align-items: stretch; flex-direction: column; }
+            .bulk-controls { justify-content: stretch; }
+            .bulk-controls > * { flex: 1 1 auto; }
             .avatar { width: 43px; height: 43px; border-radius: 13px; }
             .contact-row { gap: 7px; }
             .contact-origin { max-width: 130px; }
@@ -430,7 +450,31 @@
             <span class="search-icon" aria-hidden="true">⌕</span>
             <input type="search" id="searchInput" placeholder="Pesquisar por nome ou bairro" aria-label="Pesquisar contactos por nome ou bairro" oninput="renderList()">
         </div>
-        <div id="contactList"></div>
+        <div class="bulk-bar" id="bulkBar" aria-live="polite">
+            <div class="bulk-summary"><strong id="bulkCount">0</strong><span>selecionados</span><button class="bulk-clear" type="button" onclick="clearSelection()">Limpar</button></div>
+            <div class="bulk-controls">
+                <button class="bulk-select-all" id="bulkSelectAll" type="button" onclick="toggleAllVisible()">Selecionar visíveis</button>
+                <label class="sr-only" for="bulk-status">Alterar fase</label>
+                <select class="bulk-select" id="bulk-status" aria-label="Alterar fase dos contactos selecionados">
+                    <option value="">Alterar fase…</option>
+                    <option value="conheci">Conheci</option>
+                    <option value="conversando">Conversando</option>
+                    <option value="agendado">Date marcado</option>
+                    <option value="fiquei">Fiquei</option>
+                    <option value="intimidade">Intimidade</option>
+                    <option value="recorrente">Recorrente</option>
+                </select>
+                <label class="sr-only" for="bulk-temperature">Alterar temperatura</label>
+                <select class="bulk-select" id="bulk-temperature" aria-label="Alterar temperatura dos contactos selecionados">
+                    <option value="">Alterar temperatura…</option>
+                    <option value="frio">Frio</option>
+                    <option value="morno">Morno</option>
+                    <option value="quente">Quente</option>
+                </select>
+                <button class="bulk-apply" type="button" onclick="applyBulkUpdate()">Aplicar alterações</button>
+            </div>
+        </div>
+        <div id="contactList" role="list" aria-label="Lista de contactos"></div>
     </main>
 
     <div class="kanban-container" id="kanbanView">
@@ -607,6 +651,7 @@
     let syncQueue = readJsonStorage(localStorage, SYNC_QUEUE_STORAGE_KEY, []) || [];
     let currentAlpha = 'All';
     let editingId = null;
+    const selectedIds = new Set();
 
     // Configuração de exibição da temperatura
     const tempConfig = {
@@ -1141,17 +1186,107 @@
         renderList(); renderKanban();
     }
 
-    function renderList() {
-        const list = document.getElementById('contactList');
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        list.innerHTML = '';
-
-        const filtered = contacts.filter(c => {
+    function getVisibleContacts() {
+        const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        return contacts.filter(c => {
             const nome = c.nome || '';
             const m = `${nome} ${c.bairro || ''}`.toLowerCase().includes(query);
             const init = nome.charAt(0).toUpperCase();
             return m && (currentAlpha === 'All' || init === currentAlpha);
-        }).reverse();
+        });
+    }
+
+    function updateBulkBar() {
+        const bar = document.getElementById('bulkBar');
+        const count = document.getElementById('bulkCount');
+        const selectAll = document.getElementById('bulkSelectAll');
+        if (!bar || !count || !selectAll) return;
+        const visible = getVisibleContacts();
+        const selectedCount = selectedIds.size;
+        const allVisibleSelected = visible.length > 0 && visible.every(c => selectedIds.has(String(c.id)));
+        count.textContent = selectedCount;
+        bar.classList.toggle('active', selectedCount > 0);
+        bar.setAttribute('aria-hidden', String(selectedCount === 0));
+        selectAll.textContent = allVisibleSelected ? 'Desmarcar visíveis' : 'Selecionar visíveis';
+    }
+
+    function setContactSelected(id, checked) {
+        const key = String(id);
+        if (checked) selectedIds.add(key);
+        else selectedIds.delete(key);
+        document.querySelectorAll('#contactList .list-item').forEach(item => {
+            if (item.dataset.contactId !== key) return;
+            item.classList.toggle('is-selected', checked);
+            item.setAttribute('aria-selected', String(checked));
+            const checkbox = item.querySelector('.select-contact');
+            if (checkbox) checkbox.checked = checked;
+        });
+        updateBulkBar();
+    }
+
+    function toggleAllVisible() {
+        const visible = getVisibleContacts();
+        const allSelected = visible.length > 0 && visible.every(c => selectedIds.has(String(c.id)));
+        visible.forEach(c => {
+            const key = String(c.id);
+            if (allSelected) selectedIds.delete(key);
+            else selectedIds.add(key);
+        });
+        renderList();
+    }
+
+    function clearSelection() {
+        selectedIds.clear();
+        renderList();
+    }
+
+    async function applyBulkUpdate() {
+        const status = document.getElementById('bulk-status')?.value || '';
+        const temperatura = document.getElementById('bulk-temperature')?.value || '';
+        if (!status && !temperatura) {
+            showToast('Escolhe uma fase ou temperatura para aplicar.', true);
+            return;
+        }
+        const selected = contacts.filter(c => selectedIds.has(String(c.id)));
+        const changed = selected.filter(c => (status && c.status !== status) || (temperatura && c.temperatura !== temperatura));
+        if (changed.length === 0) {
+            showToast('Os contactos já têm esses valores.');
+            return;
+        }
+        const now = new Date().toISOString();
+        const updated = changed.map(c => normalizeContact({
+            ...c,
+            status: status || c.status,
+            temperatura: temperatura || c.temperatura,
+            updatedAt: now
+        }));
+        const byId = new Map(updated.map(c => [String(c.id), c]));
+        contacts = contacts.map(c => byId.get(String(c.id)) || c);
+        persistContacts();
+        renderList();
+        renderKanban();
+        updateUI();
+
+        if (getSyncUrl()) {
+            updated.forEach(c => queueOperation(buildSyncPayload(c)));
+            await flushSyncQueue();
+        } else {
+            setSyncStatus('ok', 'Local — navegador');
+        }
+        selectedIds.clear();
+        const statusSelect = document.getElementById('bulk-status');
+        const temperatureSelect = document.getElementById('bulk-temperature');
+        if (statusSelect) statusSelect.value = '';
+        if (temperatureSelect) temperatureSelect.value = '';
+        renderList();
+        showToast(`${changed.length} contacto(s) atualizado(s) em lote.`);
+    }
+
+    function renderList() {
+        const list = document.getElementById('contactList');
+        list.innerHTML = '';
+
+        const filtered = getVisibleContacts().reverse();
 
         if (filtered.length === 0) {
             list.innerHTML = `<div class="empty-state">
@@ -1172,15 +1307,19 @@
             const nextAction = formatDateLabel(c.nextActionAt);
             const origin = escapeHtml(c.origin) || 'Contacto pessoal';
 
+            const selected = selectedIds.has(String(c.id));
             const item = document.createElement('div');
-            item.className = 'list-item';
+            item.className = `list-item${selected ? ' is-selected' : ''}`;
+            item.dataset.contactId = String(c.id);
             item.tabIndex = 0;
-            item.setAttribute('role', 'button');
+            item.setAttribute('role', 'listitem');
+            item.setAttribute('aria-selected', String(selected));
             item.setAttribute('aria-label', `Abrir contacto de ${nome}`);
             item.style.setProperty('--status-color', `var(--color-${status})`);
             item.onclick = () => openEdit(c.id);
             item.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEdit(c.id); } };
             item.innerHTML = `
+                <div class="select-control"><input class="select-contact" type="checkbox" aria-label="Selecionar ${escapeHtml(nome)}" ${selected ? 'checked' : ''}></div>
                 <div class="contact-avatar-wrap"><img src="${avatar}" class="avatar" alt="Foto de ${escapeHtml(nome)}" onerror="this.onerror=null;this.src='${fallbackAvatar}'"></div>
                 <div class="contact-content">
                     <div class="contact-row">
@@ -1198,8 +1337,12 @@
                 </div>
                 <span class="card-chevron" aria-hidden="true">›</span>
             `;
+            const checkbox = item.querySelector('.select-contact');
+            checkbox.addEventListener('click', event => event.stopPropagation());
+            checkbox.addEventListener('change', event => setContactSelected(c.id, event.target.checked));
             list.appendChild(item);
         });
+        updateBulkBar();
         updateUI();
     }
 

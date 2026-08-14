@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DATEMIND v012</title>
-    <script src="lib/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
@@ -126,6 +125,9 @@
         .provider-toggle button { flex: 1; padding: 10px; background: var(--bg-deep); border: 1px solid var(--border); color: var(--text-dim); border-radius: 10px; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
         .provider-toggle button.active { border-color: var(--accent); color: white; }
 
+        .field-label { display: block; color: var(--text-dim); font-size: 0.68rem; font-weight: 700; margin: 4px 0 6px; }
+        .modal input[type="date"] { color-scheme: dark; }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-deep); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -174,7 +176,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:14px;">
         <div class="sync-status" id="syncStatus"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">A carregar...</span></div>
-        <button class="icon-btn" title="Configurar IA para análise das notas de voz" onclick="openSettings()">⚙</button>
+        <button class="icon-btn" title="Configurar IA e sincronização" aria-label="Configurar IA e sincronização" onclick="openSettings()">⚙</button>
     </div>
 </header>
 <div class="toast" id="toast"></div>
@@ -243,7 +245,8 @@
 <div class="modal-overlay" id="modal">
     <div class="modal">
         <h2 style="margin-bottom: 20px; font-weight: 800; font-size: 1.2rem;">FICHA DE INTELIGÊNCIA</h2>
-        <input type="text" id="in-nome" placeholder="Nome completo">
+        <label class="field-label" for="in-nome">Nome completo *</label>
+        <input type="text" id="in-nome" placeholder="Nome completo" autocomplete="name" required>
         <div class="form-row">
             <input type="number" id="in-idade" placeholder="Idade">
             <input type="text" id="in-bairro" placeholder="Bairro / Localização">
@@ -269,12 +272,20 @@
             <input type="tel" id="in-whatsapp" placeholder="WhatsApp">
             <input type="text" id="in-instagram" placeholder="Instagram">
         </div>
-        <textarea id="in-notes" rows="3" placeholder="Gostos, restrições, observações..."></textarea>
+        <textarea id="in-notes" rows="3" placeholder="Gostos, restrições, observações..." aria-label="Observações"></textarea>
+        <div class="form-row">
+            <label class="field-label" for="in-last-contact">Último contacto</label>
+            <label class="field-label" for="in-next-action">Próxima ação</label>
+        </div>
+        <div class="form-row">
+            <input type="date" id="in-last-contact" aria-label="Data do último contacto">
+            <input type="date" id="in-next-action" aria-label="Data da próxima ação">
+        </div>
 
         <div class="voice-section">
             <div class="voice-header">
                 <span>Notas de Voz</span>
-                <button type="button" class="icon-btn" title="Configurar IA" onclick="openSettings()" style="width:26px; height:26px; font-size:0.75rem;">⚙</button>
+                <button type="button" class="icon-btn" title="Configurar IA e sincronização" aria-label="Configurar IA e sincronização" onclick="openSettings()" style="width:26px; height:26px; font-size:0.75rem;">⚙</button>
             </div>
             <button type="button" class="mic-btn" id="micBtn" onclick="toggleRecording()">
                 <span class="mic-dot" id="micDot"></span>
@@ -296,7 +307,7 @@
 <div class="modal-overlay" id="settingsModal">
     <div class="modal" style="max-width: 440px;">
         <h2 style="margin-bottom: 6px; font-weight: 800; font-size: 1.2rem;">IA para Notas de Voz</h2>
-        <p class="settings-hint" style="margin-bottom: 16px;">Usada para transformar a transcrição da tua voz em pontos principais. A tua chave fica guardada só no teu navegador (localStorage) — nunca é enviada para o DATEMIND, só diretamente para o provedor escolhido.</p>
+        <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador e é enviada diretamente ao provedor escolhido. A sincronização remota é opcional e fica desativada por padrão.</p>
 
         <div class="settings-grid">
             <span class="settings-label">Provedor</span>
@@ -310,7 +321,11 @@
 
             <span class="settings-label">Modelo</span>
             <input type="text" id="in-model" placeholder="Ex: claude-sonnet-5">
-            <span class="settings-hint" id="modelHint"></span>
+                <span class="settings-hint" id="modelHint"></span>
+
+            <span class="settings-label">Sincronização remota opcional</span>
+            <input type="url" id="in-sync-url" placeholder="https://.../exec" autocomplete="off">
+            <span class="settings-hint">Deixe vazio para usar somente este navegador. O endpoint remoto deve exigir autenticação e aplicar autorização por utilizador; a app não assume que uma URL pública é segura.</span>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 18px;">
@@ -321,10 +336,48 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec";
-    const SECRET_KEY = "WeversonCRM_2026_!@#"; 
+    const CONTACTS_STORAGE_KEY = 'contact_hub_cache';
+    const PERSISTED_CONFIG_STORAGE_KEY = 'datemind_settings';
+    const SESSION_CONFIG_STORAGE_KEY = 'datemind_session';
+    const SYNC_QUEUE_STORAGE_KEY = 'contact_hub_sync_queue';
+    const LEGACY_SYNC_URL = '';
+    const STATUS_VALUES = ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'];
+    const TEMPERATURE_VALUES = ['frio', 'morno', 'quente'];
 
-    let contacts = JSON.parse(localStorage.getItem('contact_hub_cache')) || [];
+    function readJsonStorage(storage, key, fallback) {
+        try {
+            const value = storage.getItem(key);
+            return value ? JSON.parse(value) : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function normalizeContact(raw) {
+        const c = raw || {};
+        const status = c.status === 'transei' ? 'intimidade' : c.status;
+        return {
+            id: c.id || Date.now() + Math.random(),
+            nome: String(c.nome || '').trim(),
+            idade: c.idade || '',
+            bairro: c.bairro || '',
+            status: STATUS_VALUES.includes(status) ? status : 'conheci',
+            temperatura: TEMPERATURE_VALUES.includes(c.temperatura) ? c.temperatura : 'morno',
+            origin: c.origin || '',
+            photo: c.photo || '',
+            whatsapp: c.whatsapp || '',
+            instagram: c.instagram || '',
+            notes: c.notes || '',
+            lastContactAt: c.lastContactAt || '',
+            nextActionAt: c.nextActionAt || '',
+            createdAt: c.createdAt || new Date().toISOString(),
+            updatedAt: c.updatedAt || new Date().toISOString(),
+            voiceNotes: Array.isArray(c.voiceNotes) ? c.voiceNotes : []
+        };
+    }
+
+    let contacts = (readJsonStorage(localStorage, CONTACTS_STORAGE_KEY, []) || []).map(normalizeContact).filter(c => c.nome);
+    let syncQueue = readJsonStorage(localStorage, SYNC_QUEUE_STORAGE_KEY, []) || [];
     let currentAlpha = 'All';
     let editingId = null;
 
@@ -335,17 +388,26 @@
         'quente': { label: '🔥 Quente', class: 't-quente' }
     };
 
-    if (typeof CryptoJS === 'undefined') {
-        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#08090a;color:#ef4444;font-family:Inter,sans-serif;padding:40px;text-align:center;"><div><h1 style="font-size:1.5rem;margin-bottom:16px;">Erro: CryptoJS não carregou</h1><p style="color:#94a3b8;font-size:0.9rem;">O ficheiro <strong>lib/crypto-js.min.js</strong> não foi encontrado ou não pôde ser carregado.<br>Verifica que a pasta <strong>lib/</strong> existe ao lado deste ficheiro.</p></div></div>';
-    }
-    const enc = (t) => t ? CryptoJS.AES.encrypt(t.toString(), SECRET_KEY).toString() : "";
-    const dec = (t) => {
-        if (!t || !t.toString().startsWith('U2FsdGVk')) return t || "";
-        try { return CryptoJS.AES.decrypt(t.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8); } catch (e) {
-            if (typeof CryptoJS === 'undefined') return t || "";
-            return "";
+    // O modo padrão é local-only. A sincronização remota só é usada após configuração explícita.
+    function getSyncUrl() {
+        const cfg = loadAiConfig();
+        const url = (cfg.syncUrl || LEGACY_SYNC_URL || '').trim();
+        if (!url) return '';
+        try {
+            const parsed = new URL(url);
+            return parsed.protocol === 'https:' ? parsed.href : '';
+        } catch (e) {
+            return '';
         }
-    };
+    }
+
+    function persistContacts() {
+        localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(contacts));
+    }
+
+    function persistSyncQueue() {
+        localStorage.setItem(SYNC_QUEUE_STORAGE_KEY, JSON.stringify(syncQueue));
+    }
 
     // --- Helpers de feedback (toast + estado de sincronização) ---
     let toastTimer = null;
@@ -374,7 +436,9 @@
     let selectedProvider = 'anthropic';
 
     function loadAiConfig() {
-        try { return JSON.parse(localStorage.getItem('ai_config')) || {}; } catch { return {}; }
+        const persisted = readJsonStorage(localStorage, PERSISTED_CONFIG_STORAGE_KEY, {});
+        const session = readJsonStorage(sessionStorage, SESSION_CONFIG_STORAGE_KEY, {});
+        return { ...persisted, ...session };
     }
 
     function openSettings() {
@@ -382,6 +446,7 @@
         setProvider(cfg.provider || 'anthropic');
         document.getElementById('in-apikey').value = cfg.apiKey || '';
         document.getElementById('in-model').value = cfg.model || '';
+        document.getElementById('in-sync-url').value = cfg.syncUrl || '';
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -401,13 +466,31 @@
         }
     }
 
-    function saveAiSettings() {
+    async function saveAiSettings() {
         const apiKey = document.getElementById('in-apikey').value.trim();
         const model = document.getElementById('in-model').value.trim();
-        if (!apiKey) { showToast('Cola a tua chave de API antes de guardar.', true); return; }
-        localStorage.setItem('ai_config', JSON.stringify({ provider: selectedProvider, apiKey, model }));
+        const syncUrl = document.getElementById('in-sync-url').value.trim();
+        if (syncUrl) {
+            try {
+                const parsed = new URL(syncUrl);
+                if (parsed.protocol !== 'https:') throw new Error('HTTPS obrigatório');
+            } catch (e) {
+                showToast('A URL de sincronização deve ser HTTPS e válida.', true);
+                return;
+            }
+        }
+        localStorage.setItem(PERSISTED_CONFIG_STORAGE_KEY, JSON.stringify({ provider: selectedProvider, model, syncUrl }));
+        sessionStorage.setItem(SESSION_CONFIG_STORAGE_KEY, JSON.stringify({ provider: selectedProvider, model, apiKey }));
+        if (syncUrl) {
+            contacts.forEach(c => queueOperation(buildSyncPayload(c)));
+            await flushSyncQueue();
+        } else {
+            syncQueue = [];
+            persistSyncQueue();
+            setSyncStatus('ok', 'Local — navegador');
+        }
         closeSettings();
-        showToast('Configuração de IA guardada neste navegador.');
+        showToast(syncUrl ? 'Configuração guardada; sincronização remota ativada.' : 'Modo local ativado neste navegador.');
     }
 
     async function analyzeWithAI(transcript) {
@@ -624,43 +707,108 @@
         const id = e.dataTransfer.getData("id");
         const newStatus = e.currentTarget.getAttribute('data-status');
         const idx = contacts.findIndex(c => String(c.id) === id);
-        if (idx > -1) {
+        if (idx > -1 && STATUS_VALUES.includes(newStatus)) {
             contacts[idx].status = newStatus;
-            saveAndSync(contacts[idx]);
+            await saveAndSync(contacts[idx]);
             renderKanban();
         }
     }
 
-    async function saveAndSync(c) {
-        localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
-        const p = {
-            action: "update", id: c.id, nome: enc(c.nome), status: enc(c.status),
-            origin: enc(c.origin), whatsapp: enc(c.whatsapp), instagram: enc(c.instagram),
-            notes: enc(c.notes), idade: enc(c.idade), bairro: enc(c.bairro), photo: enc(c.photo),
-            temperatura: enc(c.temperatura), // Nova linha de temperatura para o GSheets
-            notasvoz: enc(JSON.stringify(c.voiceNotes || [])) // Notas de voz (transcrição + pontos-chave) cifradas
+    function buildSyncPayload(c, action = 'update') {
+        if (action === 'delete') return { action, id: c.id };
+        return {
+            action,
+            syncVersion: 2,
+            id: c.id,
+            nome: c.nome,
+            status: c.status,
+            origin: c.origin,
+            whatsapp: c.whatsapp,
+            instagram: c.instagram,
+            notes: c.notes,
+            idade: c.idade,
+            bairro: c.bairro,
+            photo: c.photo,
+            temperatura: c.temperatura,
+            lastContactAt: c.lastContactAt,
+            nextActionAt: c.nextActionAt,
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt,
+            notasvoz: JSON.stringify(c.voiceNotes || [])
         };
-        setSyncStatus('busy', 'A sincronizar...');
+    }
+
+    function queueOperation(payload) {
+        const sameContact = op => String(op.id) === String(payload.id);
+        if (payload.action === 'delete') {
+            syncQueue = syncQueue.filter(op => !sameContact(op));
+        } else {
+            syncQueue = syncQueue.filter(op => !(sameContact(op) && op.action === 'update'));
+        }
+        syncQueue.push({ ...payload, queuedAt: new Date().toISOString() });
+        persistSyncQueue();
+    }
+
+    async function sendSyncOperation(payload) {
+        const syncUrl = getSyncUrl();
+        if (!syncUrl) return;
+        const response = await fetch(syncUrl, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            credentials: 'omit'
+        });
+        if (!response.ok) throw new Error(`Servidor respondeu ${response.status}`);
+    }
+
+    let isFlushingSync = false;
+    async function flushSyncQueue() {
+        const syncUrl = getSyncUrl();
+        if (!syncUrl || isFlushingSync || syncQueue.length === 0) {
+            if (!syncUrl) setSyncStatus('ok', 'Local — navegador');
+            return;
+        }
+        isFlushingSync = true;
+        setSyncStatus('busy', `A sincronizar ${syncQueue.length}…`);
         try {
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) });
+            while (syncQueue.length > 0) {
+                await sendSyncOperation(syncQueue[0]);
+                syncQueue.shift();
+                persistSyncQueue();
+            }
             setSyncStatus('ok', 'Sincronizado');
         } catch (e) {
-            setSyncStatus('err', 'Falha ao sincronizar');
-            showToast('Guardado localmente, mas não foi possível sincronizar com a planilha.', true);
+            setSyncStatus('err', 'Pendente — tentará novamente');
+            showToast('Alteração guardada localmente; a sincronização será tentada novamente.', true);
+        } finally {
+            isFlushingSync = false;
+        }
+    }
+
+    async function saveAndSync(c) {
+        const idx = contacts.findIndex(item => String(item.id) === String(c.id));
+        const now = new Date().toISOString();
+        const normalized = normalizeContact({ ...c, updatedAt: now });
+        if (idx >= 0) contacts[idx] = normalized;
+        else contacts.push(normalized);
+        persistContacts();
+        if (getSyncUrl()) {
+            queueOperation(buildSyncPayload(normalized));
+            await flushSyncQueue();
+        } else {
+            setSyncStatus('ok', 'Local — navegador');
         }
         updateUI();
     }
 
     async function deleteAndSync(id) {
+        const removed = contacts.find(c => String(c.id) === String(id));
         contacts = contacts.filter(c => String(c.id) !== String(id));
-        localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
-        setSyncStatus('busy', 'A apagar...');
-        try {
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) });
-            setSyncStatus('ok', 'Sincronizado');
-        } catch (e) {
-            setSyncStatus('err', 'Falha ao sincronizar');
-            showToast('Apagado localmente, mas não foi possível sincronizar com a planilha.', true);
+        persistContacts();
+        if (removed && getSyncUrl()) {
+            queueOperation(buildSyncPayload(removed, 'delete'));
+            await flushSyncQueue();
+        } else if (!getSyncUrl()) {
+            setSyncStatus('ok', 'Local — navegador');
         }
         renderList(); renderKanban();
     }
@@ -782,6 +930,8 @@
         document.getElementById('in-whatsapp').value = '';
         document.getElementById('in-instagram').value = '';
         document.getElementById('in-notes').value = '';
+        document.getElementById('in-last-contact').value = '';
+        document.getElementById('in-next-action').value = '';
     }
 
     function openModal() {
@@ -812,6 +962,8 @@
         document.getElementById('in-whatsapp').value = c.whatsapp || '';
         document.getElementById('in-instagram').value = c.instagram || '';
         document.getElementById('in-notes').value = c.notes || '';
+        document.getElementById('in-last-contact').value = c.lastContactAt || '';
+        document.getElementById('in-next-action').value = c.nextActionAt || '';
         document.getElementById('deleteBtn').style.display = 'block';
         document.getElementById('modal').style.display = 'flex';
         refreshVoiceSection();
@@ -825,7 +977,7 @@
             return;
         }
         const existing = editingId ? contacts.find(i => String(i.id) === String(editingId)) : null;
-        const c = {
+        const c = normalizeContact({
             id: editingId || Date.now(),
             nome: nome,
             idade: document.getElementById('in-idade').value,
@@ -837,15 +989,14 @@
             whatsapp: document.getElementById('in-whatsapp').value.trim(),
             instagram: document.getElementById('in-instagram').value.trim(),
             notes: document.getElementById('in-notes').value.trim(),
+            lastContactAt: document.getElementById('in-last-contact').value,
+            nextActionAt: document.getElementById('in-next-action').value,
+            createdAt: existing?.createdAt || new Date().toISOString(),
             voiceNotes: existing ? (existing.voiceNotes || []) : []
-        };
-        if(editingId) {
-            const idx = contacts.findIndex(i => String(i.id) === String(editingId));
-            contacts[idx] = c;
-        } else { contacts.push(c); }
+        });
         closeModal();
-        renderList(); renderKanban();
         await saveAndSync(c);
+        renderList(); renderKanban();
     }
 
     function handleDelete() {
@@ -859,17 +1010,16 @@
         showToast(`"${nome}" foi apagado.`);
     }
 
+    function csvEscape(value) {
+        const text = value == null ? '' : String(value);
+        return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
     function exportCSV() {
         if (contacts.length === 0) { showToast('Nenhum contacto para exportar.', true); return; }
-        const headers = ['id','nome','idade','bairro','status','temperatura','origin','photo','whatsapp','instagram','notes'];
-        const rows = contacts.map(c => headers.map(h => {
-            let val = c[h] || '';
-            if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
-                val = '"' + val.replace(/"/g, '""') + '"';
-            }
-            return val;
-        }).join(','));
-        const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+        const headers = ['id','nome','idade','bairro','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','createdAt','updatedAt'];
+        const rows = contacts.map(c => headers.map(h => csvEscape(c[h])).join(','));
+        const csv = '\uFEFF' + headers.join(',') + '\r\n' + rows.join('\r\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -879,85 +1029,113 @@
         showToast(contacts.length + ' contactos exportados para CSV.');
     }
 
-    function importCSV(event) {
+    function parseCSV(text) {
+        const rows = [];
+        let row = [];
+        let field = '';
+        let quoted = false;
+        const source = text.replace(/^\uFEFF/, '');
+        for (let i = 0; i < source.length; i++) {
+            const char = source[i];
+            const next = source[i + 1];
+            if (char === '"') {
+                if (quoted && next === '"') { field += '"'; i++; }
+                else { quoted = !quoted; }
+            } else if (char === ',' && !quoted) {
+                row.push(field); field = '';
+            } else if ((char === '\n' || char === '\r') && !quoted) {
+                if (char === '\r' && next === '\n') i++;
+                row.push(field); field = '';
+                if (row.some(value => value.trim() !== '')) rows.push(row);
+                row = [];
+            } else {
+                field += char;
+            }
+        }
+        if (field || row.length) {
+            row.push(field);
+            if (row.some(value => value.trim() !== '')) rows.push(row);
+        }
+        return rows;
+    }
+
+    async function importCSV(event) {
         const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const text = e.target.result.replace(/^\uFEFF/, '');
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-            if (lines.length < 2) { showToast('CSV vazio ou inválido.', true); return; }
-            const headers = lines[0].split(',').map(h => h.trim());
-            const expected = ['nome','status'];
-            if (!expected.every(h => headers.includes(h))) {
-                showToast('CSV deve ter colunas: nome, status, idade, bairro, ...', true);
-                return;
-            }
-            const imported = [];
-            for (let i = 1; i < lines.length; i++) {
-                const vals = lines[i].split(',').map(v => v.trim().replace(/^"(.*)"$/, '$1').replace(/""/g, '"'));
-                const row = {};
-                headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
-                if (!row.nome) continue;
-                row.id = row.id || Date.now() + i;
-                imported.push(row);
-            }
-            if (imported.length === 0) { showToast('Nenhum contacto válido no CSV.', true); return; }
-            const ok = confirm(`Importar ${imported.length} contacto(s)? Os atuais (${contacts.length}) serão SUBSTITUÍDOS.`);
-            if (!ok) return;
-            contacts = imported;
-            localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
-            renderList(); renderKanban();
-            setSyncStatus('busy', 'A sincronizar...');
-            for (const c of contacts) {
-                try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'update', id: c.id, nome: enc(c.nome), status: enc(c.status), origin: enc(c.origin), whatsapp: enc(c.whatsapp), instagram: enc(c.instagram), notes: enc(c.notes), idade: enc(c.idade), bairro: enc(c.bairro), photo: enc(c.photo), temperatura: enc(c.temperatura) }) }); } catch {}
-            }
-            setSyncStatus('ok', 'Sincronizado');
-            showToast(imported.length + ' contactos importados.');
-        };
-        reader.readAsText(file);
         event.target.value = '';
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const rows = parseCSV(text);
+            if (rows.length < 2) throw new Error('CSV vazio ou inválido.');
+            const headers = rows[0].map(h => h.trim());
+            if (!headers.includes('nome')) throw new Error('CSV deve conter a coluna nome.');
+            const imported = rows.slice(1).map(values => {
+                const row = {};
+                headers.forEach((header, index) => { row[header] = (values[index] || '').trim(); });
+                return normalizeContact({ ...row, id: row.id || `import-${Date.now()}-${Math.random().toString(36).slice(2,8)}` });
+            }).filter(c => c.nome);
+            if (imported.length === 0) throw new Error('Nenhum contacto válido no CSV.');
+
+            const ok = confirm(`Importar ${imported.length} contacto(s)? Os registros serão mesclados pela coluna id; nenhum contacto atual será apagado.`);
+            if (!ok) return;
+            const currentById = new Map(contacts.map(c => [String(c.id), c]));
+            imported.forEach(c => currentById.set(String(c.id), c));
+            contacts = Array.from(currentById.values()).map(normalizeContact);
+            persistContacts();
+            if (getSyncUrl()) {
+                imported.forEach(c => queueOperation(buildSyncPayload(c)));
+                await flushSyncQueue();
+            } else {
+                setSyncStatus('ok', 'Local — navegador');
+            }
+            renderList(); renderKanban();
+            showToast(`${imported.length} contacto(s) importado(s) sem apagar os atuais.`);
+        } catch (e) {
+            showToast(e.message || 'Não foi possível importar o CSV.', true);
+        }
+    }
+
+    function hasLegacyEncryptedValue(value) {
+        return typeof value === 'string' && value.startsWith('U2FsdGVk');
     }
 
     async function init() {
-        contacts = contacts.map(c => {
-            if(c.status === 'transei') c.status = 'intimidade';
-            if(!c.temperatura) c.temperatura = 'morno'; // Auto-define antigos como morno
-            return c;
-        });
-
+        try { localStorage.removeItem('ai_config'); } catch (e) {}
+        contacts = contacts.map(normalizeContact).filter(c => c.nome);
+        persistContacts();
         renderList();
-        setSyncStatus('busy', 'A carregar...');
-        try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            if(Array.isArray(data)) {
-                contacts = data.map(c => {
-                    let statusDecrypted = dec(c.status);
-                    if (statusDecrypted === 'transei') statusDecrypted = 'intimidade';
-                    
-                    let voiceNotes = [];
-                    try { voiceNotes = JSON.parse(dec(c.notasvoz) || '[]'); } catch { voiceNotes = []; }
+        renderKanban();
 
-                    return {
-                        id: c.id, nome: dec(c.nome), status: statusDecrypted, origin: dec(c.origin),
-                        whatsapp: dec(c.whatsapp), instagram: dec(c.instagram), notes: dec(c.notes),
-                        idade: dec(c.idade), bairro: dec(c.bairro), photo: dec(c.photo),
-                        temperatura: dec(c.temperatura) || 'morno',
-                        voiceNotes: voiceNotes
-                    };
-                });
-                localStorage.setItem('contact_hub_cache', JSON.stringify(contacts));
-                renderList();
-                renderKanban();
-                setSyncStatus('ok', 'Sincronizado');
-            } else {
-                setSyncStatus('err', 'Resposta inesperada da planilha');
+        const syncUrl = getSyncUrl();
+        if (!syncUrl) {
+            setSyncStatus('ok', 'Local — navegador');
+            if (syncQueue.length) showToast(`${syncQueue.length} alteração(ões) aguardam uma sincronização configurada.`);
+            return;
+        }
+
+        setSyncStatus('busy', 'A carregar…');
+        try {
+            const res = await fetch(syncUrl, { credentials: 'omit' });
+            if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`);
+            const data = await res.json();
+            if (!Array.isArray(data)) throw new Error('Resposta remota inválida.');
+            const legacy = data.some(c => Object.values(c || {}).some(hasLegacyEncryptedValue));
+            if (legacy) {
+                setSyncStatus('err', 'Migração necessária');
+                showToast('A fonte remota contém dados do formato criptografado antigo. Eles não foram sobrescritos.', true);
+                return;
             }
-        } catch(e) {
-            // Bug corrigido: falhas de rede eram engolidas em silêncio; agora avisamos e continuamos com a cache local
-            setSyncStatus('err', 'Offline — a usar dados locais');
-            showToast('Não foi possível ligar à planilha. A mostrar dados guardados localmente.', true);
+            const remoteContacts = data.map(normalizeContact).filter(c => c.nome);
+            if (remoteContacts.length > 0 && contacts.length === 0) {
+                contacts = remoteContacts;
+                persistContacts();
+            }
+            await flushSyncQueue();
+            renderList(); renderKanban();
+            setSyncStatus('ok', 'Sincronizado');
+        } catch (e) {
+            setSyncStatus('err', 'Offline — dados locais');
+            showToast('Não foi possível sincronizar; os dados locais continuam disponíveis.', true);
         }
     }
     init();

@@ -24,3 +24,9 @@ O modo Funil foi verificado com cartão preenchido e colunas vazias tratadas com
 O contacto usado apenas para validação visual foi removido com segurança ao final dos testes. Não foram alteradas configurações existentes.
 
 Após limpar os dados de teste, a página foi recarregada com zero contactos e o estado vazio permaneceu correto. A inspeção final do console não apresentou saídas ou erros.
+
+## Validação do arrastar e soltar
+
+Em 14/08/2026, o modo Funil foi aberto com os 62 contactos exibidos. O fluxo foi testado em memória com um contacto de teste: a fase mudou de `agendado` para `conheci` e foi restaurada para `agendado`. A requisição remota foi simulada como bem-sucedida, portanto nenhuma alteração real foi gravada na planilha durante o teste. O identificador usado foi `data-contact-id`, evitando o erro anterior de extrair o ID por `split('-')`.
+
+A validação final confirmou que as seis colunas possuem `dragover`, `dragleave` e `drop`; os cartões estão com `draggable=true`, `aria-grabbed=false` e `data-contact-id` estável. Nenhum erro foi observado no console durante o carregamento.

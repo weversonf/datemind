@@ -8,7 +8,7 @@ Abra `index.html` no navegador. Não há dependência externa obrigatória para 
 
 ## Sincronização com a planilha
 
-A aplicação está configurada para ler a planilha histórica pelo endpoint do Google Apps Script associado ao projeto. Ao abrir o `index.html`, ela faz um `GET`, converte `fonte`, `fase` e `status` para o modelo atual e mescla os registros com o cache local sem apagar contactos locais. O estado exibido no cabeçalho informa quantos registros foram lidos.
+A aplicação está configurada para ler a planilha histórica pelo endpoint do Google Apps Script associado ao projeto. Ao abrir o `index.html`, ela faz um `GET` com limite de 8 segundos, converte `fonte`, `fase` e `status` para o modelo atual e mescla os registros com o cache local sem apagar contactos locais. O estado exibido no cabeçalho informa quantos registros foram lidos; se a planilha estiver indisponível, o CRM mostra `Offline · N locais` ou `Planilha indisponível` em vez de permanecer carregando.
 
 Ao criar ou editar um contacto, o Datemind envia um `POST` com `action: "update"`; ao apagar, envia `action: "delete"`. As colunas adicionais da planilha são preservadas mesmo quando não aparecem na interface. Falhas de rede mantêm as alterações localmente numa fila e fazem nova tentativa na próxima abertura.
 

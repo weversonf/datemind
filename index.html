@@ -640,6 +640,21 @@
         }
     }
 
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                throw new Error('Tempo limite ao carregar a planilha.');
+            }
+            throw error;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
     function persistContacts() {
         localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(contacts));
     }
@@ -1479,14 +1494,14 @@
 
         const syncUrl = getSyncUrl();
         if (!syncUrl) {
-            setSyncStatus('ok', 'Local — navegador');
+            setSyncStatus('ok', contacts.length ? `Local · ${contacts.length} registos` : 'Local — navegador');
             if (syncQueue.length) showToast(`${syncQueue.length} alteração(ões) aguardam uma sincronização configurada.`);
             return;
         }
 
-        setSyncStatus('busy', 'A carregar planilha…');
+        setSyncStatus('busy', contacts.length ? `Local · ${contacts.length} · a sincronizar…` : 'A carregar planilha…');
         try {
-            const res = await fetch(syncUrl, { credentials: 'omit' });
+            const res = await fetchWithTimeout(syncUrl, { credentials: 'omit' });
             if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`);
             const data = await res.json();
             if (!Array.isArray(data)) throw new Error('Resposta remota inválida.');
@@ -1496,8 +1511,9 @@
             renderList(); renderKanban();
             setSyncStatus('ok', `Planilha · ${remoteContacts.length} registos`);
         } catch (e) {
-            setSyncStatus('err', 'Offline — dados locais');
-            showToast('Não foi possível sincronizar; os dados locais continuam disponíveis.', true);
+            const fallbackLabel = contacts.length ? `Offline · ${contacts.length} locais` : 'Planilha indisponível';
+            setSyncStatus('err', fallbackLabel);
+            showToast(`${e.message || 'Não foi possível sincronizar'} Os dados locais continuam disponíveis.`, true);
         }
     }
     init();

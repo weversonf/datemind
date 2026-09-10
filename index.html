@@ -573,7 +573,7 @@
 <div class="modal-overlay" id="settingsModal">
     <div class="modal" style="max-width: 440px;">
         <h2 style="margin-bottom: 6px; font-weight: 800; font-size: 1.35rem;">Notas de voz e sincronização</h2>
-        <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador. A planilha original do Datemind está ligada por padrão; o endpoint antigo não oferece autenticação por utilizador.</p>
+        <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador. Os contactos são sincronizados diretamente com o Firestore.</p>
 
         <div class="settings-grid">
             <span class="settings-label">Provedor</span>
@@ -630,8 +630,7 @@
     const PERSISTED_CONFIG_STORAGE_KEY = 'datemind_settings';
     const SESSION_CONFIG_STORAGE_KEY = 'datemind_session';
     const SYNC_QUEUE_STORAGE_KEY = 'contact_hub_sync_queue';
-    // Endpoint histórico do Google Apps Script associado a esta base do Datemind.
-    // A URL não é uma credencial: o endpoint antigo não oferece autenticação por utilizador.
+    // Sincronização persistente no projeto Firebase rkgg.
     const LEGACY_SYNC_URL = '';
     const STATUS_VALUES = ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'];
     const TEMPERATURE_VALUES = ['frio', 'morno', 'quente'];
@@ -1733,8 +1732,11 @@
             await ensureFirebase();
             const snapshot = await firestore.collection('contacts').get();
             const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
-            mergeRemoteContacts(remoteContacts);
-            await flushSyncQueue();
+            // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.
+            contacts = remoteContacts.map(normalizeContact);
+            syncQueue = [];
+            persistContacts();
+            persistSyncQueue();
             renderList(); renderKanban();
             setSyncStatus('ok', `Firestore · ${remoteContacts.length} registos`);
         } catch (e) {

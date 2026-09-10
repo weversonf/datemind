@@ -47,10 +47,11 @@
         .app-grid { display: grid; grid-template-columns: 320px 1fr; gap: 30px; max-width: 1600px; margin: 30px auto; padding: 0 40px; }
 
         /* KANBAN */
-        .kanban-container { display: none; gap: 20px; grid-column: 1 / -1; overflow-x: auto; padding-bottom: 15px; }
-        .kanban-container.active { display: flex; }
-        .kanban-col { background: rgba(17, 19, 22, 0.4); border-radius: 20px; border: 1px solid var(--border); padding: 20px; min-height: 75vh; min-width: 280px; flex: 1; }
-        .col-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: block; }
+        .kanban-wrapper { display: none; width: 100%; grid-column: 1 / -1; flex-direction: column; gap: 14px; }
+        .kanban-wrapper.active { display: flex; }
+        .kanban-container { display: flex; gap: 14px; width: 100%; overflow-x: auto; padding-bottom: 15px; }
+        .kanban-col { background: rgba(17, 19, 22, 0.4); border-radius: 20px; border: 1px solid var(--border); padding: 20px; min-height: 75vh; min-width: 280px; flex: 1; display: flex; flex-direction: column; }
+        .col-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
 
         /* CARDS */
         .card { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; cursor: grab; transition: 0.3s; }
@@ -242,14 +243,70 @@
         .a-btn.active { color: #fff; border-color: var(--plum); background: var(--plum); box-shadow: 0 5px 12px rgba(94,60,93,.16); }
         .a-btn.active span { color: #e9dcea; }
         .a-btn:disabled { cursor: default; opacity: .42 !important; }
-        .temperature-filters { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
-        .temperature-filter { min-height: 39px; padding: 7px 8px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); cursor: pointer; font-size: .65rem; font-weight: 800; transition: .18s ease; }
-        .temperature-filter:hover { border-color: #cfc4d0; background: #fbf7fa; }
+        .filter-block { margin-bottom: 14px; }
+        .filter-label { display: block; margin-bottom: 7px; color: var(--muted); font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+
+        .status-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+        .status-chip-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            min-height: 29px; padding: 4px 8px;
+            color: var(--ink-soft); border: 1px solid var(--line);
+            border-radius: 8px; background: var(--surface-soft);
+            cursor: pointer; font-size: .64rem; font-weight: 750;
+            transition: .18s ease;
+        }
+        .status-chip-btn:hover:not(:disabled) { border-color: #cfc4d0; background: #fbf7fa; }
+        .status-chip-btn.active {
+            color: #fff; border-color: var(--plum); background: var(--plum);
+            box-shadow: 0 4px 10px rgba(94,60,93,.16);
+        }
+        .status-chip-btn .chip-dot {
+            width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+        }
+        .status-chip-btn.active .chip-dot {
+            box-shadow: 0 0 0 1.5px #fff;
+        }
+        .status-chip-btn span.count {
+            color: var(--muted); font-size: .58rem; font-weight: 600; margin-left: 2px;
+        }
+        .status-chip-btn.active span.count {
+            color: #e9dcea;
+        }
+        .status-chip-btn:disabled { opacity: .42; cursor: default; }
+
+        .temperature-filters { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .temperature-filter { min-height: 34px; padding: 6px 8px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 9px; background: var(--surface-soft); cursor: pointer; font-size: .64rem; font-weight: 800; transition: .18s ease; text-align: center; }
+        .temperature-filter:hover:not(:disabled) { border-color: #cfc4d0; background: #fbf7fa; }
         .temperature-filter.active { color: #fff; border-color: var(--plum); background: var(--plum); box-shadow: 0 5px 12px rgba(94,60,93,.16); }
-        .temperature-filter span { display: block; margin-top: 3px; color: var(--muted); font-size: .58rem; font-weight: 600; }
+        .temperature-filter span { display: block; margin-top: 2px; color: var(--muted); font-size: .58rem; font-weight: 600; }
         .temperature-filter.active span { color: #e9dcea; }
-        .filter-reset { width: 100%; margin-top: 9px; padding: 7px 8px; color: var(--plum); border: 1px dashed #d8cbd8; border-radius: 9px; background: transparent; cursor: pointer; font-size: .64rem; font-weight: 800; }
-        .filter-reset:hover { background: #fbf7fb; }
+        .temperature-filter:disabled { opacity: .42; cursor: default; }
+
+        .filter-reset { width: 100%; margin-top: 10px; padding: 7px 8px; color: var(--plum); border: 1px dashed #d8cbd8; border-radius: 9px; background: transparent; cursor: pointer; font-size: .64rem; font-weight: 800; transition: .18s ease; }
+        .filter-reset:hover { background: #fbf7fb; border-color: var(--plum); }
+
+        /* Barra de Filtros do Kanban */
+        .kanban-filter-bar {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+            gap: 12px; padding: 12px 18px; border: 1px solid var(--line); border-radius: 16px;
+            background: rgba(255,255,255,.65); box-shadow: var(--shadow-sm);
+        }
+        .k-filter-section {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .k-filter-label {
+            color: var(--muted); font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+        }
+        .k-status-chips, .k-temp-chips {
+            display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+        }
+        .k-reset-btn {
+            width: auto; margin-top: 0; padding: 6px 12px; min-height: 29px;
+        }
+        .col-count {
+            font-size: .68rem; padding: 2px 7px; border-radius: 999px;
+            background: rgba(0,0,0,.06); color: inherit; font-weight: 700;
+        }
         .data-actions { display: grid; gap: 9px; }
         .data-btn { min-height: 39px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink-soft); background: var(--surface); cursor: pointer; font-size: .7rem; font-weight: 750; transition: .18s ease; }
         .data-btn:hover { color: var(--plum); border-color: #cfc4d0; background: #fdfafd; }
@@ -420,24 +477,29 @@
         <section class="glass-box filter-card" aria-labelledby="filter-heading">
             <div class="panel-heading">
                 <div>
-                    <span class="panel-kicker">Navegação</span>
-                    <h2 id="filter-heading">Ordem alfabética</h2>
+                    <span class="panel-kicker">Filtros & Navegação</span>
+                    <h2 id="filter-heading">Filtrar contactos</h2>
                 </div>
+                <span class="panel-icon" aria-hidden="true">⌁</span>
             </div>
-            <p class="filter-copy">Escolhe uma inicial para ver a lista e a quantidade de contactos.</p>
-            <div class="alpha-grid" id="alphaFilters"></div>
+
+            <div class="filter-block">
+                <span class="filter-label">Por fase</span>
+                <div class="status-chips" id="statusFilters"></div>
+            </div>
+
+            <div class="filter-block">
+                <span class="filter-label">Por temperatura</span>
+                <div class="temperature-filters" id="temperatureFilters"></div>
+            </div>
+
+            <div class="filter-block">
+                <span class="filter-label">Ordem alfabética</span>
+                <p class="filter-copy">Escolhe uma inicial para ver a lista e a quantidade de contactos.</p>
+                <div class="alpha-grid" id="alphaFilters"></div>
+            </div>
+
             <button class="filter-reset" type="button" onclick="resetFilters()">Limpar filtros</button>
-        </section>
-        <section class="glass-box filter-card" aria-labelledby="temperature-heading">
-            <div class="panel-heading">
-                <div>
-                    <span class="panel-kicker">Segmentação</span>
-                    <h2 id="temperature-heading">Por temperatura</h2>
-                </div>
-                <span class="panel-icon" aria-hidden="true">◌</span>
-            </div>
-            <p class="filter-copy">Filtra pelo nível de interesse.</p>
-            <div class="temperature-filters" id="temperatureFilters"></div>
         </section>
         <section class="glass-box data-card" aria-labelledby="data-heading">
             <div class="panel-heading">
@@ -497,30 +559,44 @@
         <div id="contactList" role="list" aria-label="Lista de contactos"></div>
     </main>
 
-    <div class="kanban-container" id="kanbanView">
-        <div class="kanban-col" data-status="conheci" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-conheci);">1. Conheci</span>
-            <div id="list-conheci"></div>
+    <div class="kanban-wrapper" id="kanbanView">
+        <div class="kanban-filter-bar glass-box">
+            <div class="k-filter-section">
+                <span class="k-filter-label">Fase:</span>
+                <div class="k-status-chips" id="kanbanStatusFilters"></div>
+            </div>
+            <div class="k-filter-section">
+                <span class="k-filter-label">Temperatura:</span>
+                <div class="k-temp-chips" id="kanbanTempFilters"></div>
+            </div>
+            <button class="filter-reset k-reset-btn" type="button" onclick="resetFilters()">Limpar filtros</button>
         </div>
-        <div class="kanban-col" data-status="conversando" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-conversando);">2. Conversando</span>
-            <div id="list-conversando"></div>
-        </div>
-        <div class="kanban-col" data-status="agendado" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-agendado);">3. Date Marcado</span>
-            <div id="list-agendado"></div>
-        </div>
-        <div class="kanban-col" data-status="fiquei" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-fiquei);">4. Fiquei</span>
-            <div id="list-fiquei"></div>
-        </div>
-        <div class="kanban-col" data-status="intimidade" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-intimidade);">5. Intimidade</span>
-            <div id="list-intimidade"></div>
-        </div>
-        <div class="kanban-col" data-status="recorrente" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-            <span class="col-title" style="color: var(--color-recorrente);">6. Recorrente</span>
-            <div id="list-recorrente"></div>
+
+        <div class="kanban-container">
+            <div class="kanban-col" data-status="conheci" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-conheci);">1. Conheci</span>
+                <div id="list-conheci"></div>
+            </div>
+            <div class="kanban-col" data-status="conversando" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-conversando);">2. Conversando</span>
+                <div id="list-conversando"></div>
+            </div>
+            <div class="kanban-col" data-status="agendado" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-agendado);">3. Date Marcado</span>
+                <div id="list-agendado"></div>
+            </div>
+            <div class="kanban-col" data-status="fiquei" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-fiquei);">4. Fiquei</span>
+                <div id="list-fiquei"></div>
+            </div>
+            <div class="kanban-col" data-status="intimidade" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-intimidade);">5. Intimidade</span>
+                <div id="list-intimidade"></div>
+            </div>
+            <div class="kanban-col" data-status="recorrente" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-recorrente);">6. Recorrente</span>
+                <div id="list-recorrente"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -701,6 +777,7 @@
     let syncQueue = readJsonStorage(localStorage, SYNC_QUEUE_STORAGE_KEY, []) || [];
     let currentAlpha = 'All';
     let currentTemperature = 'All';
+    let currentStatus = 'All';
     let editingId = null;
     const selectedIds = new Set();
 
@@ -1236,17 +1313,23 @@
             const m = `${nome} ${c.bairro || ''}`.toLowerCase().includes(query);
             const init = nome.charAt(0).toUpperCase();
             const temperature = c.temperatura || 'morno';
-            return m && (currentAlpha === 'All' || init === currentAlpha)
-                && (currentTemperature === 'All' || temperature === currentTemperature);
+            const status = c.status || 'conheci';
+            return m
+                && (currentAlpha === 'All' || init === currentAlpha)
+                && (currentTemperature === 'All' || temperature === currentTemperature)
+                && (currentStatus === 'All' || status === currentStatus);
         });
     }
 
     function resetFilters() {
         currentAlpha = 'All';
         currentTemperature = 'All';
+        currentStatus = 'All';
         const search = document.getElementById('searchInput');
         if (search) search.value = '';
         renderList();
+        renderKanban();
+        updateUI();
     }
 
     function updateBulkBar() {
@@ -1400,13 +1483,28 @@
     }
 
     function renderKanban() {
-        STATUS_VALUES.forEach(s => {
+        STATUS_VALUES.forEach((s, idx) => {
             const col = document.getElementById(`list-${s}`);
-            if(!col) return;
+            const colParent = col?.closest('.kanban-col');
+            if (!col || !colParent) return;
+
+            if (currentStatus === 'All' || currentStatus === s) {
+                colParent.style.display = 'flex';
+            } else {
+                colParent.style.display = 'none';
+            }
+
             col.innerHTML = '';
-            const inCol = contacts.filter(c => c.status === s);
+            const inCol = contacts.filter(c => c.status === s && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature));
+
+            const titleEl = colParent.querySelector('.col-title');
+            if (titleEl) {
+                const baseTitle = statusConfig[s] || s;
+                titleEl.innerHTML = `<span>${idx + 1}. ${baseTitle}</span><span class="col-count">${inCol.length}</span>`;
+            }
+
             if (inCol.length === 0) {
-                col.innerHTML = `<div class="empty-state"><span>Sem contactos nesta fase</span></div>`;
+                col.innerHTML = `<div class="empty-state"><span>Sem contactos${currentTemperature !== 'All' ? ' nesta temperatura' : ' nesta fase'}</span></div>`;
                 return;
             }
             inCol.forEach(c => {
@@ -1461,45 +1559,97 @@
         if (total) total.textContent = `${contacts.length} ${contacts.length === 1 ? 'contacto' : 'contactos'}`;
 
         const sDiv = document.getElementById('statusStats');
-        sDiv.innerHTML = '';
-        Object.entries(stats).forEach(([k, v]) => {
-            const p = (v / contacts.length * 100) || 0;
-            sDiv.innerHTML += `<div class="status-row">
-                <div class="status-row-top"><span><i class="status-dot" style="background:var(--color-${k})"></i>${statusConfig[k]}</span><strong>${v}</strong></div>
-                <div class="status-track"><span style="width:${p}%;background:var(--color-${k})"></span></div>
-            </div>`;
+        if (sDiv) {
+            sDiv.innerHTML = '';
+            Object.entries(stats).forEach(([k, v]) => {
+                const p = (v / contacts.length * 100) || 0;
+                sDiv.innerHTML += `<div class="status-row">
+                    <div class="status-row-top"><span><i class="status-dot" style="background:var(--color-${k})"></i>${statusConfig[k]}</span><strong>${v}</strong></div>
+                    <div class="status-track"><span style="width:${p}%;background:var(--color-${k})"></span></div>
+                </div>`;
+            });
+        }
+
+        // Filtros de Status (Sidebar e Kanban)
+        const statusItems = [
+            ['All', 'Todas as fases', '#8a7b8a'],
+            ...STATUS_VALUES.map(s => [s, statusConfig[s], `var(--color-${s})`])
+        ];
+        ['statusFilters', 'kanbanStatusFilters'].forEach(containerId => {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = '';
+            statusItems.forEach(([val, label, dotColor]) => {
+                const count = val === 'All'
+                    ? contacts.filter(c => currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature).length
+                    : contacts.filter(c => c.status === val && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature)).length;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `status-chip-btn ${currentStatus === val ? 'active' : ''}`;
+                btn.disabled = count === 0 && val !== 'All';
+                btn.setAttribute('aria-label', `${label}: ${count} contactos`);
+                btn.onclick = () => {
+                    currentStatus = (currentStatus === val && val !== 'All') ? 'All' : val;
+                    renderList(); renderKanban();
+                };
+                btn.innerHTML = `<i class="chip-dot" style="background:${dotColor}"></i><span>${label}</span><span class="count">${count}</span>`;
+                el.appendChild(btn);
+            });
         });
 
+        // Filtros de Temperatura (Sidebar e Kanban)
+        const tempItems = [
+            ['All', 'Todas'],
+            ['frio', '🧊 Frio'],
+            ['morno', '⚡ Morno'],
+            ['quente', '🔥 Quente']
+        ];
+        ['temperatureFilters', 'kanbanTempFilters'].forEach(containerId => {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = '';
+            tempItems.forEach(([val, label]) => {
+                const count = val === 'All'
+                    ? contacts.filter(c => currentStatus === 'All' || c.status === currentStatus).length
+                    : contacts.filter(c => (currentStatus === 'All' || c.status === currentStatus) && (c.temperatura || 'morno') === val).length;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `temperature-filter ${currentTemperature === val ? 'active' : ''}`;
+                btn.disabled = count === 0 && val !== 'All';
+                btn.setAttribute('aria-label', `${label}: ${count} contactos`);
+                btn.onclick = () => {
+                    currentTemperature = (currentTemperature === val && val !== 'All') ? 'All' : val;
+                    renderList(); renderKanban();
+                };
+                btn.innerHTML = `<span>${label}</span><span class="count">${count}</span>`;
+                el.appendChild(btn);
+            });
+        });
+
+        // Calendário de Letras (Ordem Alfabética)
         const aDiv = document.getElementById('alphaFilters');
-        aDiv.innerHTML = '';
-        ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].forEach(l => {
-            const count = l === 'All'
-                ? contacts.filter(c => currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature).length
-                : contacts.filter(c => (c.nome || '').charAt(0).toUpperCase() === l && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature)).length;
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = `a-btn ${currentAlpha === l ? 'active' : ''}`;
-            btn.disabled = count === 0 && l !== 'All';
-            btn.setAttribute('aria-label', l === 'All' ? `Ver todos os ${count} contactos` : `Filtrar contactos com a letra ${l}: ${count}`);
-            btn.onclick = () => { currentAlpha = l; renderList(); };
-            btn.innerHTML = `${l === 'All' ? 'Tudo' : l}<span>${count}</span>`;
-            aDiv.appendChild(btn);
-        });
-
-        const tDiv = document.getElementById('temperatureFilters');
-        if (!tDiv) return;
-        tDiv.innerHTML = '';
-        [['All', 'Todas'], ['frio', 'Frio'], ['morno', 'Morno'], ['quente', 'Quente']].forEach(([value, label]) => {
-            const count = value === 'All' ? contacts.length : contacts.filter(c => (c.temperatura || 'morno') === value).length;
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = `temperature-filter ${currentTemperature === value ? 'active' : ''}`;
-            btn.disabled = count === 0 && value !== 'All';
-            btn.setAttribute('aria-label', `${label}: ${count} contactos`);
-            btn.onclick = () => { currentTemperature = value; renderList(); };
-            btn.innerHTML = `${label}<span>${count}</span>`;
-            tDiv.appendChild(btn);
-        });
+        if (aDiv) {
+            aDiv.innerHTML = '';
+            ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].forEach(l => {
+                const count = contacts.filter(c => {
+                    const tempMatch = currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature;
+                    const statusMatch = currentStatus === 'All' || c.status === currentStatus;
+                    const letterMatch = l === 'All' ? true : (c.nome || '').charAt(0).toUpperCase() === l;
+                    return tempMatch && statusMatch && letterMatch;
+                }).length;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `a-btn ${currentAlpha === l ? 'active' : ''}`;
+                btn.disabled = count === 0 && l !== 'All';
+                btn.setAttribute('aria-label', l === 'All' ? `Ver todos os ${count} contactos` : `Filtrar contactos com a letra ${l}: ${count}`);
+                btn.onclick = () => {
+                    currentAlpha = (currentAlpha === l && l !== 'All') ? 'All' : l;
+                    renderList();
+                };
+                btn.innerHTML = `${l === 'All' ? 'Tudo' : l}<span>${count}</span>`;
+                aDiv.appendChild(btn);
+            });
+        }
     }
 
     function resetForm() {

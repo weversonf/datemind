@@ -468,7 +468,7 @@
         </div>
         <div class="search-field">
             <span class="search-icon" aria-hidden="true">⌕</span>
-            <input type="search" id="searchInput" placeholder="Pesquisar por nome ou bairro" aria-label="Pesquisar contactos por nome ou bairro" oninput="renderList()">
+            <input type="search" id="searchInput" name="not_account_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Pesquisar por nome ou bairro" aria-label="Pesquisar contactos por nome ou bairro" oninput="renderList()">
         </div>
         <div class="bulk-bar" id="bulkBar" aria-live="polite">
             <div class="bulk-summary"><strong id="bulkCount">0</strong><span>selecionados</span><button class="bulk-clear" type="button" onclick="clearSelection()">Limpar</button></div>
@@ -592,33 +592,35 @@
 
 <div class="modal-overlay" id="settingsModal">
     <div class="modal" style="max-width: 440px;">
-        <h2 style="margin-bottom: 6px; font-weight: 800; font-size: 1.35rem;">Notas de voz e sincronização</h2>
-        <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador. Os contactos são sincronizados diretamente com o Firestore.</p>
+        <form autocomplete="off" onsubmit="return false;">
+            <h2 style="margin-bottom: 6px; font-weight: 800; font-size: 1.35rem;">Notas de voz e sincronização</h2>
+            <p class="settings-hint" style="margin-bottom: 16px;">A IA transforma a transcrição da tua voz em pontos principais. A chave fica apenas nesta sessão do navegador. Os contactos são sincronizados diretamente com o Firestore.</p>
 
-        <div class="settings-grid">
-            <span class="settings-label">Provedor</span>
-            <div class="provider-toggle">
-                <button type="button" id="prov-anthropic" onclick="setProvider('anthropic')">Anthropic (Claude)</button>
-                <button type="button" id="prov-openai" onclick="setProvider('openai')">OpenAI</button>
+            <div class="settings-grid">
+                <span class="settings-label">Provedor</span>
+                <div class="provider-toggle">
+                    <button type="button" id="prov-anthropic" onclick="setProvider('anthropic')">Anthropic (Claude)</button>
+                    <button type="button" id="prov-openai" onclick="setProvider('openai')">OpenAI</button>
+                </div>
+
+                <span class="settings-label">Chave da API</span>
+                <input type="password" id="in-apikey" name="datemind_api_token" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-form-type="other" placeholder="Cola aqui a tua chave de API">
+
+                <span class="settings-label">Modelo</span>
+                <input type="text" id="in-model" placeholder="Ex: claude-sonnet-5">
+                    <span class="settings-hint" id="modelHint"></span>
+
+                <span class="settings-label">Sincronização</span>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); padding: 8px 0;">
+                    Conectado ao Firebase Firestore (<code>rkgg-ebc5b</code>). Os contactos são sincronizados automaticamente na nuvem com autenticação anônima.
+                </div>
             </div>
 
-            <span class="settings-label">Chave da API</span>
-            <input type="password" id="in-apikey" placeholder="Cola aqui a tua chave de API">
-
-            <span class="settings-label">Modelo</span>
-            <input type="text" id="in-model" placeholder="Ex: claude-sonnet-5">
-                <span class="settings-hint" id="modelHint"></span>
-
-            <span class="settings-label">Sincronização</span>
-            <div style="font-size: 0.85rem; color: var(--text-secondary); padding: 8px 0;">
-                Conectado ao Firebase Firestore (<code>rkgg-ebc5b</code>). Os contactos são sincronizados automaticamente na nuvem com autenticação anônima.
+            <div style="display: flex; gap: 10px; margin-top: 18px;">
+                <button class="button-secondary" type="button" onclick="closeSettings()">Cancelar</button>
+                <button class="button-primary modal-save" type="button" onclick="saveAiSettings()">Guardar definições</button>
             </div>
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-top: 18px;">
-            <button class="button-secondary" type="button" onclick="closeSettings()">Cancelar</button>
-            <button class="button-primary modal-save" type="button" onclick="saveAiSettings()">Guardar definições</button>
-        </div>
+        </form>
     </div>
 </div>
 
@@ -1781,6 +1783,25 @@
 
     async function init() {
         try { localStorage.removeItem('ai_config'); } catch (e) {}
+        const searchInputEl = document.getElementById('searchInput');
+        if (searchInputEl) {
+            searchInputEl.value = '';
+            [100, 300, 800].forEach(delay => {
+                setTimeout(() => {
+                    if (searchInputEl.value && searchInputEl.value.includes('@')) {
+                        searchInputEl.value = '';
+                        renderList();
+                    }
+                }, delay);
+            });
+        }
+        window.addEventListener('pageshow', () => {
+            const s = document.getElementById('searchInput');
+            if (s && s.value.includes('@')) {
+                s.value = '';
+                renderList();
+            }
+        });
         contacts = contacts.map(normalizeContact).filter(c => c.nome);
         persistContacts();
         renderList();

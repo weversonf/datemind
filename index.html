@@ -1188,6 +1188,7 @@
         } catch (e) {
             setSyncStatus('err', 'Pendente — tentará novamente');
             showToast('Alteração guardada localmente; a sincronização será tentada novamente.', true);
+            throw e;
         } finally {
             isFlushingSync = false;
         }
@@ -1195,6 +1196,7 @@
 
     async function saveAndSync(c) {
         const idx = contacts.findIndex(item => String(item.id) === String(c.id));
+        const previous = idx >= 0 ? contacts[idx] : null;
         const now = new Date().toISOString();
         const normalized = normalizeContact({ ...c, updatedAt: now });
         if (idx >= 0) contacts[idx] = normalized;
@@ -1202,7 +1204,15 @@
         persistContacts();
         if (getSyncUrl()) {
             queueOperation(buildSyncPayload(normalized));
-            await flushSyncQueue();
+            try {
+                await flushSyncQueue();
+            } catch (error) {
+                if (idx >= 0) contacts[idx] = previous;
+                else contacts = contacts.filter(item => String(item.id) !== String(normalized.id));
+                persistContacts();
+                updateUI();
+                throw error;
+            }
         } else {
             setSyncStatus('ok', 'Local — navegador');
         }
@@ -1215,7 +1225,14 @@
         persistContacts();
         if (removed && getSyncUrl()) {
             queueOperation(buildSyncPayload(removed, 'delete'));
-            await flushSyncQueue();
+            try {
+                await flushSyncQueue();
+            } catch (error) {
+                contacts.push(removed);
+                persistContacts();
+                renderList(); renderKanban();
+                throw error;
+            }
         } else if (!getSyncUrl()) {
             setSyncStatus('ok', 'Local — navegador');
         }
@@ -1571,19 +1588,28 @@
             voiceNotes: existing ? (existing.voiceNotes || []) : []
         });
         closeModal();
-        await saveAndSync(c);
-        renderList(); renderKanban();
+        try {
+            await saveAndSync(c);
+            renderList(); renderKanban();
+            showToast('Contacto guardado e sincronizado.');
+        } catch (error) {
+            showToast('Não foi possível guardar no Firestore. A alteração foi desfeita.', true);
+        }
     }
 
-    function handleDelete() {
+    async function handleDelete() {
         if (!editingId) return;
         const c = contacts.find(i => String(i.id) === String(editingId));
         const nome = c ? (c.nome || 'este contacto') : 'este contacto';
         if (!confirm(`Apagar "${nome}" definitivamente? Esta ação não pode ser desfeita.`)) return;
         const id = editingId;
         closeModal();
-        deleteAndSync(id);
-        showToast(`"${nome}" foi apagado.`);
+        try {
+            await deleteAndSync(id);
+            showToast(`"${nome}" foi apagado e sincronizado.`);
+        } catch (error) {
+            showToast(`Não foi possível apagar "${nome}" no Firestore. O contacto foi restaurado.`, true);
+        }
     }
 
     function csvEscape(value) {
@@ -1778,6 +1804,7 @@
         setSyncStatus('busy', contacts.length ? `Local · ${contacts.length} · a sincronizar…` : 'A carregar Firestore…');
         try {
             await ensureFirebase();
+            if (syncQueue.length) await flushSyncQueue();
             const snapshot = await firestore.collection('contacts').get();
             const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
             // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.

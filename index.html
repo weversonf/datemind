@@ -601,14 +601,38 @@
     </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+    const firebaseConfig = {
+        apiKey: 'AIzaSyDfQOlcy90_5jvPWfCW9eDIBtIvt2TDL00',
+        authDomain: 'rkgg-ebc5b.firebaseapp.com',
+        projectId: 'rkgg-ebc5b',
+        storageBucket: 'rkgg-ebc5b.firebasestorage.app',
+        messagingSenderId: '177296931369',
+        appId: '1:177296931369:web:1a053bedd533b4d904fa38'
+    };
+    const firebaseApp = firebase.initializeApp(firebaseConfig);
+    const firebaseAuth = firebase.auth();
+    const firestore = firebase.firestore();
+    let firebaseReady = null;
+    async function ensureFirebase() {
+        if (!firebaseReady) {
+            firebaseReady = firebaseAuth.currentUser
+                ? Promise.resolve(firebaseAuth.currentUser)
+                : firebaseAuth.signInAnonymously().then(result => result.user);
+        }
+        return firebaseReady;
+    }
+
     const CONTACTS_STORAGE_KEY = 'contact_hub_cache';
     const PERSISTED_CONFIG_STORAGE_KEY = 'datemind_settings';
     const SESSION_CONFIG_STORAGE_KEY = 'datemind_session';
     const SYNC_QUEUE_STORAGE_KEY = 'contact_hub_sync_queue';
     // Endpoint histórico do Google Apps Script associado a esta base do Datemind.
     // A URL não é uma credencial: o endpoint antigo não oferece autenticação por utilizador.
-    const LEGACY_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzmNqRIo7AHp1bCV27XokIcQDauV5m__9AC7nGbaYjDx2gIf_4yD5UKYZk8wIH_DmaT/exec';
+    const LEGACY_SYNC_URL = '';
     const STATUS_VALUES = ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'];
     const TEMPERATURE_VALUES = ['frio', 'morno', 'quente'];
 
@@ -676,15 +700,7 @@
 
     // A aplicação inicia ligada à planilha histórica; o utilizador pode limpar a URL para voltar ao modo local.
     function getSyncUrl() {
-        const cfg = loadAiConfig();
-        const url = (cfg.syncUrl || LEGACY_SYNC_URL || '').trim();
-        if (!url) return '';
-        try {
-            const parsed = new URL(url);
-            return parsed.protocol === 'https:' ? parsed.href : '';
-        } catch (e) {
-            return '';
-        }
+        return 'firebase';
     }
 
     async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
@@ -1123,14 +1139,14 @@
     }
 
     async function sendSyncOperation(payload) {
-        const syncUrl = getSyncUrl();
-        if (!syncUrl) return;
-        const response = await fetch(syncUrl, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            credentials: 'omit'
-        });
-        if (!response.ok) throw new Error(`Servidor respondeu ${response.status}`);
+        await ensureFirebase();
+        const ref = firestore.collection('contacts').doc(String(payload.id));
+        if (payload.action === 'delete') {
+            await ref.delete();
+            return;
+        }
+        const { action, queuedAt, ...contact } = payload;
+        await ref.set(contact, { merge: true });
     }
 
     let isFlushingSync = false;
@@ -1712,19 +1728,17 @@
             return;
         }
 
-        setSyncStatus('busy', contacts.length ? `Local · ${contacts.length} · a sincronizar…` : 'A carregar planilha…');
+        setSyncStatus('busy', contacts.length ? `Local · ${contacts.length} · a sincronizar…` : 'A carregar Firestore…');
         try {
-            const res = await fetchWithTimeout(syncUrl, { credentials: 'omit' });
-            if (!res.ok) throw new Error(`Servidor respondeu ${res.status}`);
-            const data = await res.json();
-            if (!Array.isArray(data)) throw new Error('Resposta remota inválida.');
-            const remoteContacts = data.map(normalizeRemoteContact).filter(c => c.nome);
+            await ensureFirebase();
+            const snapshot = await firestore.collection('contacts').get();
+            const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
             mergeRemoteContacts(remoteContacts);
             await flushSyncQueue();
             renderList(); renderKanban();
-            setSyncStatus('ok', `Planilha · ${remoteContacts.length} registos`);
+            setSyncStatus('ok', `Firestore · ${remoteContacts.length} registos`);
         } catch (e) {
-            const fallbackLabel = contacts.length ? `Offline · ${contacts.length} locais` : 'Planilha indisponível';
+            const fallbackLabel = contacts.length ? `Offline · ${contacts.length} locais` : 'Firestore indisponível';
             setSyncStatus('err', fallbackLabel);
             showToast(`${e.message || 'Não foi possível sincronizar'} Os dados locais continuam disponíveis.`, true);
         }

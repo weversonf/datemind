@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permite leitura e escrita apenas para clientes autenticados (inclusive autenticação anônima do Datemind)
+    match /contacts/{contactId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Bloqueia qualquer outra coleção ou rota por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

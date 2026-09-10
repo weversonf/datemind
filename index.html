@@ -609,9 +609,10 @@
             <input type="text" id="in-model" placeholder="Ex: claude-sonnet-5">
                 <span class="settings-hint" id="modelHint"></span>
 
-            <span class="settings-label">Sincronização remota opcional</span>
-            <input type="url" id="in-sync-url" placeholder="https://.../exec" autocomplete="off">
-            <span class="settings-hint">Deixe vazio para usar somente este navegador. O endpoint remoto deve exigir autenticação e aplicar autorização por utilizador; a app não assume que uma URL pública é segura.</span>
+            <span class="settings-label">Sincronização</span>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); padding: 8px 0;">
+                Conectado ao Firebase Firestore (<code>rkgg-ebc5b</code>). Os contactos são sincronizados automaticamente na nuvem com autenticação anônima.
+            </div>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 18px;">
@@ -638,10 +639,14 @@
     const firestore = firebase.firestore();
     let firebaseReady = null;
     async function ensureFirebase() {
+        if (firebaseAuth.currentUser) return firebaseAuth.currentUser;
         if (!firebaseReady) {
-            firebaseReady = firebaseAuth.currentUser
-                ? Promise.resolve(firebaseAuth.currentUser)
-                : firebaseAuth.signInAnonymously().then(result => result.user);
+            firebaseReady = firebaseAuth.signInAnonymously()
+                .then(result => result.user)
+                .catch(err => {
+                    firebaseReady = null;
+                    throw err;
+                });
         }
         return firebaseReady;
     }
@@ -783,7 +788,6 @@
         setProvider(cfg.provider || 'anthropic');
         document.getElementById('in-apikey').value = cfg.apiKey || '';
         document.getElementById('in-model').value = cfg.model || '';
-        document.getElementById('in-sync-url').value = cfg.syncUrl || LEGACY_SYNC_URL;
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -806,28 +810,10 @@
     async function saveAiSettings() {
         const apiKey = document.getElementById('in-apikey').value.trim();
         const model = document.getElementById('in-model').value.trim();
-        const syncUrl = document.getElementById('in-sync-url').value.trim();
-        if (syncUrl) {
-            try {
-                const parsed = new URL(syncUrl);
-                if (parsed.protocol !== 'https:') throw new Error('HTTPS obrigatório');
-            } catch (e) {
-                showToast('A URL de sincronização deve ser HTTPS e válida.', true);
-                return;
-            }
-        }
-        localStorage.setItem(PERSISTED_CONFIG_STORAGE_KEY, JSON.stringify({ provider: selectedProvider, model, syncUrl }));
+        localStorage.setItem(PERSISTED_CONFIG_STORAGE_KEY, JSON.stringify({ provider: selectedProvider, model }));
         sessionStorage.setItem(SESSION_CONFIG_STORAGE_KEY, JSON.stringify({ provider: selectedProvider, model, apiKey }));
-        if (syncUrl) {
-            contacts.forEach(c => queueOperation(buildSyncPayload(c)));
-            await flushSyncQueue();
-        } else {
-            syncQueue = [];
-            persistSyncQueue();
-            setSyncStatus('ok', 'Local — navegador');
-        }
         closeSettings();
-        showToast(syncUrl ? 'Configuração guardada; sincronização remota ativada.' : 'Modo local ativado neste navegador.');
+        showToast('Configurações de IA guardadas com sucesso.');
     }
 
     async function analyzeWithAI(transcript) {
@@ -1124,13 +1110,14 @@
             : (SHEET_PHASE_BY_STATUS[c.status] || c.legacyPhase || 'Orientativo');
         return {
             action,
-            syncVersion: 3,
+            syncVersion: 4,
             id: c.id,
             ...c.legacyFields,
             nome: sheetValue(c, 'nome'),
             fonte: sheetValue(c, 'origin'),
             fase: phase,
             status: SHEET_TEMPERATURE_BY_VALUE[c.temperatura] || 'Morno',
+            crmStatus: c.status,
             origin: sheetValue(c, 'origin'),
             whatsapp: sheetValue(c, 'whatsapp'),
             instagram: sheetValue(c, 'instagram'),
@@ -1143,6 +1130,7 @@
             nextActionAt: c.nextActionAt,
             createdAt: c.createdAt,
             updatedAt: c.updatedAt,
+            voiceNotes: c.voiceNotes || [],
             notasvoz: JSON.stringify(c.voiceNotes || [])
         };
     }
@@ -1230,13 +1218,13 @@
             } catch (error) {
                 contacts.push(removed);
                 persistContacts();
-                renderList(); renderKanban();
+                renderList(); renderKanban(); updateUI();
                 throw error;
             }
         } else if (!getSyncUrl()) {
             setSyncStatus('ok', 'Local — navegador');
         }
-        renderList(); renderKanban();
+        renderList(); renderKanban(); updateUI();
     }
 
     function getVisibleContacts() {
@@ -1740,12 +1728,16 @@
         });
         const rawPhase = String(source.fase || '').trim();
         const sourceStatus = String(source.status || '').trim().toLowerCase();
+        const crmStatus = String(source.crmStatus || '').trim().toLowerCase();
+        const resolvedStatus = STATUS_VALUES.includes(crmStatus)
+            ? crmStatus
+            : (STATUS_VALUES.includes(sourceStatus) ? sourceStatus : mapSheetPhaseToStatus(rawPhase));
         return normalizeContact({
             id: source.id,
             nome: hasLegacyEncryptedValue(source.nome) ? '' : source.nome,
             idade: hasLegacyEncryptedValue(source.idade) ? '' : source.idade,
             bairro: hasLegacyEncryptedValue(source.bairro) ? '' : source.bairro,
-            status: STATUS_VALUES.includes(sourceStatus) ? sourceStatus : mapSheetPhaseToStatus(rawPhase),
+            status: resolvedStatus,
             temperatura: mapSheetTemperature(source.temperatura || source.status),
             origin: hasLegacyEncryptedValue(source.origin || source.fonte) ? '' : (source.origin || source.fonte || ''),
             photo: hasLegacyEncryptedValue(source.photo) ? '' : (source.photo || ''),
@@ -1812,7 +1804,7 @@
             syncQueue = [];
             persistContacts();
             persistSyncQueue();
-            renderList(); renderKanban();
+            renderList(); renderKanban(); updateUI();
             setSyncStatus('ok', `Firestore · ${remoteContacts.length} registos`);
         } catch (e) {
             const fallbackLabel = contacts.length ? `Offline · ${contacts.length} locais` : 'Firestore indisponível';

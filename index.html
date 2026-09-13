@@ -19,6 +19,7 @@
             /* Cores do Funil */
             --color-conheci: #64748b;     
             --color-conversando: #3b82f6; 
+            --color-quase: #8b7cf6;
             --color-agendado: #a855f7;    
             --color-fiquei: #f59e0b;      
             --color-intimidade: #ef4444;  
@@ -187,6 +188,7 @@
             --radius-lg: 26px;
             --color-conheci: #9a7b5d;
             --color-conversando: #6287bf;
+            --color-quase: #7a6fd0;
             --color-agendado: #a57ab5;
             --color-fiquei: #d49653;
             --color-intimidade: #df756d;
@@ -407,6 +409,37 @@
         .toast.err { color: #ae4f48; border-color: #efb9b2; }
         .card.is-dragging { opacity: .42; transform: scale(.985); }
         .kanban-col.is-drag-over { border-color: var(--plum); background: rgba(94,60,93,.055); box-shadow: inset 0 0 0 2px rgba(94,60,93,.1); }
+        .kanban-col.is-hidden { display: none !important; }
+
+        /* Kanban: todas as colunas visíveis no desktop, sem scroll horizontal */
+        @media (min-width: 1100px) {
+            .kanban-container {
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: minmax(0, 1fr);
+                overflow-x: visible;
+            }
+            .kanban-col { min-width: 0; }
+        }
+        @media (max-width: 1099px) {
+            .kanban-container { display: flex; overflow-x: auto; }
+            .kanban-col { min-width: 260px; flex: 0 0 260px; }
+        }
+
+        /* Toggles de colunas avançadas (Intimidade / Recorrente) */
+        .k-toggle-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            min-height: 29px; padding: 4px 10px;
+            color: var(--ink-soft); border: 1px solid var(--line);
+            border-radius: 999px; background: var(--surface-soft);
+            cursor: pointer; font-size: .64rem; font-weight: 750;
+            transition: .18s ease; white-space: nowrap;
+        }
+        .k-toggle-btn:hover { border-color: #cfc4d0; background: #fbf7fa; }
+        .k-toggle-btn.is-off { opacity: .55; border-style: dashed; }
+        .k-toggle-btn .chip-dot {
+            width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+        }
         button:focus-visible, .a-btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .list-item:focus-visible, .card:focus-visible { outline: 3px solid rgba(94,60,93,.24); outline-offset: 2px; }
 
         @media (max-width: 980px) {
@@ -541,6 +574,7 @@
                     <option value="">Alterar fase…</option>
                     <option value="conheci">Conheci</option>
                     <option value="conversando">Conversando</option>
+                    <option value="quase">Quase marcando</option>
                     <option value="agendado">Date marcado</option>
                     <option value="fiquei">Fiquei</option>
                     <option value="intimidade">Intimidade</option>
@@ -569,6 +603,11 @@
                 <span class="k-filter-label">Temperatura:</span>
                 <div class="k-temp-chips" id="kanbanTempFilters"></div>
             </div>
+            <div class="k-filter-section">
+                <span class="k-filter-label">Colunas:</span>
+                <button class="k-toggle-btn" id="toggle-intimidade" type="button" onclick="toggleKanbanColumn('intimidade')"></button>
+                <button class="k-toggle-btn" id="toggle-recorrente" type="button" onclick="toggleKanbanColumn('recorrente')"></button>
+            </div>
             <button class="filter-reset k-reset-btn" type="button" onclick="resetFilters()">Limpar filtros</button>
         </div>
 
@@ -581,20 +620,24 @@
                 <span class="col-title" style="color: var(--color-conversando);">2. Conversando</span>
                 <div id="list-conversando"></div>
             </div>
+            <div class="kanban-col" data-status="quase" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
+                <span class="col-title" style="color: var(--color-quase);">3. Quase marcando</span>
+                <div id="list-quase"></div>
+            </div>
             <div class="kanban-col" data-status="agendado" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-                <span class="col-title" style="color: var(--color-agendado);">3. Date Marcado</span>
+                <span class="col-title" style="color: var(--color-agendado);">4. Date Marcado</span>
                 <div id="list-agendado"></div>
             </div>
             <div class="kanban-col" data-status="fiquei" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-                <span class="col-title" style="color: var(--color-fiquei);">4. Fiquei</span>
+                <span class="col-title" style="color: var(--color-fiquei);">5. Fiquei</span>
                 <div id="list-fiquei"></div>
             </div>
             <div class="kanban-col" data-status="intimidade" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-                <span class="col-title" style="color: var(--color-intimidade);">5. Intimidade</span>
+                <span class="col-title" style="color: var(--color-intimidade);">6. Intimidade</span>
                 <div id="list-intimidade"></div>
             </div>
             <div class="kanban-col" data-status="recorrente" ondragover="allowDrop(event)" ondragleave="clearDragOver(event)" ondrop="drop(event)">
-                <span class="col-title" style="color: var(--color-recorrente);">6. Recorrente</span>
+                <span class="col-title" style="color: var(--color-recorrente);">7. Recorrente</span>
                 <div id="list-recorrente"></div>
             </div>
         </div>
@@ -617,6 +660,7 @@
             <select id="in-status">
                 <option value="conheci">Conheci (Contato Inicial)</option>
                 <option value="conversando">Conversando</option>
+                <option value="quase">Quase marcando</option>
                 <option value="agendado">Date Marcado</option>
                 <option value="fiquei">Fiquei</option>
                 <option value="intimidade">Intimidade</option>
@@ -735,7 +779,7 @@
     const SYNC_QUEUE_STORAGE_KEY = 'contact_hub_sync_queue';
     // Sincronização persistente no projeto Firebase rkgg.
     const LEGACY_SYNC_URL = '';
-    const STATUS_VALUES = ['conheci', 'conversando', 'agendado', 'fiquei', 'intimidade', 'recorrente'];
+    const STATUS_VALUES = ['conheci', 'conversando', 'quase', 'agendado', 'fiquei', 'intimidade', 'recorrente'];
     const TEMPERATURE_VALUES = ['frio', 'morno', 'quente'];
 
     function readJsonStorage(storage, key, fallback) {
@@ -790,11 +834,43 @@
     const statusConfig = {
         conheci: 'Conheci',
         conversando: 'Conversando',
+        quase: 'Quase marcando',
         agendado: 'Date marcado',
         fiquei: 'Fiquei',
         intimidade: 'Intimidade',
         recorrente: 'Recorrente'
     };
+
+    // Colunas avançadas começam ocultas no kanban; o utilizador pode revelá-las.
+    const LATE_STAGE_COLUMNS = ['intimidade', 'recorrente'];
+    const HIDDEN_COLUMNS_STORAGE_KEY = 'datemind_hidden_kanban_cols';
+    let hiddenKanbanColumns = readJsonStorage(localStorage, HIDDEN_COLUMNS_STORAGE_KEY, LATE_STAGE_COLUMNS);
+
+    function isKanbanColumnHidden(status) {
+        return Array.isArray(hiddenKanbanColumns) && hiddenKanbanColumns.includes(status);
+    }
+
+    function toggleKanbanColumn(status) {
+        const hidden = new Set(Array.isArray(hiddenKanbanColumns) ? hiddenKanbanColumns : []);
+        if (hidden.has(status)) hidden.delete(status);
+        else hidden.add(status);
+        hiddenKanbanColumns = [...hidden];
+        try { localStorage.setItem(HIDDEN_COLUMNS_STORAGE_KEY, JSON.stringify(hiddenKanbanColumns)); } catch (e) {}
+        renderKanban();
+        updateKanbanColumnToggles();
+    }
+
+    function updateKanbanColumnToggles() {
+        LATE_STAGE_COLUMNS.forEach(status => {
+            const btn = document.getElementById(`toggle-${status}`);
+            if (!btn) return;
+            const hidden = isKanbanColumnHidden(status);
+            const label = statusConfig[status] || status;
+            btn.classList.toggle('is-off', hidden);
+            btn.setAttribute('aria-pressed', String(!hidden));
+            btn.innerHTML = `<i class="chip-dot" style="background:var(--color-${status})"></i><span>${hidden ? 'Mostrar' : 'Ocultar'} ${label}</span>`;
+        });
+    }
 
     function formatDateLabel(value) {
         if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
@@ -1170,6 +1246,7 @@
     const SHEET_PHASE_BY_STATUS = {
         conheci: 'Orientativo',
         conversando: 'Negociação',
+        quase: 'Negociação',
         agendado: 'Fechado',
         fiquei: 'Fechado',
         intimidade: 'Fechado',
@@ -1488,10 +1565,14 @@
             const colParent = col?.closest('.kanban-col');
             if (!col || !colParent) return;
 
-            if (currentStatus === 'All' || currentStatus === s) {
+            const matchesFilter = currentStatus === 'All' || currentStatus === s;
+            const hiddenByToggle = isKanbanColumnHidden(s) && currentStatus !== s;
+            if (matchesFilter && !hiddenByToggle) {
                 colParent.style.display = 'flex';
+                colParent.classList.remove('is-hidden');
             } else {
                 colParent.style.display = 'none';
+                colParent.classList.add('is-hidden');
             }
 
             col.innerHTML = '';
@@ -1548,10 +1629,11 @@
                 col.appendChild(card);
             });
         });
+        updateKanbanColumnToggles();
     }
 
     function updateUI() {
-        const stats = { conheci: 0, conversando: 0, agendado: 0, fiquei: 0, intimidade: 0, recorrente: 0 };
+        const stats = Object.fromEntries(STATUS_VALUES.map(s => [s, 0]));
         contacts.forEach(c => {
             if (stats[c.status] !== undefined) stats[c.status]++;
         });

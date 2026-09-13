@@ -533,6 +533,11 @@
             </div>
 
             <div class="filter-block">
+                <span class="filter-label">Por profissão</span>
+                <div class="temperature-filters" id="profissaoFilters"></div>
+            </div>
+
+            <div class="filter-block">
                 <span class="filter-label">Ordem alfabética</span>
                 <p class="filter-copy">Escolhe uma inicial para ver a lista e a quantidade de contactos.</p>
                 <div class="alpha-grid" id="alphaFilters"></div>
@@ -569,7 +574,7 @@
         </div>
         <div class="search-field">
             <span class="search-icon" aria-hidden="true">⌕</span>
-            <input type="search" id="searchInput" name="not_account_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Pesquisar por nome ou bairro" aria-label="Pesquisar contactos por nome ou bairro" oninput="renderList()">
+            <input type="search" id="searchInput" name="not_account_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Pesquisar por nome, bairro ou profissão" aria-label="Pesquisar contactos por nome, bairro ou profissão" oninput="renderList()">
         </div>
         <div class="bulk-bar" id="bulkBar" aria-live="polite">
             <div class="bulk-summary"><strong id="bulkCount">0</strong><span>selecionados</span><button class="bulk-clear" type="button" onclick="clearSelection()">Limpar</button></div>
@@ -608,6 +613,10 @@
             <div class="k-filter-section">
                 <span class="k-filter-label">Temperatura:</span>
                 <div class="k-temp-chips" id="kanbanTempFilters"></div>
+            </div>
+            <div class="k-filter-section">
+                <span class="k-filter-label">Profissão:</span>
+                <div class="k-temp-chips" id="kanbanProfissaoFilters"></div>
             </div>
             <div class="k-filter-section">
                 <span class="k-filter-label">Colunas:</span>
@@ -662,6 +671,7 @@
             <input type="number" id="in-idade" placeholder="Idade">
             <input type="text" id="in-bairro" placeholder="Bairro / Localização">
         </div>
+        <input type="text" id="in-profissao" placeholder="Profissão">
         <div class="form-row">
             <select id="in-status">
                 <option value="conheci">Conheci (Contato Inicial)</option>
@@ -806,6 +816,7 @@
             nome: String(c.nome || '').trim(),
             idade: c.idade || '',
             bairro: c.bairro || '',
+            profissao: c.profissao || '',
             status: STATUS_VALUES.includes(status) ? status : 'conheci',
             temperatura: TEMPERATURE_VALUES.includes(c.temperatura) ? c.temperatura : 'morno',
             origin: c.origin || '',
@@ -829,6 +840,7 @@
     let currentAlpha = 'All';
     let currentTemperature = 'All';
     let currentStatus = 'All';
+    let currentProfissao = 'All';
     let editingId = null;
     const selectedIds = new Set();
 
@@ -1287,6 +1299,7 @@
             notes: sheetValue(c, 'notes'),
             idade: sheetValue(c, 'idade'),
             bairro: sheetValue(c, 'bairro'),
+            profissao: sheetValue(c, 'profissao'),
             photo: sheetValue(c, 'photo'),
             temperatura: c.temperatura,
             lastContactAt: c.lastContactAt,
@@ -1394,14 +1407,16 @@
         const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
         return contacts.filter(c => {
             const nome = c.nome || '';
-            const m = `${nome} ${c.bairro || ''}`.toLowerCase().includes(query);
+            const m = `${nome} ${c.bairro || ''} ${c.profissao || ''}`.toLowerCase().includes(query);
             const init = nome.charAt(0).toUpperCase();
             const temperature = c.temperatura || 'morno';
             const status = c.status || 'conheci';
+            const profissao = (c.profissao || '').trim();
             return m
                 && (currentAlpha === 'All' || init === currentAlpha)
                 && (currentTemperature === 'All' || temperature === currentTemperature)
-                && (currentStatus === 'All' || status === currentStatus);
+                && (currentStatus === 'All' || status === currentStatus)
+                && (currentProfissao === 'All' || profissao === currentProfissao);
         });
     }
 
@@ -1409,6 +1424,7 @@
         currentAlpha = 'All';
         currentTemperature = 'All';
         currentStatus = 'All';
+        currentProfissao = 'All';
         const search = document.getElementById('searchInput');
         if (search) search.value = '';
         renderList();
@@ -1551,6 +1567,7 @@
                     </div>
                     <div class="contact-meta">
                         <span>⌖ ${escapeHtml(c.bairro) || 'Local não definido'}</span>
+                        ${c.profissao ? `<span>💼 ${escapeHtml(c.profissao)}</span>` : ''}
                         <span class="status-chip"><i></i>${statusLabel}</span>
                         ${nextAction ? `<span>↳ Próxima ação: ${nextAction}</span>` : ''}
                     </div>
@@ -1583,7 +1600,7 @@
             }
 
             col.innerHTML = '';
-            const inCol = contacts.filter(c => c.status === s && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature));
+            const inCol = contacts.filter(c => c.status === s && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature) && (currentProfissao === 'All' || ((c.profissao || '').trim()) === currentProfissao));
 
             const titleEl = colParent.querySelector('.col-title');
             if (titleEl) {
@@ -1715,6 +1732,35 @@
             });
         });
 
+        // Filtros de Profissão (Sidebar e Kanban)
+        const profValues = [...new Set(contacts.map(c => (c.profissao || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt'));
+        const profItems = [['All', 'Todas'], ...profValues.map(p => [p, p])];
+        ['profissaoFilters', 'kanbanProfissaoFilters'].forEach(containerId => {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = '';
+            if (profValues.length === 0) {
+                el.innerHTML = `<span class="settings-hint">Sem profissões registadas.</span>`;
+                return;
+            }
+            profItems.forEach(([val, label]) => {
+                const count = val === 'All'
+                    ? contacts.filter(c => (currentStatus === 'All' || c.status === currentStatus) && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature)).length
+                    : contacts.filter(c => (currentStatus === 'All' || c.status === currentStatus) && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature) && ((c.profissao || '').trim() === val)).length;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `temperature-filter ${currentProfissao === val ? 'active' : ''}`;
+                btn.disabled = count === 0 && val !== 'All';
+                btn.setAttribute('aria-label', `${label}: ${count} contactos`);
+                btn.onclick = () => {
+                    currentProfissao = (currentProfissao === val && val !== 'All') ? 'All' : val;
+                    renderList(); renderKanban();
+                };
+                btn.innerHTML = `<span>${escapeHtml(label)}</span><span class="count">${count}</span>`;
+                el.appendChild(btn);
+            });
+        });
+
         // Calendário de Letras (Ordem Alfabética)
         const aDiv = document.getElementById('alphaFilters');
         if (aDiv) {
@@ -1745,6 +1791,7 @@
         document.getElementById('in-nome').value = '';
         document.getElementById('in-idade').value = '';
         document.getElementById('in-bairro').value = '';
+        document.getElementById('in-profissao').value = '';
         document.getElementById('in-status').value = 'conheci';
         document.getElementById('in-temperatura').value = 'morno';
         document.getElementById('in-origin').value = '';
@@ -1781,6 +1828,7 @@
         document.getElementById('in-nome').value = c.nome || '';
         document.getElementById('in-idade').value = c.idade || '';
         document.getElementById('in-bairro').value = c.bairro || '';
+        document.getElementById('in-profissao').value = c.profissao || '';
         document.getElementById('in-status').value = c.status || 'conheci';
         document.getElementById('in-temperatura').value = c.temperatura || 'morno';
         document.getElementById('in-origin').value = c.origin || '';
@@ -1798,7 +1846,7 @@
 
     // Auto-save na edição: alterou, guardou — sem precisar do botão.
     // Só vale a editar contacto existente; contacto novo continua a exigir "Guardar contacto".
-    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'];
+    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-profissao', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'];
     let autosaveTimer = null;
     let autosaveSuspended = false;
 
@@ -1821,6 +1869,7 @@
             nome: nome,
             idade: document.getElementById('in-idade').value,
             bairro: document.getElementById('in-bairro').value.trim(),
+            profissao: document.getElementById('in-profissao').value.trim(),
             status: document.getElementById('in-status').value,
             temperatura: document.getElementById('in-temperatura').value,
             origin: document.getElementById('in-origin').value.trim(),
@@ -1881,6 +1930,7 @@
             nome: nome,
             idade: document.getElementById('in-idade').value,
             bairro: document.getElementById('in-bairro').value.trim(),
+            profissao: document.getElementById('in-profissao').value.trim(),
             status: document.getElementById('in-status').value,
             temperatura: document.getElementById('in-temperatura').value,
             origin: document.getElementById('in-origin').value.trim(),
@@ -1927,7 +1977,7 @@
 
     function exportCSV() {
         if (contacts.length === 0) { showToast('Nenhum contacto para exportar.', true); return; }
-        const headers = ['id','nome','idade','bairro','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','createdAt','updatedAt'];
+        const headers = ['id','nome','idade','bairro','profissao','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','createdAt','updatedAt'];
         const rows = contacts.map(c => headers.map(h => csvEscape(c[h])).join(','));
         const csv = '\uFEFF' + headers.join(',') + '\r\n' + rows.join('\r\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2038,7 +2088,7 @@
         const source = raw || {};
         const encryptedFields = {};
         const legacyFields = {};
-        ['favorito', 'profissao', 'formacao', 'cidade', 'estado', 'bebe', 'fuma', 'pets', 'sexo', 'qtde_filhos', 'idade_filhos'].forEach(field => {
+        ['favorito', 'formacao', 'cidade', 'estado', 'bebe', 'fuma', 'pets', 'sexo', 'qtde_filhos', 'idade_filhos'].forEach(field => {
             if (source[field] !== undefined) legacyFields[field] = source[field];
         });
         ['nome', 'fonte', 'origin', 'whatsapp', 'instagram', 'notes', 'idade', 'bairro', 'photo'].forEach(field => {
@@ -2057,6 +2107,7 @@
             nome: hasLegacyEncryptedValue(source.nome) ? '' : source.nome,
             idade: hasLegacyEncryptedValue(source.idade) ? '' : source.idade,
             bairro: hasLegacyEncryptedValue(source.bairro) ? '' : source.bairro,
+            profissao: source.profissao || '',
             status: resolvedStatus,
             temperatura: mapSheetTemperature(source.temperatura || source.status),
             origin: hasLegacyEncryptedValue(source.origin || source.fonte) ? '' : (source.origin || source.fonte || ''),

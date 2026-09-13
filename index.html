@@ -383,6 +383,12 @@
         .modal h2 { color: var(--ink); letter-spacing: -.04em; }
         .modal-copy { margin: -8px 0 19px; color: var(--muted); font-size: .75rem; line-height: 1.5; }
         .modal input, .modal select, .modal textarea { min-height: 43px; margin-bottom: 10px; padding: 10px 12px; color: var(--ink); border: 1px solid var(--line); border-radius: 11px; background: var(--surface-tint); font-size: .78rem; }
+        .modal { scrollbar-width: thin; scrollbar-color: #d9cbd9 transparent; }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: transparent; }
+        .modal::-webkit-scrollbar-thumb { background: #ddd0dd; border-radius: 999px; }
+        .modal::-webkit-scrollbar-thumb:hover { background: var(--plum); }
+        .autosave-hint { min-height: 16px; margin: 2px 0 8px; color: var(--muted); font-size: .68rem; font-weight: 600; text-align: center; }
         .modal textarea { min-height: 86px; resize: vertical; }
         .modal input::placeholder, .modal textarea::placeholder { color: #9ca3ad; }
         .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: #c9b5ca; box-shadow: 0 0 0 3px rgba(94,60,93,.09); }
@@ -702,6 +708,7 @@
             <div id="voiceNotesList"></div>
         </div>
 
+        <div class="autosave-hint" id="autosaveHint" aria-live="polite"></div>
         <div style="display: flex; gap: 10px;">
             <button id="deleteBtn" class="delete-btn" type="button" onclick="handleDelete()" style="display:none;">Apagar</button>
             <button class="button-secondary" type="button" onclick="closeModal()">Cancelar</button>
@@ -1753,12 +1760,15 @@
         editingId = null;
         resetForm(); // Bug corrigido: antes o modal reabria com os dados do último contacto editado
         document.getElementById('deleteBtn').style.display = 'none';
+        setAutosaveHint('');
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('in-nome').focus();
         refreshVoiceSection();
     }
     
     function closeModal() {
+        if (editingId && !autosaveSuspended && isModalOpen()) autosaveEdit();
+        clearTimeout(autosaveTimer);
         if (isRecording) stopRecording();
         document.getElementById('modal').style.display = 'none';
     }
@@ -1767,6 +1777,7 @@
         const c = contacts.find(i => String(i.id) === String(id));
         if (!c) { showToast('Contacto não encontrado.', true); return; } // Bug corrigido: evitava um crash se o id não existir
         editingId = c.id;
+        clearTimeout(autosaveTimer);
         document.getElementById('in-nome').value = c.nome || '';
         document.getElementById('in-idade').value = c.idade || '';
         document.getElementById('in-bairro').value = c.bairro || '';
@@ -1780,8 +1791,81 @@
         document.getElementById('in-last-contact').value = c.lastContactAt || '';
         document.getElementById('in-next-action').value = c.nextActionAt || '';
         document.getElementById('deleteBtn').style.display = 'block';
+        setAutosaveHint('As alterações guardam-se automaticamente');
         document.getElementById('modal').style.display = 'flex';
         refreshVoiceSection();
+    }
+
+    // Auto-save na edição: alterou, guardou — sem precisar do botão.
+    // Só vale a editar contacto existente; contacto novo continua a exigir "Guardar contacto".
+    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'];
+    let autosaveTimer = null;
+    let autosaveSuspended = false;
+
+    function isModalOpen() {
+        return document.getElementById('modal')?.style.display === 'flex';
+    }
+
+    function setAutosaveHint(text) {
+        const el = document.getElementById('autosaveHint');
+        if (el) el.textContent = text || '';
+    }
+
+    function readModalContact() {
+        const nome = document.getElementById('in-nome').value.trim();
+        if (!nome) return null;
+        const existing = editingId ? contacts.find(i => String(i.id) === String(editingId)) : null;
+        if (!existing) return null;
+        return normalizeContact({
+            id: existing.id,
+            nome: nome,
+            idade: document.getElementById('in-idade').value,
+            bairro: document.getElementById('in-bairro').value.trim(),
+            status: document.getElementById('in-status').value,
+            temperatura: document.getElementById('in-temperatura').value,
+            origin: document.getElementById('in-origin').value.trim(),
+            photo: document.getElementById('in-photo').value.trim(),
+            whatsapp: document.getElementById('in-whatsapp').value.trim(),
+            instagram: document.getElementById('in-instagram').value.trim(),
+            notes: document.getElementById('in-notes').value.trim(),
+            lastContactAt: document.getElementById('in-last-contact').value,
+            nextActionAt: document.getElementById('in-next-action').value,
+            createdAt: existing.createdAt,
+            voiceNotes: existing.voiceNotes || []
+        });
+    }
+
+    async function autosaveEdit() {
+        if (!editingId || !isModalOpen() || autosaveSuspended) return;
+        const c = readModalContact();
+        if (!c) return; // nome vazio ou contacto removido: não guarda
+        setAutosaveHint('A guardar…');
+        try {
+            await saveAndSync(c);
+            renderList(); renderKanban();
+            setAutosaveHint('Alterações guardadas ✓');
+        } catch (error) {
+            setAutosaveHint('Falha ao guardar. Volta a mexer para tentar de novo.');
+        }
+    }
+
+    function scheduleAutosave() {
+        setAutosaveHint('A escrever…');
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(() => autosaveEdit(), 700);
+    }
+
+    function bindAutosave() {
+        AUTOSAVE_FIELD_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el || el.dataset.autosaveBound) return;
+            el.dataset.autosaveBound = '1';
+            if (el.tagName.toLowerCase() === 'select' || el.type === 'date') {
+                el.addEventListener('change', () => autosaveEdit());
+            } else {
+                el.addEventListener('input', scheduleAutosave);
+            }
+        });
     }
 
     async function handleSave() {
@@ -1825,7 +1909,9 @@
         const nome = c ? (c.nome || 'este contacto') : 'este contacto';
         if (!confirm(`Apagar "${nome}" definitivamente? Esta ação não pode ser desfeita.`)) return;
         const id = editingId;
+        autosaveSuspended = true;
         closeModal();
+        autosaveSuspended = false;
         try {
             await deleteAndSync(id);
             showToast(`"${nome}" foi apagado e sincronizado.`);
@@ -2036,6 +2122,7 @@
         });
         contacts = contacts.map(normalizeContact).filter(c => c.nome);
         persistContacts();
+        bindAutosave();
         renderList();
         renderKanban();
 

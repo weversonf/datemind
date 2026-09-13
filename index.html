@@ -671,7 +671,8 @@
             <input type="number" id="in-idade" placeholder="Idade">
             <input type="text" id="in-bairro" placeholder="Bairro / Localização">
         </div>
-        <input type="text" id="in-profissao" placeholder="Profissão">
+        <input type="text" id="in-profissao" placeholder="Profissão" list="profissaoList" autocomplete="off">
+        <datalist id="profissaoList"></datalist>
         <div class="form-row">
             <select id="in-status">
                 <option value="conheci">Conheci (Contato Inicial)</option>
@@ -808,6 +809,12 @@
         }
     }
 
+    // Profissão com inicial sempre maiúscula (lista e filtros ficam limpos).
+    function capitalizeFirst(str) {
+        const s = (str || '').toString().trim();
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+    }
+
     function normalizeContact(raw) {
         const c = raw || {};
         const status = c.status === 'transei' ? 'intimidade' : c.status;
@@ -816,7 +823,7 @@
             nome: String(c.nome || '').trim(),
             idade: c.idade || '',
             bairro: c.bairro || '',
-            profissao: c.profissao || '',
+            profissao: capitalizeFirst(c.profissao),
             status: STATUS_VALUES.includes(status) ? status : 'conheci',
             temperatura: TEMPERATURE_VALUES.includes(c.temperatura) ? c.temperatura : 'morno',
             origin: c.origin || '',
@@ -889,6 +896,17 @@
             btn.setAttribute('aria-pressed', String(!hidden));
             btn.innerHTML = `<i class="chip-dot" style="background:var(--color-${status})"></i><span>${hidden ? 'Mostrar' : 'Ocultar'} ${label}</span>`;
         });
+    }
+
+    // Autocomplete de profissões: sugere valores já cadastrados (datalist).
+    function distinctProfissoes() {
+        return [...new Set(contacts.map(c => (c.profissao || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt'));
+    }
+
+    function refreshProfissaoDatalist() {
+        const dl = document.getElementById('profissaoList');
+        if (!dl) return;
+        dl.innerHTML = distinctProfissoes().map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
     }
 
     function formatDateLabel(value) {
@@ -1733,7 +1751,7 @@
         });
 
         // Filtros de Profissão (Sidebar e Kanban)
-        const profValues = [...new Set(contacts.map(c => (c.profissao || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt'));
+        const profValues = distinctProfissoes();
         const profItems = [['All', 'Todas'], ...profValues.map(p => [p, p])];
         ['profissaoFilters', 'kanbanProfissaoFilters'].forEach(containerId => {
             const el = document.getElementById(containerId);
@@ -1785,6 +1803,8 @@
                 aDiv.appendChild(btn);
             });
         }
+
+        refreshProfissaoDatalist();
     }
 
     function resetForm() {
@@ -1807,14 +1827,15 @@
         editingId = null;
         resetForm(); // Bug corrigido: antes o modal reabria com os dados do último contacto editado
         document.getElementById('deleteBtn').style.display = 'none';
-        setAutosaveHint('');
+        setAutosaveHint('Basta preencher — guardamos automaticamente');
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('in-nome').focus();
+        refreshProfissaoDatalist();
         refreshVoiceSection();
     }
     
     function closeModal() {
-        if (editingId && !autosaveSuspended && isModalOpen()) autosaveEdit();
+        if (!autosaveSuspended && isModalOpen()) autosaveEdit();
         clearTimeout(autosaveTimer);
         if (isRecording) stopRecording();
         document.getElementById('modal').style.display = 'none';
@@ -1841,11 +1862,12 @@
         document.getElementById('deleteBtn').style.display = 'block';
         setAutosaveHint('As alterações guardam-se automaticamente');
         document.getElementById('modal').style.display = 'flex';
+        refreshProfissaoDatalist();
         refreshVoiceSection();
     }
 
-    // Auto-save na edição: alterou, guardou — sem precisar do botão.
-    // Só vale a editar contacto existente; contacto novo continua a exigir "Guardar contacto".
+    // Auto-save: alterou, guardou — sem precisar do botão.
+    // A editar, atualiza. A criar, o contacto nasce sozinho no primeiro conteúdo válido (nome).
     const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-profissao', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'];
     let autosaveTimer = null;
     let autosaveSuspended = false;
@@ -1861,15 +1883,14 @@
 
     function readModalContact() {
         const nome = document.getElementById('in-nome').value.trim();
-        if (!nome) return null;
-        const existing = editingId ? contacts.find(i => String(i.id) === String(editingId)) : null;
-        if (!existing) return null;
+        if (!nome || !editingId) return null;
+        const existing = contacts.find(i => String(i.id) === String(editingId)) || null;
         return normalizeContact({
-            id: existing.id,
+            id: editingId,
             nome: nome,
             idade: document.getElementById('in-idade').value,
             bairro: document.getElementById('in-bairro').value.trim(),
-            profissao: document.getElementById('in-profissao').value.trim(),
+            profissao: capitalizeFirst(document.getElementById('in-profissao').value),
             status: document.getElementById('in-status').value,
             temperatura: document.getElementById('in-temperatura').value,
             origin: document.getElementById('in-origin').value.trim(),
@@ -1879,20 +1900,30 @@
             notes: document.getElementById('in-notes').value.trim(),
             lastContactAt: document.getElementById('in-last-contact').value,
             nextActionAt: document.getElementById('in-next-action').value,
-            createdAt: existing.createdAt,
-            voiceNotes: existing.voiceNotes || []
+            createdAt: existing?.createdAt || new Date().toISOString(),
+            voiceNotes: existing ? (existing.voiceNotes || []) : []
         });
     }
 
     async function autosaveEdit() {
-        if (!editingId || !isModalOpen() || autosaveSuspended) return;
+        if (!isModalOpen() || autosaveSuspended) return;
+        const nome = document.getElementById('in-nome').value.trim();
+        if (!nome) return; // sem nome não há contacto para guardar
+        const isNew = !editingId;
+        if (isNew) editingId = Date.now();
         const c = readModalContact();
-        if (!c) return; // nome vazio ou contacto removido: não guarda
+        if (!c) { if (isNew) editingId = null; return; }
         setAutosaveHint('A guardar…');
         try {
             await saveAndSync(c);
             renderList(); renderKanban();
-            setAutosaveHint('Alterações guardadas ✓');
+            if (isNew) {
+                document.getElementById('deleteBtn').style.display = 'block';
+                setAutosaveHint('Contacto criado — as alterações guardam-se automaticamente');
+                refreshVoiceSection();
+            } else {
+                setAutosaveHint('Alterações guardadas ✓');
+            }
         } catch (error) {
             setAutosaveHint('Falha ao guardar. Volta a mexer para tentar de novo.');
         }
@@ -1930,7 +1961,7 @@
             nome: nome,
             idade: document.getElementById('in-idade').value,
             bairro: document.getElementById('in-bairro').value.trim(),
-            profissao: document.getElementById('in-profissao').value.trim(),
+            profissao: capitalizeFirst(document.getElementById('in-profissao').value),
             status: document.getElementById('in-status').value,
             temperatura: document.getElementById('in-temperatura').value,
             origin: document.getElementById('in-origin').value.trim(),

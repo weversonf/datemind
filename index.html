@@ -482,6 +482,20 @@
             width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0;
         }
 
+        /* Micro-animações — dinâmico sem exagero */
+        @keyframes dm-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes dm-pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes dm-fade { from { opacity: 0; } to { opacity: 1; } }
+        #contactList .list-item { animation: dm-rise .28s ease both; }
+        .kanban-container .card { animation: dm-rise .25s ease both; }
+        #listView.view-enter, #kanbanView.view-enter { animation: dm-fade .22s ease both; }
+        .modal-overlay[style*="flex"] .modal { animation: dm-pop .22s ease both; }
+        .v-btn:active, .primary-btn:active, .button-primary:active, .data-btn:active,
+        .a-btn:active, .status-chip-btn:active, .temperature-filter:active, .k-toggle-btn:active { transform: scale(.97); }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+
         /* Modo escuro — overrides de superfícies claras */
         [data-theme="dark"] body { background-image: radial-gradient(circle at 92% -5%, rgba(232,115,98,.07), transparent 29rem), radial-gradient(circle at -8% 75%, rgba(184,155,216,.07), transparent 28rem); }
         [data-theme="dark"] body::before { background-image: linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px); }
@@ -717,6 +731,7 @@
             </div>
             <div class="k-filter-section">
                 <span class="k-filter-label">Colunas:</span>
+                <button class="k-toggle-btn" id="toggle-fiquei" type="button" onclick="toggleKanbanColumn('fiquei')"></button>
                 <button class="k-toggle-btn" id="toggle-intimidade" type="button" onclick="toggleKanbanColumn('intimidade')"></button>
                 <button class="k-toggle-btn" id="toggle-recorrente" type="button" onclick="toggleKanbanColumn('recorrente')"></button>
             </div>
@@ -972,7 +987,7 @@
     };
 
     // Colunas avançadas começam ocultas no kanban; o utilizador pode revelá-las.
-    const LATE_STAGE_COLUMNS = ['intimidade', 'recorrente'];
+    const LATE_STAGE_COLUMNS = ['fiquei', 'intimidade', 'recorrente'];
     const HIDDEN_COLUMNS_STORAGE_KEY = 'datemind_hidden_kanban_cols';
     let hiddenKanbanColumns = readJsonStorage(localStorage, HIDDEN_COLUMNS_STORAGE_KEY, LATE_STAGE_COLUMNS);
 
@@ -1306,13 +1321,23 @@
     }
 
     function setView(v) {
-        document.getElementById('btn-list').classList.toggle('active', v === 'list');
-        document.getElementById('btn-kanban').classList.toggle('active', v === 'kanban');
-        document.getElementById('listView').style.display = v === 'list' ? 'block' : 'none';
-        document.getElementById('sidebar').style.display = v === 'list' ? 'flex' : 'none';
-        document.getElementById('kanbanView').classList.toggle('active', v === 'kanban');
-        document.querySelector('.app-grid').style.gridTemplateColumns = v === 'kanban' ? '1fr' : '320px 1fr';
-        v === 'kanban' ? renderKanban() : renderList();
+        const view = v === 'kanban' ? 'kanban' : 'list';
+        try { localStorage.setItem('datemind_view', view); } catch (e) {}
+        const btnList = document.getElementById('btn-list');
+        const btnKanban = document.getElementById('btn-kanban');
+        if (btnList) { btnList.classList.toggle('active', view === 'list'); btnList.setAttribute('aria-pressed', String(view === 'list')); }
+        if (btnKanban) { btnKanban.classList.toggle('active', view === 'kanban'); btnKanban.setAttribute('aria-pressed', String(view === 'kanban')); }
+        document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
+        document.getElementById('sidebar').style.display = view === 'list' ? 'flex' : 'none';
+        document.getElementById('kanbanView').classList.toggle('active', view === 'kanban');
+        document.querySelector('.app-grid').style.gridTemplateColumns = view === 'kanban' ? '1fr' : '320px 1fr';
+        const shown = view === 'kanban' ? document.getElementById('kanbanView') : document.getElementById('listView');
+        if (shown) { shown.classList.remove('view-enter'); void shown.offsetWidth; shown.classList.add('view-enter'); }
+        view === 'kanban' ? renderKanban() : renderList();
+    }
+    function getSavedView() {
+        try { return localStorage.getItem('datemind_view') === 'kanban' ? 'kanban' : 'list'; }
+        catch (e) { return 'list'; }
     }
 
     // Theme: claro / escuro / sistema (guardado no navegador)
@@ -1721,7 +1746,7 @@
             return;
         }
 
-        filtered.forEach(c => {
+        filtered.forEach((c, i) => {
             const nome = c.nome || 'Sem nome';
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=5e3c5d&color=fff&bold=true`;
             const avatar = c.photo ? c.photo.replace(/["']/g, '') : fallbackAvatar;
@@ -1733,6 +1758,7 @@
             const selected = selectedIds.has(String(c.id));
             const item = document.createElement('div');
             item.className = `list-item${selected ? ' is-selected' : ''}`;
+            item.style.animationDelay = Math.min(i * 22, 220) + 'ms';
             item.dataset.contactId = String(c.id);
             item.tabIndex = 0;
             item.setAttribute('role', 'listitem');
@@ -1798,13 +1824,14 @@
                 col.innerHTML = `<div class="empty-state"><span>Sem contactos${currentTemperature !== 'All' ? ' nesta temperatura' : ' nesta fase'}</span></div>`;
                 return;
             }
-            inCol.forEach(c => {
+            inCol.forEach((c, i) => {
                 const nome = c.nome || 'Sem nome';
                 const temp = tempConfig[c.temperatura || 'morno'] || tempConfig.morno;
                 const nextAction = formatDateLabel(c.nextActionAt);
 
                 const card = document.createElement('div');
                 card.className = 'card';
+                card.style.animationDelay = Math.min(i * 22, 220) + 'ms';
                 card.draggable = true;
                 card.dataset.contactId = String(c.id);
                 card.id = `c-${String(c.id).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
@@ -2392,6 +2419,7 @@
         bindAutosave();
         renderList();
         renderKanban();
+        setView(getSavedView());
 
         const syncUrl = getSyncUrl();
         if (!syncUrl) {

@@ -685,7 +685,7 @@
         </div>
         <div class="search-field">
             <span class="search-icon" aria-hidden="true">⌕</span>
-            <input type="search" id="searchInput" name="not_account_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Pesquisar por nome, bairro ou profissão" aria-label="Pesquisar contactos por nome, bairro ou profissão" oninput="renderList()">
+            <input type="search" id="searchInput" name="not_account_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Pesquisar por nome, bairro ou profissão" aria-label="Pesquisar contactos por nome, bairro ou profissão" oninput="scheduleSearch()">
         </div>
         <div class="bulk-bar" id="bulkBar" aria-live="polite">
             <div class="bulk-summary"><strong id="bulkCount">0</strong><span>selecionados</span><button class="bulk-clear" type="button" onclick="clearSelection()">Limpar</button></div>
@@ -969,6 +969,32 @@
     let currentProfissao = 'All';
     let editingId = null;
     const selectedIds = new Set();
+
+    // Filtros persistem neste navegador — abrir como deixaste.
+    const FILTERS_KEY = 'datemind_filters';
+    function persistFilters() {
+        try {
+            localStorage.setItem(FILTERS_KEY, JSON.stringify({
+                alpha: currentAlpha, temperature: currentTemperature,
+                status: currentStatus, profissao: currentProfissao
+            }));
+        } catch (e) {}
+    }
+    function restoreFilters() {
+        const f = readJsonStorage(localStorage, FILTERS_KEY, null);
+        if (!f || typeof f !== 'object') return;
+        if (typeof f.alpha === 'string') currentAlpha = f.alpha;
+        if (typeof f.temperature === 'string') currentTemperature = f.temperature;
+        if (typeof f.status === 'string') currentStatus = f.status;
+        if (typeof f.profissao === 'string') currentProfissao = f.profissao;
+    }
+
+    // Busca com debounce — evita re-render a cada tecla.
+    let searchTimer = null;
+    function scheduleSearch() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => renderList(), 180);
+    }
 
     // Configuração de exibição da temperatura
     const tempConfig = {
@@ -1457,22 +1483,14 @@
         }
         if (contact.status === newStatus) return;
 
-        const previousStatus = contact.status;
         contact.status = newStatus;
         persistContacts();
         renderKanban();
         updateUI();
-        showToast(`${contact.nome} movido para ${statusConfig[newStatus]}.`);
-
-        try {
-            await saveAndSync(contact);
-        } catch (error) {
-            contact.status = previousStatus;
-            persistContacts();
-            renderKanban();
-            updateUI();
-            showToast('Não foi possível atualizar a fase. O contacto voltou à coluna anterior.', true);
-        }
+        await saveAndSync(contact);
+        showToast(syncQueue.length
+            ? `${contact.nome} movido para ${statusConfig[newStatus]} (sincroniza depois).`
+            : `${contact.nome} movido para ${statusConfig[newStatus]}.`);
     }
 
     const SHEET_PHASE_BY_STATUS = {
@@ -1573,7 +1591,6 @@
 
     async function saveAndSync(c) {
         const idx = contacts.findIndex(item => String(item.id) === String(c.id));
-        const previous = idx >= 0 ? contacts[idx] : null;
         const now = new Date().toISOString();
         const normalized = normalizeContact({ ...c, updatedAt: now });
         if (idx >= 0) contacts[idx] = normalized;
@@ -1584,16 +1601,15 @@
             try {
                 await flushSyncQueue();
             } catch (error) {
-                if (idx >= 0) contacts[idx] = previous;
-                else contacts = contacts.filter(item => String(item.id) !== String(normalized.id));
-                persistContacts();
-                updateUI();
-                throw error;
+                // Offline-first: a alteração fica guardada local + na fila; sincroniza depois.
+                // Nunca descartar o que o utilizador digitou por falha de rede.
+                setSyncStatus('err', 'Pendente — tentará novamente');
             }
         } else {
             setSyncStatus('ok', 'Local — navegador');
         }
         updateUI();
+        return normalized;
     }
 
     async function deleteAndSync(id) {
@@ -1605,10 +1621,8 @@
             try {
                 await flushSyncQueue();
             } catch (error) {
-                contacts.push(removed);
-                persistContacts();
-                renderList(); renderKanban(); updateUI();
-                throw error;
+                // Offline-first: mantém apagado local + operação na fila; sincroniza depois.
+                setSyncStatus('err', 'Pendente — tentará novamente');
             }
         } else if (!getSyncUrl()) {
             setSyncStatus('ok', 'Local — navegador');
@@ -1638,6 +1652,7 @@
         currentTemperature = 'All';
         currentStatus = 'All';
         currentProfissao = 'All';
+        persistFilters();
         const search = document.getElementById('searchInput');
         if (search) search.value = '';
         renderList();
@@ -1718,7 +1733,7 @@
 
         if (getSyncUrl()) {
             updated.forEach(c => queueOperation(buildSyncPayload(c)));
-            await flushSyncQueue();
+            try { await flushSyncQueue(); } catch (error) { /* fila persistida; tenta depois */ }
         } else {
             setSyncStatus('ok', 'Local — navegador');
         }
@@ -1728,7 +1743,7 @@
         if (statusSelect) statusSelect.value = '';
         if (temperatureSelect) temperatureSelect.value = '';
         renderList();
-        showToast(`${changed.length} contacto(s) atualizado(s) em lote.`);
+        showToast(syncQueue.length ? `${changed.length} contacto(s) atualizado(s) neste dispositivo (sincroniza depois).` : `${changed.length} contacto(s) atualizado(s) em lote.`);
     }
 
     function renderList() {
@@ -1909,6 +1924,7 @@
                 btn.setAttribute('aria-label', `${label}: ${count} contactos`);
                 btn.onclick = () => {
                     currentStatus = (currentStatus === val && val !== 'All') ? 'All' : val;
+                    persistFilters();
                     renderList(); renderKanban();
                 };
                 btn.innerHTML = `<i class="chip-dot" style="background:${dotColor}"></i><span>${label}</span><span class="count">${count}</span>`;
@@ -1938,6 +1954,7 @@
                 btn.setAttribute('aria-label', `${label}: ${count} contactos`);
                 btn.onclick = () => {
                     currentTemperature = (currentTemperature === val && val !== 'All') ? 'All' : val;
+                    persistFilters();
                     renderList(); renderKanban();
                 };
                 btn.innerHTML = `<span>${label}</span><span class="count">${count}</span>`;
@@ -1967,6 +1984,7 @@
                 btn.setAttribute('aria-label', `${label}: ${count} contactos`);
                 btn.onclick = () => {
                     currentProfissao = (currentProfissao === val && val !== 'All') ? 'All' : val;
+                    persistFilters();
                     renderList(); renderKanban();
                 };
                 btn.innerHTML = `<span>${escapeHtml(label)}</span><span class="count">${count}</span>`;
@@ -1992,6 +2010,7 @@
                 btn.setAttribute('aria-label', l === 'All' ? `Ver todos os ${count} contactos` : `Filtrar contactos com a letra ${l}: ${count}`);
                 btn.onclick = () => {
                     currentAlpha = (currentAlpha === l && l !== 'All') ? 'All' : l;
+                    persistFilters();
                     renderList();
                 };
                 btn.innerHTML = `${l === 'All' ? 'Tudo' : l}<span>${count}</span>`;
@@ -2117,12 +2136,13 @@
         try {
             await saveAndSync(c);
             renderList(); renderKanban();
+            const pending = syncQueue.length > 0;
             if (isNew) {
                 document.getElementById('deleteBtn').style.display = 'block';
-                setAutosaveHint('Contacto criado — as alterações guardam-se automaticamente');
+                setAutosaveHint(pending ? 'Contacto criado neste dispositivo — sincroniza depois ⏳' : 'Contacto criado — as alterações guardam-se automaticamente');
                 refreshVoiceSection();
             } else {
-                setAutosaveHint('Alterações guardadas ✓');
+                setAutosaveHint(pending ? 'Guardado neste dispositivo — sincroniza depois ⏳' : 'Alterações guardadas ✓');
             }
         } catch (error) {
             setAutosaveHint('Falha ao guardar. Volta a mexer para tentar de novo.');
@@ -2207,9 +2227,9 @@
         autosaveSuspended = false;
         try {
             await deleteAndSync(id);
-            showToast(`"${nome}" foi apagado e sincronizado.`);
+            showToast(syncQueue.length ? `"${nome}" foi apagado neste dispositivo (sincroniza depois).` : `"${nome}" foi apagado e sincronizado.`);
         } catch (error) {
-            showToast(`Não foi possível apagar "${nome}" no Firestore. O contacto foi restaurado.`, true);
+            showToast(`Não foi possível apagar "${nome}". Tenta de novo.`, true);
         }
     }
 
@@ -2287,12 +2307,12 @@
             persistContacts();
             if (getSyncUrl()) {
                 imported.forEach(c => queueOperation(buildSyncPayload(c)));
-                await flushSyncQueue();
+                try { await flushSyncQueue(); } catch (error) { /* fila persistida; tenta depois */ }
             } else {
                 setSyncStatus('ok', 'Local — navegador');
             }
             renderList(); renderKanban();
-            showToast(`${imported.length} contacto(s) importado(s) sem apagar os atuais.`);
+            showToast(syncQueue.length ? `${imported.length} contacto(s) importado(s) neste dispositivo (sincroniza depois).` : `${imported.length} contacto(s) importado(s) sem apagar os atuais.`);
         } catch (e) {
             showToast(e.message || 'Não foi possível importar o CSV.', true);
         }
@@ -2417,6 +2437,7 @@
         contacts = contacts.map(normalizeContact).filter(c => c.nome);
         persistContacts();
         bindAutosave();
+        restoreFilters();
         renderList();
         renderKanban();
         setView(getSavedView());

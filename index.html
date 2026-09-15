@@ -496,6 +496,18 @@
             *, *::before, *::after { animation: none !important; transition: none !important; }
         }
 
+        /* Login — ecrã privado */
+        .login-overlay { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; background: var(--canvas); }
+        .login-overlay.show { display: flex; animation: dm-fade .25s ease both; }
+        .login-card { width: 100%; max-width: 360px; text-align: center; padding: 38px 30px 30px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-md); animation: dm-pop .25s ease both; }
+        .login-mark { width: 46px; height: 46px; margin: 0 auto 16px; font-size: .8rem; }
+        .login-card h2 { color: var(--ink); font-size: 1.4rem; letter-spacing: -.03em; margin-bottom: 8px; }
+        .login-card p { color: var(--muted); font-size: .78rem; line-height: 1.55; margin-bottom: 20px; }
+        .login-btn { width: 100%; min-height: 46px; font-size: .8rem; }
+        .login-error { min-height: 18px; margin: 12px 0 0 !important; color: var(--temp-quente); font-size: .72rem; font-weight: 600; }
+        .session-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-tint); }
+        .session-email { font-size: .75rem; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         /* Modo escuro — overrides de superfícies claras */
         [data-theme="dark"] body { background-image: radial-gradient(circle at 92% -5%, rgba(232,115,98,.07), transparent 29rem), radial-gradient(circle at -8% 75%, rgba(184,155,216,.07), transparent 28rem); }
         [data-theme="dark"] body::before { background-image: linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px); }
@@ -611,6 +623,16 @@
     </div>
 </header>
 <div class="toast" id="toast"></div>
+
+<div class="login-overlay" id="loginOverlay" aria-hidden="true">
+    <div class="login-card" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <div class="brand-mark login-mark" aria-hidden="true">DM</div>
+        <h2 id="loginTitle">Datemind</h2>
+        <p>O teu espaço privado para bons encontros.<br>Entra para ver os teus contactos.</p>
+        <button class="button-primary login-btn" type="button" onclick="signInWithGoogle()">Entrar com Google</button>
+        <p class="login-error" id="loginError" role="alert"></p>
+    </div>
+</div>
 
 <div class="app-grid">
     <aside class="sidebar" id="sidebar">
@@ -871,6 +893,12 @@
                     <button type="button" id="theme-system" onclick="setThemeMode('system')">Sistema</button>
                 </div>
                 <span class="settings-hint">O modo escuro fica guardado neste navegador. “Sistema” acompanha o teu telemóvel/computador.</span>
+
+                <span class="settings-label">Sessão</span>
+                <div class="session-row">
+                    <span class="session-email" id="sessionEmail">—</span>
+                    <button type="button" class="bulk-clear" onclick="signOut()">Sair</button>
+                </div>
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 18px;">
@@ -896,18 +924,59 @@
     const firebaseApp = firebase.initializeApp(firebaseConfig);
     const firebaseAuth = firebase.auth();
     const firestore = firebase.firestore();
-    let firebaseReady = null;
-    async function ensureFirebase() {
-        if (firebaseAuth.currentUser) return firebaseAuth.currentUser;
-        if (!firebaseReady) {
-            firebaseReady = firebaseAuth.signInAnonymously()
-                .then(result => result.user)
-                .catch(err => {
-                    firebaseReady = null;
-                    throw err;
-                });
+
+    // Acesso privado: só esta conta Google entra. A regra no Firestore impõe o mesmo no servidor.
+    const ALLOWED_EMAIL = 'weversonf@gmail.com';
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+    function isAuthorizedUser(user) {
+        return !!user && ((user.email || '').toLowerCase() === ALLOWED_EMAIL);
+    }
+
+    async function ensureUser() {
+        const user = firebaseAuth.currentUser;
+        if (isAuthorizedUser(user)) return user;
+        throw new Error('Sem sessão — entra com Google.');
+    }
+
+    function loginErrorMessage(e) {
+        const code = (e && e.code) || '';
+        if (code === 'auth/unauthorized-domain') return 'Falta autorizar o domínio weversonf.github.io no Firebase.';
+        if (code === 'auth/operation-not-allowed') return 'Login com Google desativado no Firebase.';
+        if (code === 'auth/popup-closed-by-user') return 'Login cancelado. Tenta de novo.';
+        return 'Não foi possível entrar. Tenta de novo.';
+    }
+
+    async function signInWithGoogle() {
+        const errBox = document.getElementById('loginError');
+        if (errBox) errBox.textContent = '';
+        setSyncStatus('busy', 'A abrir login…');
+        try {
+            await firebaseAuth.signInWithPopup(googleProvider);
+        } catch (e) {
+            const code = (e && e.code) || '';
+            if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+                try { await firebaseAuth.signInWithRedirect(googleProvider); return; }
+                catch (e2) { e = e2; }
+            }
+            if (errBox) errBox.textContent = loginErrorMessage(e);
+            setSyncStatus('', 'Entra para continuar');
         }
-        return firebaseReady;
+    }
+
+    async function signOut() {
+        closeSettings();
+        try { await firebaseAuth.signOut(); } catch (e) {}
+    }
+
+    function showLogin(show) {
+        document.getElementById('loginOverlay')?.classList.toggle('show', !!show);
+    }
+
+    function updateSessionUI(user) {
+        const el = document.getElementById('sessionEmail');
+        if (el) el.textContent = (user && user.email) ? user.email : '—';
     }
 
     const CONTACTS_STORAGE_KEY = 'contact_hub_cache';
@@ -1127,6 +1196,7 @@
         document.getElementById('in-model').value = cfg.model || '';
         const mode = getThemeMode();
         paintThemeButtons(mode, document.documentElement.getAttribute('data-theme') || 'light');
+        updateSessionUI(firebaseAuth.currentUser);
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -1554,7 +1624,7 @@
     }
 
     async function sendSyncOperation(payload) {
-        await ensureFirebase();
+        await ensureUser();
         const ref = firestore.collection('contacts').doc(String(payload.id));
         if (payload.action === 'delete') {
             await ref.delete();
@@ -2413,6 +2483,27 @@
         persistContacts();
     }
 
+    async function syncFromFirestore() {
+        setSyncStatus('busy', contacts.length ? `Local · ${contacts.length} · a sincronizar…` : 'A carregar Firestore…');
+        try {
+            await ensureUser();
+            if (syncQueue.length) await flushSyncQueue();
+            const snapshot = await firestore.collection('contacts').get();
+            const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
+            // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.
+            contacts = remoteContacts.map(normalizeContact);
+            syncQueue = [];
+            persistContacts();
+            persistSyncQueue();
+            renderList(); renderKanban(); updateUI();
+            setSyncStatus('ok', `Firestore · ${remoteContacts.length} registos`);
+        } catch (e) {
+            const fallbackLabel = contacts.length ? `Offline · ${contacts.length} locais` : 'Firestore indisponível';
+            setSyncStatus('err', fallbackLabel);
+            showToast(`${e.message || 'Não foi possível sincronizar'} Os dados locais continuam disponíveis.`, true);
+        }
+    }
+
     async function init() {
         try { localStorage.removeItem('ai_config'); } catch (e) {}
         const searchInputEl = document.getElementById('searchInput');
@@ -2449,24 +2540,27 @@
             return;
         }
 
-        setSyncStatus('busy', contacts.length ? `Local · ${contacts.length} · a sincronizar…` : 'A carregar Firestore…');
-        try {
-            await ensureFirebase();
-            if (syncQueue.length) await flushSyncQueue();
-            const snapshot = await firestore.collection('contacts').get();
-            const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
-            // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.
-            contacts = remoteContacts.map(normalizeContact);
-            syncQueue = [];
-            persistContacts();
-            persistSyncQueue();
-            renderList(); renderKanban(); updateUI();
-            setSyncStatus('ok', `Firestore · ${remoteContacts.length} registos`);
-        } catch (e) {
-            const fallbackLabel = contacts.length ? `Offline · ${contacts.length} locais` : 'Firestore indisponível';
-            setSyncStatus('err', fallbackLabel);
-            showToast(`${e.message || 'Não foi possível sincronizar'} Os dados locais continuam disponíveis.`, true);
+        setSyncStatus('busy', 'A verificar sessão…');
+        updateSessionUI(null);
+        try { await firebaseAuth.getRedirectResult(); } catch (e) {
+            const errBox = document.getElementById('loginError');
+            if (errBox) errBox.textContent = loginErrorMessage(e);
         }
+        firebaseAuth.onAuthStateChanged(async (user) => {
+            updateSessionUI(user);
+            if (isAuthorizedUser(user)) {
+                showLogin(false);
+                await syncFromFirestore();
+            } else {
+                if (user) {
+                    try { await firebaseAuth.signOut(); } catch (e) {}
+                    const errBox = document.getElementById('loginError');
+                    if (errBox) errBox.textContent = 'Esta conta Google não tem acesso ao Datemind.';
+                }
+                showLogin(true);
+                setSyncStatus('', 'Entra para continuar');
+            }
+        });
     }
     init();
 </script>

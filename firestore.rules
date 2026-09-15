@@ -2,9 +2,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Permite leitura e escrita apenas para clientes autenticados (inclusive autenticação anônima do Datemind)
+    // Só o dono (login Google com este e-mail) lê e escreve. Anônimo e outras contas: bloqueados.
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email == 'weversonf@gmail.com';
+    }
     match /contacts/{contactId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isOwner();
     }
 
     // Bloqueia qualquer outra coleção ou rota por padrão

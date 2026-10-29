@@ -1,0 +1,97 @@
+/* DateMind · compact single-row Kanban toolbar · v015 */
+#kanbanView .kanban-filter-bar.dm-compact-toolbar {
+  position: relative; z-index: 30; display: flex; align-items: center;
+  flex-wrap: nowrap; justify-content: flex-start; gap: 9px;
+  min-height: 58px; padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+}
+.dm-toolbar-heading { display: inline-flex; align-items: center; gap: 7px;
+  flex: 0 0 auto; padding-right: 12px; margin-right: 3px;
+  border-right: 1px solid var(--line); color: var(--ink); font-size: .74rem;
+  font-weight: 800; white-space: nowrap; }
+.dm-toolbar-heading svg { width: 16px; height: 16px; color: var(--plum); }
+.dm-toolbar-field { display: flex; align-items: center; gap: 6px;
+  min-width: 0; flex: 0 1 auto; }
+.dm-toolbar-field label { color: var(--muted); font-size: .64rem;
+  font-weight: 750; white-space: nowrap; }
+.dm-toolbar-select { min-width: 0; height: 35px; padding: 0 30px 0 11px;
+  border: 1px solid var(--line); border-radius: 9px;
+  color: var(--ink); background: var(--surface-soft);
+  font: 750 .72rem inherit; font-size: .72rem; font-weight: 750;
+  cursor: pointer; max-width: 188px; text-overflow: ellipsis; }
+#dmFilterStatus { width: 152px; }
+#dmFilterTemp { width: 115px; }
+#dmFilterJob { width: 160px; }
+.dm-toolbar-select:focus-visible,.dm-toolbar-more > summary:focus-visible,
+.dm-toolbar-clear:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+.dm-toolbar-select.is-active { color: var(--plum); border-color: var(--plum);
+  background: var(--surface-tint); }
+.dm-toolbar-spacer { flex: 1 1 auto; min-width: 4px; }
+.dm-toolbar-count { flex: 0 0 auto; color: var(--muted);
+  font-size: .69rem; font-weight: 750; white-space: nowrap; }
+.dm-toolbar-count strong { color: var(--ink); font-size: .79rem; }
+.dm-toolbar-clear { display: inline-flex; justify-content: center; align-items: center;
+  flex: 0 0 auto; min-height: 34px; padding: 7px 10px;
+  border: 1px solid transparent; border-radius: 9px; background: transparent;
+  color: var(--muted); font-size: .7rem; font-weight: 700; cursor: pointer; }
+.dm-toolbar-clear:hover { color: var(--plum); background: var(--surface-soft); }
+.dm-toolbar-more { position: relative; flex: 0 0 auto; }
+.dm-toolbar-more > summary { list-style: none; display: inline-flex;
+  align-items: center; gap: 7px; min-height: 35px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface-soft); color: var(--ink);
+  font-size: .71rem; font-weight: 750; cursor: pointer; white-space: nowrap; }
+.dm-toolbar-more > summary::-webkit-details-marker { display: none; }
+.dm-toolbar-more > summary svg { width: 14px; height: 14px; color: var(--plum); }
+.dm-toolbar-more[open] > summary { border-color: var(--plum); color: var(--plum); }
+.dm-toolbar-badge { display: none; min-width: 17px; height: 17px; align-items: center;
+  justify-content: center; padding: 0 4px; border-radius: 999px;
+  background: var(--plum); color: white; font-size: .6rem; font-weight: 800; }
+.dm-toolbar-badge:not(:empty) { display: inline-flex; }
+.dm-toolbar-panel { position: absolute; z-index: 100; top: calc(100% + 10px); right: 0;
+  width: min(680px, calc(100vw - 42px)); max-height: min(72vh, 720px); overflow: auto;
+  padding: 18px; border: 1px solid var(--line); border-radius: 15px;
+  background: var(--surface); box-shadow: 0 18px 65px rgba(0,0,0,.22); }
+.dm-panel-heading { display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px; }
+.dm-panel-heading strong { color: var(--ink); font-size: .82rem; }
+.dm-panel-heading span { color: var(--muted); font-size: .67rem; }
+.dm-panel-columns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.dm-panel-columns > span { margin-right: 8px; color: var(--muted);
+  font-size: .68rem; font-weight: 750; }
+.dm-panel-columns .k-toggle-btn { min-height: 30px; }
+#kanbanView .dm-toolbar-panel .dm-filter-grid { display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+#kanbanView .dm-toolbar-panel .dm-filter-bottom { margin-top: 14px; }
+#kanbanView .dm-toolbar-panel .dm-filter-control { min-height: 36px; }
+.dm-toolbar-legacy { display: none !important; }
+@media (max-width: 1100px) {
+  #kanbanView .kanban-filter-bar.dm-compact-toolbar { gap: 7px; }
+  .dm-toolbar-heading { padding-right: 8px; margin-right: 0; }
+  .dm-toolbar-field label { display: none; }
+  #dmFilterStatus { width: 137px; }
+  #dmFilterTemp { width: 108px; }
+  #dmFilterJob { width: 139px; }
+}
+@media (max-width: 720px) {
+  #kanbanView .kanban-filter-bar.dm-compact-toolbar { gap: 6px; padding: 8px; min-height: 52px; }
+  .dm-toolbar-heading { font-size: 0; border: none; padding: 0; }
+  .dm-toolbar-heading svg { width: 18px; height: 18px; }
+  #dmFilterStatus { width: 106px; }
+  #dmFilterTemp { width: 94px; }
+  #dmFilterJob { width: 105px; }
+  .dm-toolbar-select { padding: 0 20px 0 7px; font-size: .66rem; }
+  .dm-toolbar-more > summary { padding: 0 8px; }
+  .dm-toolbar-more .dm-more-label { display: none; }
+  .dm-toolbar-clear { padding: 5px; }
+  .dm-toolbar-count { display: none; }
+  .dm-toolbar-spacer { display: none; }
+  #kanbanView .dm-toolbar-panel .dm-filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .dm-toolbar-panel { right: -45px; padding: 13px; }
+}
+@media (max-width: 490px) {
+  #dmFilterJob { display: none; }
+  #kanbanView .dm-toolbar-panel .dm-filter-grid { grid-template-columns: 1fr; }
+}

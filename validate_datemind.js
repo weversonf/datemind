@@ -12,6 +12,12 @@ for (const old of ['CryptoJS', 'SECRET_KEY', 'API_URL', 'enc(', 'dec(', 'split(\
   if (match[1].includes(old)) throw new Error('Referência legada: '+old);
 }
 assert(html.includes('src="datemind-dossier.js"'), 'Dossiê não carregado');
+assert(html.includes('class="kanban-filter-bar glass-box dm-compact-toolbar"'), 'Barra compacta ausente');
+assert(html.includes('href="datemind-toolbar.css"'), 'Estilos da barra compacta ausentes');
+assert(html.includes('function setCompactFilter(kind,value)'), 'Selects compactos sem lógica');
+assert(html.includes('function refreshCompactToolbar()'), 'Contagem e estado da barra não atualizados');
+assert(dossierJS.includes('function activeCount()'), 'Indicador de filtros avançados ausente');
+
 assert(html.includes('href="datemind-dossier.css"'), 'Estilos do dossiê não carregados');
 assert(dossierCSS.includes('.dm-dossier-section'), 'Layout do dossiê ausente');
 assert(html.includes('dossier: DateMindDossier.fromRemote(source)'), 'Falta leitura do Firestore');

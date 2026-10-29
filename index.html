@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATEMIND v014 — Dossiês</title>
+    <title>DATEMIND v015 — Filtros compactos</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="datemind-dossier.css">
@@ -604,6 +604,7 @@
             .kanban-col { min-width: 260px; }
         }
     </style>
+    <link rel="stylesheet" href="datemind-toolbar.css">
 </head>
 <body>
 
@@ -740,27 +741,53 @@
     </main>
 
     <div class="kanban-wrapper" id="kanbanView">
-        <div class="kanban-filter-bar glass-box">
-            <div class="k-filter-section">
-                <span class="k-filter-label">Fase:</span>
-                <div class="k-status-chips" id="kanbanStatusFilters"></div>
+        <div class="kanban-filter-bar glass-box dm-compact-toolbar" role="group" aria-label="Filtros do funil">
+            <span class="dm-toolbar-heading">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/><circle cx="8" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/></svg>
+                Filtros
+            </span>
+            <div class="dm-toolbar-field">
+                <label for="dmFilterStatus">Fase</label>
+                <select id="dmFilterStatus" class="dm-toolbar-select" aria-label="Filtrar por fase" onchange="setCompactFilter('status',this.value)">
+                    <option value="All">Todas as fases</option>
+                </select>
             </div>
-            <div class="k-filter-section">
-                <span class="k-filter-label">Temperatura:</span>
-                <div class="k-temp-chips" id="kanbanTempFilters"></div>
+            <div class="dm-toolbar-field">
+                <label for="dmFilterTemp">Temperatura</label>
+                <select id="dmFilterTemp" class="dm-toolbar-select" aria-label="Filtrar por temperatura" onchange="setCompactFilter('temperature',this.value)">
+                    <option value="All">Temperatura</option>
+                </select>
             </div>
-            <div class="k-filter-section">
-                <span class="k-filter-label">Profissão:</span>
-                <div class="k-temp-chips" id="kanbanProfissaoFilters"></div>
+            <div class="dm-toolbar-field">
+                <label for="dmFilterJob">Profissão</label>
+                <select id="dmFilterJob" class="dm-toolbar-select" aria-label="Filtrar por profissão" onchange="setCompactFilter('profissao',this.value)">
+                    <option value="All">Profissão</option>
+                </select>
             </div>
-            <div class="k-filter-section">
-                <span class="k-filter-label">Colunas:</span>
-                <button class="k-toggle-btn" id="toggle-fiquei" type="button" onclick="toggleKanbanColumn('fiquei')"></button>
-                <button class="k-toggle-btn" id="toggle-intimidade" type="button" onclick="toggleKanbanColumn('intimidade')"></button>
-                <button class="k-toggle-btn" id="toggle-recorrente" type="button" onclick="toggleKanbanColumn('recorrente')"></button>
+            <details class="dm-toolbar-more" id="dmToolbarMore">
+                <summary title="Abrir filtros avançados e opções das colunas" aria-label="Mais filtros e opções de colunas">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/><circle cx="8" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/></svg>
+                    <span class="dm-more-label">Mais filtros</span><span id="dmToolbarBadge" class="dm-toolbar-badge" aria-live="polite"></span>
+                </summary>
+                <div class="dm-toolbar-panel">
+                    <div class="dm-panel-heading"><strong>Filtros avançados</strong><span>Combine até 24 critérios</span></div>
+                    <div class="dm-panel-columns">
+                        <span>Exibir colunas</span>
+                        <button class="k-toggle-btn" id="toggle-fiquei" type="button" onclick="toggleKanbanColumn('fiquei')"></button>
+                        <button class="k-toggle-btn" id="toggle-intimidade" type="button" onclick="toggleKanbanColumn('intimidade')"></button>
+                        <button class="k-toggle-btn" id="toggle-recorrente" type="button" onclick="toggleKanbanColumn('recorrente')"></button>
+                    </div>
+                    <div id="dossierFiltersKanban"></div>
+                </div>
+            </details>
+            <div class="dm-toolbar-spacer"></div>
+            <span id="dmToolbarCount" class="dm-toolbar-count" aria-live="polite"></span>
+            <button class="dm-toolbar-clear" type="button" onclick="resetFilters()" title="Limpar todos os filtros">Limpar</button>
+            <div class="dm-toolbar-legacy" hidden aria-hidden="true">
+                <div id="kanbanStatusFilters"></div>
+                <div id="kanbanTempFilters"></div>
+                <div id="kanbanProfissaoFilters"></div>
             </div>
-            <details class="dm-filter-wrap"><summary>Filtros avançados · 24 critérios</summary><div id="dossierFiltersKanban"></div></details>
-            <button class="filter-reset k-reset-btn" type="button" onclick="resetFilters()">Limpar filtros</button>
         </div>
 
         <div class="kanban-container">
@@ -1727,6 +1754,55 @@
         });
     }
 
+    // Compact Kanban toolbar — same filter state as the sidebar.
+    function setCompactFilter(kind,value) {
+        if(kind==='status') currentStatus=STATUS_VALUES.includes(value)?value:'All';
+        else if(kind==='temperature') currentTemperature=TEMPERATURE_VALUES.includes(value)?value:'All';
+        else if(kind==='profissao') currentProfissao=value==='All'||distinctProfissoes().includes(value)?value:'All';
+        persistFilters();
+        renderList(); renderKanban(); updateUI();
+    }
+    function refreshCompactToolbar() {
+        const elements = [
+            ['dmFilterStatus', currentStatus, [['All','Todas as fases'], ...STATUS_VALUES.map(v=>[v,statusConfig[v]])]],
+            ['dmFilterTemp', currentTemperature, [['All','Temperatura'], ['frio','🧊 Frio'], ['morno','⚡ Morno'], ['quente','🔥 Quente']]],
+            ['dmFilterJob', currentProfissao, [['All','Profissão'], ...distinctProfissoes().map(v=>[v,v])]]
+        ];
+        elements.forEach(([id,selected,options])=>{
+            const el=document.getElementById(id);
+            if(!el)return;
+            const markup=options.map(([val,label])=>'<option value="'+escapeHtml(val)+'">'+escapeHtml(label)+'</option>').join('');
+            if(el.innerHTML!==markup)el.innerHTML=markup;
+            el.value=selected;
+            el.classList.toggle('is-active',selected!=='All');
+        });
+        const total=contacts.length;
+        const visible=contacts.filter(c=>
+            (currentStatus==='All'||c.status===currentStatus) &&
+            (currentTemperature==='All'||(c.temperatura||'morno')===currentTemperature) &&
+            (currentProfissao==='All'||(c.profissao||'').trim()===currentProfissao) &&
+            DateMindDossier.match(c)
+        ).length;
+        const counter=document.getElementById('dmToolbarCount');
+        if(counter)counter.innerHTML='<strong>'+visible+'</strong> de '+total;
+        const activeCount=(currentStatus!=='All'?1:0)+(currentTemperature!=='All'?1:0)+
+            (currentProfissao!=='All'?1:0)+DateMindDossier.activeCount();
+        const badge=document.getElementById('dmToolbarBadge');
+        if(badge)badge.textContent=activeCount?String(activeCount):'';
+        const clear=document.querySelector('#kanbanView .dm-toolbar-clear');
+        if(clear)clear.style.visibility=activeCount||currentAlpha!=='All'?'visible':'hidden';
+    }
+    function bindCompactToolbar() {
+        document.addEventListener('pointerdown', e=>{
+            const more=document.getElementById('dmToolbarMore');
+            if(more?.open&&!more.contains(e.target))more.open=false;
+        });
+        document.addEventListener('keydown',e=>{
+            const more=document.getElementById('dmToolbarMore');
+            if(e.key==='Escape'&&more?.open){more.open=false;e.stopPropagation();}
+        });
+    }
+
     function resetFilters() {
         currentAlpha = 'All';
         currentTemperature = 'All';
@@ -2102,6 +2178,7 @@
         }
 
         refreshProfissaoDatalist();
+        refreshCompactToolbar();
     }
 
     function resetForm() {
@@ -2637,7 +2714,8 @@
         });
         contacts = contacts.map(normalizeContact).filter(c => c.nome);
         persistContacts();
-        DateMindDossier.mount({contacts: () => contacts, changed: () => { renderList(); renderKanban(); }});
+        DateMindDossier.mount({contacts: () => contacts, changed: () => { renderList(); renderKanban(); updateUI(); }});
+        bindCompactToolbar();
         bindAutosave();
         restoreFilters();
         renderList();

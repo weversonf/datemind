@@ -2190,6 +2190,7 @@
         if (!nome || !editingId) return null;
         const existing = contacts.find(i => String(i.id) === String(editingId)) || null;
         return normalizeContact({
+            ...(existing || {}), // Preserve legacy fields, imported data and metadata when editing.
             id: editingId,
             nome: nome,
             idade: document.getElementById('in-idade').value,

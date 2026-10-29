@@ -1,0 +1,23 @@
+/* DateMind · extensão de dossiês */
+#modal .modal { max-width: 760px; max-height: 92vh; overflow-y: auto; }
+.dm-dossier-heading { display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin:18px 0 12px;border-top:1px solid var(--border, #dad4df);padding-top:18px; }
+.dm-dossier-heading strong {font-size:14px;color:var(--ink,var(--text-main));}
+.dm-dossier-heading small{font-size:11px;color:var(--muted,var(--text-dim));}
+.dm-dossier-section{border:1px solid var(--line,var(--border));border-radius:13px;margin:8px 0;background:var(--surface,var(--bg-surface));}
+.dm-dossier-section summary{cursor:pointer;padding:13px 15px;font-size:12px;font-weight:750;list-style-position:inside;}
+.dm-dossier-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;padding:4px 15px 16px;}
+.dm-dossier-field{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted,var(--text-dim));font-weight:650;min-width:0;}
+.dm-dossier-field:has(textarea){grid-column:1/-1;}
+.dm-dossier-field input,.dm-dossier-field select,.dm-dossier-field textarea{width:100%;margin:0!important;min-width:0;color:var(--ink,var(--text-main));background:var(--surface-soft,var(--bg-deep));border:1px solid var(--line,var(--border));border-radius:9px;padding:10px;font-size:12px;resize:vertical;}
+.dm-filter-wrap{margin:12px 0;border:1px solid var(--line,var(--border));border-radius:12px;padding:9px 11px;background:var(--surface,var(--bg-surface));}
+.dm-filter-wrap summary{cursor:pointer;font-size:12px;font-weight:750;color:var(--ink,var(--text-main));padding:6px;}
+.dm-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;}
+.dm-filter-field{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:650;color:var(--muted,var(--text-dim));min-width:0;}
+.dm-filter-control{width:100%;min-width:0;border:1px solid var(--line,var(--border));background:var(--surface-soft,var(--bg-deep));color:var(--ink,var(--text-main));border-radius:8px;padding:8px;font-size:11px;}
+.dm-filter-bottom{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:10px;font-size:10px;color:var(--muted,var(--text-dim));}
+.dm-filter-bottom button{border:1px solid var(--line,var(--border));border-radius:8px;background:transparent;color:var(--ink,var(--text-main));padding:7px 10px;font-size:10px;cursor:pointer;}
+.dm-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.dm-card-tags span{font-size:10px;background:var(--surface-soft,var(--bg-deep));border:1px solid var(--line,var(--border));border-radius:6px;padding:4px 6px;color:var(--muted,var(--text-dim));}
+.kanban-filter-bar .dm-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+.kanban-filter-bar .dm-filter-wrap{flex-basis:100%;width:100%;}
+@media(max-width:650px){.dm-dossier-grid,.dm-filter-grid,.kanban-filter-bar .dm-filter-grid{grid-template-columns:1fr;}#modal .modal{max-height:96vh;}}

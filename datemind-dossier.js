@@ -223,5 +223,6 @@ const DateMindDossier = (() => {
     });
     return normalize(d);
   }
-  return {normalize,fromRemote,mount,fillForm,clearForm,readForm,formIds,refreshOptions,match,clearFilters,cardTags,searchText,exportHeaders,csvValue,importRow};
+  function activeCount() { return Object.values(selected).filter(v => v !== '' && v !== null && v !== undefined).length; }
+  return {normalize,fromRemote,mount,fillForm,clearForm,readForm,formIds,refreshOptions,match,clearFilters,activeCount,cardTags,searchText,exportHeaders,csvValue,importRow};
 })();

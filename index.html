@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATEMIND v013</title>
+    <title>DATEMIND v014 — Dossiês</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="datemind-dossier.css">
     <style>
         :root {
             --bg-deep: #08090a;
@@ -670,6 +671,7 @@
                 <div class="temperature-filters" id="profissaoFilters"></div>
             </div>
 
+            <details class="dm-filter-wrap"><summary>Filtros avançados · Dossiê</summary><div id="dossierFiltersList"></div></details>
             <div class="filter-block">
                 <span class="filter-label">Ordem alfabética</span>
                 <p class="filter-copy">Escolhe uma inicial para ver a lista e a quantidade de contactos.</p>
@@ -757,6 +759,7 @@
                 <button class="k-toggle-btn" id="toggle-intimidade" type="button" onclick="toggleKanbanColumn('intimidade')"></button>
                 <button class="k-toggle-btn" id="toggle-recorrente" type="button" onclick="toggleKanbanColumn('recorrente')"></button>
             </div>
+            <details class="dm-filter-wrap"><summary>Filtros avançados · 24 critérios</summary><div id="dossierFiltersKanban"></div></details>
             <button class="filter-reset k-reset-btn" type="button" onclick="resetFilters()">Limpar filtros</button>
         </div>
 
@@ -839,6 +842,7 @@
             <input type="date" id="in-next-action" aria-label="Data da próxima ação">
         </div>
 
+        <div id="dossierFormFields"></div>
         <div class="voice-section">
             <div class="voice-header">
                 <span>Notas de Voz</span>
@@ -912,6 +916,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="datemind-dossier.js"></script>
 <script>
     const firebaseConfig = {
         apiKey: 'AIzaSyDfQOlcy90_5jvPWfCW9eDIBtIvt2TDL00',
@@ -1026,7 +1031,8 @@
             voiceNotes: Array.isArray(c.voiceNotes) ? c.voiceNotes : [],
             legacyPhase: String(c.legacyPhase || c.fase || '').trim(),
             legacyFields: c.legacyFields && typeof c.legacyFields === 'object' ? c.legacyFields : {},
-            legacyEncrypted: c.legacyEncrypted && typeof c.legacyEncrypted === 'object' ? c.legacyEncrypted : {}
+            legacyEncrypted: c.legacyEncrypted && typeof c.legacyEncrypted === 'object' ? c.legacyEncrypted : {},
+            dossier: DateMindDossier.normalize(c.dossier)
         };
     }
 
@@ -1608,6 +1614,7 @@
             createdAt: c.createdAt,
             updatedAt: c.updatedAt,
             voiceNotes: c.voiceNotes || [],
+            dossier: DateMindDossier.normalize(c.dossier),
             notasvoz: JSON.stringify(c.voiceNotes || [])
         };
     }
@@ -1666,6 +1673,7 @@
         if (idx >= 0) contacts[idx] = normalized;
         else contacts.push(normalized);
         persistContacts();
+        DateMindDossier.refreshOptions(contacts);
         if (getSyncUrl()) {
             queueOperation(buildSyncPayload(normalized));
             try {
@@ -1686,6 +1694,7 @@
         const removed = contacts.find(c => String(c.id) === String(id));
         contacts = contacts.filter(c => String(c.id) !== String(id));
         persistContacts();
+        DateMindDossier.refreshOptions(contacts);
         if (removed && getSyncUrl()) {
             queueOperation(buildSyncPayload(removed, 'delete'));
             try {
@@ -1704,7 +1713,7 @@
         const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
         return contacts.filter(c => {
             const nome = c.nome || '';
-            const m = `${nome} ${c.bairro || ''} ${c.profissao || ''}`.toLowerCase().includes(query);
+            const m = `${nome} ${c.bairro || ''} ${c.profissao || ''} ${DateMindDossier.searchText(c)}`.toLowerCase().includes(query);
             const init = nome.charAt(0).toUpperCase();
             const temperature = c.temperatura || 'morno';
             const status = c.status || 'conheci';
@@ -1713,7 +1722,8 @@
                 && (currentAlpha === 'All' || init === currentAlpha)
                 && (currentTemperature === 'All' || temperature === currentTemperature)
                 && (currentStatus === 'All' || status === currentStatus)
-                && (currentProfissao === 'All' || profissao === currentProfissao);
+                && (currentProfissao === 'All' || profissao === currentProfissao)
+                && DateMindDossier.match(c);
         });
     }
 
@@ -1722,6 +1732,7 @@
         currentTemperature = 'All';
         currentStatus = 'All';
         currentProfissao = 'All';
+        DateMindDossier.clearFilters();
         persistFilters();
         const search = document.getElementById('searchInput');
         if (search) search.value = '';
@@ -1868,6 +1879,7 @@
                         <span class="status-chip"><i></i>${statusLabel}</span>
                         ${nextAction ? `<span>↳ Próxima ação: ${nextAction}</span>` : ''}
                     </div>
+                    ${DateMindDossier.cardTags(c)}
                 </div>
                 <span class="card-chevron" aria-hidden="true">›</span>
             `;
@@ -1897,7 +1909,7 @@
             }
 
             col.innerHTML = '';
-            const inCol = contacts.filter(c => c.status === s && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature) && (currentProfissao === 'All' || ((c.profissao || '').trim()) === currentProfissao));
+            const inCol = contacts.filter(c => c.status === s && (currentTemperature === 'All' || (c.temperatura || 'morno') === currentTemperature) && (currentProfissao === 'All' || ((c.profissao || '').trim()) === currentProfissao) && DateMindDossier.match(c));
 
             const titleEl = colParent.querySelector('.col-title');
             if (titleEl) {
@@ -1943,6 +1955,7 @@
                         </div>
                         <span class="temp-badge ${temp.class}">${temp.label}</span>
                     </div>
+                    ${DateMindDossier.cardTags(c)}
                     <div class="kanban-card-footer">
                         <div class="card-loc" title="${escapeHtml(c.bairro) || 'Local não definido'}">⌖ ${escapeHtml(c.bairro) || 'Local não definido'}</div>
                         <span class="kanban-next${nextAction ? '' : ' is-empty'}">${nextAction ? `Próxima: ${nextAction}` : 'Sem próxima ação'}</span>
@@ -2105,6 +2118,7 @@
         document.getElementById('in-notes').value = '';
         document.getElementById('in-last-contact').value = '';
         document.getElementById('in-next-action').value = '';
+        DateMindDossier.clearForm();
     }
 
     function openModal() {
@@ -2146,6 +2160,7 @@
         document.getElementById('in-notes').value = c.notes || '';
         document.getElementById('in-last-contact').value = c.lastContactAt || '';
         document.getElementById('in-next-action').value = c.nextActionAt || '';
+        DateMindDossier.fillForm(c.dossier);
         document.getElementById('deleteBtn').style.display = 'block';
         const editTitle = document.getElementById('modalTitle');
         if (editTitle) editTitle.textContent = 'Editar contacto';
@@ -2157,7 +2172,7 @@
 
     // Auto-save: alterou, guardou — sem precisar do botão.
     // A editar, atualiza. A criar, o contacto nasce sozinho no primeiro conteúdo válido (nome).
-    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-profissao', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'];
+    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-profissao', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'].concat(DateMindDossier.formIds());
     let autosaveTimer = null;
     let autosaveSuspended = false;
 
@@ -2189,6 +2204,7 @@
             notes: document.getElementById('in-notes').value.trim(),
             lastContactAt: document.getElementById('in-last-contact').value,
             nextActionAt: document.getElementById('in-next-action').value,
+            dossier: DateMindDossier.readForm(existing?.dossier),
             createdAt: existing?.createdAt || new Date().toISOString(),
             voiceNotes: existing ? (existing.voiceNotes || []) : []
         });
@@ -2310,8 +2326,8 @@
 
     function exportCSV() {
         if (contacts.length === 0) { showToast('Nenhum contacto para exportar.', true); return; }
-        const headers = ['id','nome','idade','bairro','profissao','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','createdAt','updatedAt'];
-        const rows = contacts.map(c => headers.map(h => csvEscape(c[h])).join(','));
+        const headers = ['id','nome','idade','bairro','profissao','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','createdAt','updatedAt', ...DateMindDossier.exportHeaders()];
+        const rows = contacts.map(c => headers.map(h => csvEscape(h.startsWith('dossier_') ? DateMindDossier.csvValue(c,h) : c[h])).join(','));
         const csv = '\uFEFF' + headers.join(',') + '\r\n' + rows.join('\r\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -2365,7 +2381,8 @@
             const imported = rows.slice(1).map(values => {
                 const row = {};
                 headers.forEach((header, index) => { row[header] = (values[index] || '').trim(); });
-                return normalizeContact({ ...row, id: row.id || `import-${Date.now()}-${Math.random().toString(36).slice(2,8)}` });
+                const old = row.id ? contacts.find(c => String(c.id) === String(row.id)) : null;
+                return normalizeContact({ ...(old || {}), ...row, dossier: DateMindDossier.importRow(row, old?.dossier), id: row.id || `import-${Date.now()}-${Math.random().toString(36).slice(2,8)}` });
             }).filter(c => c.nome);
             if (imported.length === 0) throw new Error('Nenhum contacto válido no CSV.');
 
@@ -2375,6 +2392,7 @@
             imported.forEach(c => currentById.set(String(c.id), c));
             contacts = Array.from(currentById.values()).map(normalizeContact);
             persistContacts();
+            DateMindDossier.refreshOptions(contacts);
             if (getSyncUrl()) {
                 imported.forEach(c => queueOperation(buildSyncPayload(c)));
                 try { await flushSyncQueue(); } catch (error) { /* fila persistida; tenta depois */ }
@@ -2453,6 +2471,7 @@
             createdAt: source.createdAt || '',
             updatedAt: source.updatedAt || '',
             voiceNotes: parseRemoteVoiceNotes(source.notasvoz || source.voiceNotes),
+            dossier: DateMindDossier.fromRemote(source),
             legacyPhase: rawPhase,
             legacyFields,
             legacyEncrypted: encryptedFields
@@ -2492,6 +2511,7 @@
             const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
             // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.
             contacts = remoteContacts.map(normalizeContact);
+            DateMindDossier.refreshOptions(contacts);
             syncQueue = [];
             persistContacts();
             persistSyncQueue();
@@ -2527,6 +2547,7 @@
         });
         contacts = contacts.map(normalizeContact).filter(c => c.nome);
         persistContacts();
+        DateMindDossier.mount({contacts: () => contacts, changed: () => { renderList(); renderKanban(); }});
         bindAutosave();
         restoreFilters();
         renderList();

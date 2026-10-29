@@ -2369,42 +2369,131 @@
         return rows;
     }
 
+    // Importação conservadora de perfis: reconcilia IDs e nomes, protege a base existente.
+    function foldContactName(value) {
+        return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+            .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+    }
+    function findImportMatch(record, existing) {
+        const idMatches = record.id ? existing.filter(c => String(c.id)===String(record.id)) : [];
+        if (idMatches.length===1) return {target:idMatches[0],kind:'ID'};
+        const name=foldContactName(record.nome);
+        const alias=foldContactName(record.dossier?.alias);
+        if (!name) return {target:null,kind:'novo'};
+        // Equal names are safe only if unique in the current database.
+        const exact=existing.filter(c => foldContactName(c.nome)===name);
+        if(exact.length===1) return {target:exact[0],kind:'nome'};
+        if(exact.length>1) return {target:null,kind:'ambíguo'};
+        const candidates=existing.filter(c=>{
+            const cname=foldContactName(c.nome);
+            const ca=foldContactName(c.dossier?.alias);
+            return (alias && cname===alias) || (ca && ca===name);
+        });
+        if(candidates.length===1) return {target:candidates[0],kind:'apelido'};
+        if(candidates.length>1) return {target:null,kind:'ambíguo'};
+        const first=(name.split(' ')[0] || '');
+        // Warn before creating a second contact whose first name might already be present.
+        const probable=first.length>2 ? existing.filter(c => foldContactName(c.nome).split(' ')[0]===first) : [];
+        return {target:null,kind:probable.length ? 'revisar' : 'novo',probable:probable.map(c=>c.nome)};
+    }
+    function mergeImportedDossier(existing,incoming) {
+        const original=DateMindDossier.normalize(existing);
+        const next=DateMindDossier.normalize(incoming);
+        for(const [key,value] of Object.entries(next)) {
+            const previous=original[key];
+            const hasPrevious=Array.isArray(previous) ? previous.length>0 : previous!=='' && previous!==null && previous!==undefined;
+            const hasIncoming=Array.isArray(value) ? value.length>0 : value!=='' && value!==null && value!==undefined;
+            if(!hasPrevious && hasIncoming) original[key]=value;
+            else if(Array.isArray(previous) && Array.isArray(value) && value.length) {
+                const all=[...previous];
+                for(const v of value) if(!all.some(p=>foldContactName(p)===foldContactName(v))) all.push(v);
+                original[key]=all;
+            }
+        }
+        return DateMindDossier.normalize(original);
+    }
     async function importCSV(event) {
-        const file = event.target.files[0];
-        event.target.value = '';
-        if (!file) return;
+        const file=event.target.files[0];
+        event.target.value='';
+        if(!file)return;
         try {
-            const text = await file.text();
-            const rows = parseCSV(text);
-            if (rows.length < 2) throw new Error('CSV vazio ou inválido.');
-            const headers = rows[0].map(h => h.trim());
-            if (!headers.includes('nome')) throw new Error('CSV deve conter a coluna nome.');
-            const imported = rows.slice(1).map(values => {
-                const row = {};
-                headers.forEach((header, index) => { row[header] = (values[index] || '').trim(); });
-                const old = row.id ? contacts.find(c => String(c.id) === String(row.id)) : null;
-                return normalizeContact({ ...(old || {}), ...row, dossier: DateMindDossier.importRow(row, old?.dossier), id: row.id || `import-${Date.now()}-${Math.random().toString(36).slice(2,8)}` });
-            }).filter(c => c.nome);
-            if (imported.length === 0) throw new Error('Nenhum contacto válido no CSV.');
-
-            const ok = confirm(`Importar ${imported.length} contacto(s)? Os registros serão mesclados pela coluna id; nenhum contacto atual será apagado.`);
-            if (!ok) return;
-            const currentById = new Map(contacts.map(c => [String(c.id), c]));
-            imported.forEach(c => currentById.set(String(c.id), c));
-            contacts = Array.from(currentById.values()).map(normalizeContact);
+            const text=await file.text();
+            const rows=parseCSV(text);
+            if(rows.length<2) throw new Error('CSV vazio ou inválido.');
+            const headers=rows[0].map(h=>h.trim());
+            if(!headers.includes('nome')) throw new Error('CSV deve conter a coluna nome.');
+            const rawRows=rows.slice(1).map(values=>{
+                const row={};
+                headers.forEach((h,i)=>row[h]=String(values[i]||'').trim());
+                return row;
+            }).filter(row=>row.nome);
+            if(!rawRows.length)throw new Error('Nenhum contacto válido no CSV.');
+            const operations=[];
+            const conflicts=[];
+            const existingSet=[...contacts];
+            const usedIds=new Set();
+            for(const row of rawRows) {
+                const id=row.id||'';
+                const probe={id,nome:row.nome,dossier:DateMindDossier.importRow(row,{})};
+                const match=findImportMatch(probe,existingSet);
+                if(match.kind==='ambíguo') {
+                    conflicts.push(row.nome+' (mais de uma correspondência)');
+                    continue;
+                }
+                if(match.kind==='revisar') {
+                    conflicts.push(row.nome+' (possível duplicidade com '+match.probable.join(' / ')+')');
+                    continue;
+                }
+                const prev=match.target||null;
+                if(prev && usedIds.has(String(prev.id))) {
+                    conflicts.push(row.nome+' (várias linhas para o mesmo contato)');
+                    continue;
+                }
+                if(prev)usedIds.add(String(prev.id));
+                const allowed=['idade','bairro','profissao','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt'];
+                const merged={
+                    ...(prev||{}),
+                    nome:prev?.nome||row.nome,
+                    id:prev?.id || id || 'import-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),
+                    status:prev?.status || (STATUS_VALUES.includes(row.status)?row.status:'conheci'),
+                    temperatura:prev?.temperatura || (TEMPERATURE_VALUES.includes(row.temperatura)?row.temperatura:'morno'),
+                    dossier:mergeImportedDossier(prev?.dossier,DateMindDossier.importRow(row,{})),
+                    createdAt:prev?.createdAt || new Date().toISOString(),
+                    voiceNotes:prev?.voiceNotes || []
+                };
+                for(const field of allowed) {
+                    if(!row[field])continue;
+                    if(field==='lastContactAt') {
+                        if(!merged.lastContactAt || row[field]>merged.lastContactAt) merged.lastContactAt=row[field];
+                    } else if(!merged[field]) {
+                        merged[field]=row[field];
+                    }
+                }
+                operations.push({contact:normalizeContact(merged),matched:!!prev});
+            }
+            if(conflicts.length) {
+                showToast('Importação interrompida: revisar duplicidades.',true);
+                alert('Possíveis duplicidades/ambiguidade. Nada foi importado.\n\n'+conflicts.join('\n')+'\n\nRevise os nomes no CSV ou a ficha no DateMind antes de tentar novamente.');
+                return;
+            }
+            const matching=operations.filter(op=>op.matched).length;
+            const creating=operations.length-matching;
+            if(!confirm('Prévia da importação de '+operations.length+' ficha(s):\n'+
+                '• '+matching+' registro(s) existentes serão complementados, sem substituir os campos preenchidos.\n'+
+                '• '+creating+' novos registros serão criados.\n\n'+
+                'IDs, etapas e notas existentes serão preservados. Os dados poderão ser sincronizados com seu Firestore privado após confirmar.\n\nContinuar?')) return;
+            const byId=new Map(contacts.map(c=>[String(c.id),c]));
+            for(const op of operations) byId.set(String(op.contact.id),op.contact);
+            contacts=Array.from(byId.values()).map(normalizeContact);
             persistContacts();
             DateMindDossier.refreshOptions(contacts);
-            if (getSyncUrl()) {
-                imported.forEach(c => queueOperation(buildSyncPayload(c)));
-                try { await flushSyncQueue(); } catch (error) { /* fila persistida; tenta depois */ }
-            } else {
-                setSyncStatus('ok', 'Local — navegador');
-            }
-            renderList(); renderKanban();
-            showToast(syncQueue.length ? `${imported.length} contacto(s) importado(s) neste dispositivo (sincroniza depois).` : `${imported.length} contacto(s) importado(s) sem apagar os atuais.`);
-        } catch (e) {
-            showToast(e.message || 'Não foi possível importar o CSV.', true);
-        }
+            if(getSyncUrl()) {
+                operations.forEach(op=>queueOperation(buildSyncPayload(op.contact)));
+                try {await flushSyncQueue();}catch(e){/* Mantém fila de alterações offline. */}
+            } else setSyncStatus('ok','Local — navegador');
+            renderList();renderKanban();updateUI();
+            showToast(operations.length+' ficha(s) importada(s): '+matching+' atualizadas, '+creating+' novas.'+(syncQueue.length?' Sincronização pendente.':''));
+        } catch(e) {showToast(e.message||'Não foi possível importar o CSV.',true);}
     }
 
     function hasLegacyEncryptedValue(value) {

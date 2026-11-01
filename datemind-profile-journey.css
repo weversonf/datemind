@@ -1,0 +1,31 @@
+/* DateMind — progressive profile journey */
+#modal .modal {max-width:820px;width:min(96vw,820px);max-height:94dvh;overflow-y:auto;scrollbar-gutter:stable}
+.dm-journey{margin-top:18px}
+.dm-journey-top{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}
+.dm-journey-top>div{display:grid;gap:4px}
+.dm-journey-eyebrow{font-size:10px;letter-spacing:.13em;font-weight:800;color:var(--accent,#ffb300)}
+#dmJourneyHeading{font-size:20px;font-weight:800}
+#dmJourneyPercent{font-size:12px;font-weight:750;color:var(--accent,#ffb300);white-space:nowrap}
+.dm-journey-progress{height:7px;border-radius:99px;background:var(--border,#2d3139);overflow:hidden;margin-bottom:16px}
+.dm-journey-progress span{display:block;height:100%;width:0;background:var(--accent,#ffb300);border-radius:inherit;transition:width .2s}
+.dm-journey-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;padding:0 0 12px;margin-bottom:10px}
+.dm-journey-tab{flex:0 0 auto;min-height:48px;display:flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--border,#2d3139);border-radius:13px;background:var(--bg-card,#1a1d21);color:var(--text-dim,#94a3b8);font-size:12px;font-weight:750;cursor:pointer}
+.dm-journey-tab>span:first-child{font-size:17px}
+.dm-journey-tab[aria-selected=true]{border-color:var(--accent,#ffb300);color:var(--accent,#ffb300);background:rgba(255,179,0,.07)}
+.dm-journey-tab.dm-has-data:not([aria-selected=true])::after{content:'•';color:var(--accent,#ffb300)}
+.dm-journey-panel[hidden]{display:none!important}
+.dm-journey-panel{animation:dmPanelIn .16s ease-out}
+.dm-journey-panel .dm-dossier-section{border:0;background:transparent;margin:0}
+.dm-journey-panel .dm-dossier-section>summary{display:none}
+.dm-journey-panel .dm-dossier-grid{padding:8px 0 12px}
+.dm-journey-panel input,.dm-journey-panel select,.dm-journey-panel textarea{min-height:44px}
+.dm-journey-footer{position:sticky;bottom:-1px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0 5px;background:var(--bg-surface,#111316);border-top:1px solid var(--border,#2d3139);margin-top:14px}
+.dm-journey-footer>span{font-size:12px;color:var(--text-dim,#94a3b8)}
+.dm-journey-footer>div{display:flex;gap:8px}
+.dm-journey-footer button{min-height:44px;padding:10px 14px;border-radius:11px;border:1px solid var(--border,#2d3139);background:var(--bg-card,#1a1d21);color:var(--text-main,#fff);font-weight:750;cursor:pointer}
+#dmJourneyNext{background:var(--accent,#ffb300);color:#171717;border-color:transparent}
+.dm-journey-footer button:disabled{opacity:.35;cursor:not-allowed}
+.dm-journey-tab:focus-visible,.dm-journey-footer button:focus-visible{outline:2px solid var(--accent,#ffb300);outline-offset:2px}
+@keyframes dmPanelIn{from{opacity:.55;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(max-width:650px){#modal .modal{width:100%;max-height:96dvh;padding:20px 16px 26px}.dm-journey-panel .dm-dossier-grid{grid-template-columns:1fr}.dm-journey-footer{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}.dm-journey-footer>span{font-size:11px}.dm-journey-footer button{padding:10px}}
+@media(prefers-reduced-motion:reduce){.dm-journey-panel{animation:none}.dm-journey-progress span{transition:none}}

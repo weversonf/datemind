@@ -1,0 +1,39 @@
+/* DateMind 2.0 — responsive navigation foundation. Presentation only. */
+:root { --dm-touch:44px; --dm-mobile-nav-height:68px; }
+.dm-mobile-nav { display:none; }
+@media (max-width: 767px) {
+  html { scroll-padding-bottom:calc(var(--dm-mobile-nav-height) + 22px); }
+  body { padding-bottom:calc(var(--dm-mobile-nav-height) + env(safe-area-inset-bottom,0px) + 12px); }
+  header { padding:12px 16px; gap:10px; }
+  .brand-caption { display:none; }
+  .app-grid { display:flex !important; flex-direction:column; gap:16px; width:100%; max-width:100%; margin:14px auto; padding:0 14px; min-width:0; }
+  #listView,#kanbanView { width:100%; min-width:0; }
+  #sidebar { width:100%; min-width:0; }
+  .main-header { gap:10px; flex-wrap:wrap; }
+  .search-field input { min-height:var(--dm-touch); font-size:16px; }
+  .list-item { padding:12px; gap:12px; min-width:0; }
+  .list-item > * { min-width:0; }
+  .card { transition:background-color .18s,border-color .18s,transform .18s; }
+  .card:active,.list-item:active { transform:scale(.99); }
+  .kanban-container { scroll-snap-type:x proximity; overscroll-behavior-x:contain; }
+  .kanban-col { flex:0 0 min(86vw,350px); min-width:0; scroll-snap-align:start; min-height:55vh; }
+  .dm-mobile-nav { position:fixed; left:0; right:0; bottom:0; z-index:900; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px)); background:var(--bg-surface,#111316); border-top:1px solid var(--border,#2d3139); box-shadow:0 -8px 28px rgba(0,0,0,.16); }
+  .dm-mobile-nav button { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:3px; min-height:var(--dm-touch); background:transparent; color:var(--text-dim,#94a3b8); border:0; border-radius:12px; font:600 11px Inter,sans-serif; cursor:pointer; }
+  .dm-mobile-nav button[aria-current=page] { color:var(--accent,#ffb300); background:rgba(127,127,127,.1); }
+  .dm-mobile-nav .dm-nav-icon { font-size:20px; line-height:1; }
+  .dm-mobile-nav button:focus-visible { outline:2px solid var(--accent,#ffb300); outline-offset:-2px; }
+  .fab { bottom:calc(var(--dm-mobile-nav-height) + 20px + env(safe-area-inset-bottom,0px)); }
+  #modal .modal { max-height:calc(100dvh - 28px); overflow-y:auto; }
+  .dm-dossier-field input,.dm-dossier-field select,.dm-dossier-field textarea { min-height:44px; font-size:16px; }
+  .dm-filter-control,.dm-toolbar-select { min-height:44px; font-size:16px; }
+  #kanbanView .kanban-filter-bar.dm-compact-toolbar { flex-wrap:wrap; }
+  .dm-toolbar-panel { max-width:calc(100vw - 28px); }
+}
+@media (min-width:768px) and (max-width:1100px) {
+  .app-grid { grid-template-columns:minmax(230px,28%) minmax(0,1fr) !important; gap:18px; padding:0 22px; }
+  #listView { min-width:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .card,.list-item { transition:none !important; transform:none !important; }
+  .kanban-container { scroll-behavior:auto; }
+}

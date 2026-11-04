@@ -606,6 +606,7 @@
     </style>
     <link rel="stylesheet" href="datemind-toolbar.css">
     <link rel="stylesheet" href="datemind-v2.css">
+    <link rel="stylesheet" href="datemind-agenda.css">
 </head>
 <body>
 
@@ -870,6 +871,7 @@
             <input type="date" id="in-next-action" aria-label="Data da próxima ação">
         </div>
 
+        <div id="dmDateFields" hidden><label for="in-date-at">📅 Data e hora do date marcado</label><div class="form-row"><input type="date" id="in-date-at" aria-label="Data do date"><input type="time" id="in-date-time" aria-label="Horário do date"></div><input type="text" id="in-date-place" placeholder="Local do encontro (opcional)" aria-label="Local do encontro"></div>
         <div id="dossierFormFields"></div>
         <div class="voice-section">
             <div class="voice-header">
@@ -1054,6 +1056,9 @@
             notes: c.notes || '',
             lastContactAt: c.lastContactAt || '',
             nextActionAt: c.nextActionAt || '',
+            dateAt: c.dateAt || '',
+            dateTime: c.dateTime || '',
+            datePlace: c.datePlace || '',
             createdAt: c.createdAt || new Date().toISOString(),
             updatedAt: c.updatedAt || new Date().toISOString(),
             voiceNotes: Array.isArray(c.voiceNotes) ? c.voiceNotes : [],
@@ -2196,6 +2201,9 @@
         document.getElementById('in-notes').value = '';
         document.getElementById('in-last-contact').value = '';
         document.getElementById('in-next-action').value = '';
+        document.getElementById('in-date-at').value = '';
+        document.getElementById('in-date-time').value = '';
+        document.getElementById('in-date-place').value = '';
         DateMindDossier.clearForm();
     }
 
@@ -2238,6 +2246,9 @@
         document.getElementById('in-notes').value = c.notes || '';
         document.getElementById('in-last-contact').value = c.lastContactAt || '';
         document.getElementById('in-next-action').value = c.nextActionAt || '';
+        document.getElementById('in-date-at').value = c.dateAt || '';
+        document.getElementById('in-date-time').value = c.dateTime || '';
+        document.getElementById('in-date-place').value = c.datePlace || '';
         DateMindDossier.fillForm(c.dossier);
         document.getElementById('deleteBtn').style.display = 'block';
         const editTitle = document.getElementById('modalTitle');
@@ -2250,7 +2261,7 @@
 
     // Auto-save: alterou, guardou — sem precisar do botão.
     // A editar, atualiza. A criar, o contacto nasce sozinho no primeiro conteúdo válido (nome).
-    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-profissao', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action'].concat(DateMindDossier.formIds());
+    const AUTOSAVE_FIELD_IDS = ['in-nome', 'in-idade', 'in-bairro', 'in-profissao', 'in-status', 'in-temperatura', 'in-origin', 'in-photo', 'in-whatsapp', 'in-instagram', 'in-notes', 'in-last-contact', 'in-next-action', 'in-date-at', 'in-date-time', 'in-date-place'].concat(DateMindDossier.formIds());
     let autosaveTimer = null;
     let autosaveSuspended = false;
 
@@ -2283,6 +2294,9 @@
             notes: document.getElementById('in-notes').value.trim(),
             lastContactAt: document.getElementById('in-last-contact').value,
             nextActionAt: document.getElementById('in-next-action').value,
+            dateAt: document.getElementById('in-date-at').value,
+            dateTime: document.getElementById('in-date-time').value,
+            datePlace: document.getElementById('in-date-place').value.trim(),
             dossier: DateMindDossier.readForm(existing?.dossier),
             createdAt: existing?.createdAt || new Date().toISOString(),
             voiceNotes: existing ? (existing.voiceNotes || []) : []
@@ -2301,6 +2315,7 @@
         try {
             await saveAndSync(c);
             renderList(); renderKanban();
+            document.dispatchEvent(new Event('datemind:contacts-changed'));
             const pending = syncQueue.length > 0;
             if (isNew) {
                 document.getElementById('deleteBtn').style.display = 'block';
@@ -2679,6 +2694,7 @@
             const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
             // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.
             contacts = remoteContacts.map(normalizeContact);
+            document.dispatchEvent(new Event('datemind:contacts-changed'));
             DateMindDossier.refreshOptions(contacts);
             syncQueue = [];
             persistContacts();
@@ -2752,8 +2768,10 @@
             }
         });
     }
+    window.DateMindAgenda = {getContacts:()=>contacts,openContact:(id)=>openEdit(id)};
     init();
 </script>
 <script src="datemind-v2.js"></script>
+<script src="datemind-agenda.js"></script>
 </body>
 </html>

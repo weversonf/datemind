@@ -1,0 +1,26 @@
+/* Monthly agenda */
+#dmAgenda{max-width:1280px;margin:24px auto;padding:0 24px 110px}
+#dmAgenda[hidden],#dmDateFields[hidden]{display:none!important}
+.dm-agenda-header,.dm-agenda-controls{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dm-agenda-header h1{font-size:clamp(25px,4vw,38px);margin:3px 0}
+.dm-agenda-header p,.dm-agenda-help{color:var(--text-secondary,#9ca3af);font-size:13px}
+.dm-agenda-kicker{font-size:11px;letter-spacing:.14em;font-weight:800;color:var(--accent,#ffb300)}
+.dm-agenda-controls{margin:25px 0 12px;justify-content:center}
+.dm-agenda-controls h2{font-size:20px;min-width:220px;text-align:center;text-transform:capitalize}
+.dm-agenda-controls button,#dmAgendaToday{border:1px solid var(--border,#35383e);background:var(--bg-card,#202228);color:inherit;border-radius:12px;padding:10px 16px;min-height:44px;cursor:pointer}
+#dmAgendaCount{font-size:13px;color:var(--text-secondary,#9ca3af);margin-bottom:12px}
+.dm-agenda-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--border,#35383e);border-radius:16px;overflow:hidden;background:var(--bg-card,#17191d)}
+.dm-agenda-weekday{text-align:center;padding:13px 4px;font-size:12px;font-weight:800;border-bottom:1px solid var(--border,#35383e)}
+.dm-agenda-day,.dm-agenda-empty{min-height:115px;border-right:1px solid var(--border,#35383e);border-bottom:1px solid var(--border,#35383e);padding:8px;min-width:0}
+.dm-agenda-day.today{background:rgba(255,179,0,.07)}
+.dm-agenda-number{font-size:13px;font-weight:800;display:inline-block;margin-bottom:7px}
+.dm-agenda-event{display:block;width:100%;text-align:left;background:rgba(255,179,0,.13);color:var(--accent,#ffb300);border:1px solid rgba(255,179,0,.25);border-radius:7px;padding:6px;margin-bottom:4px;overflow-wrap:anywhere;font-size:11px;cursor:pointer}
+.dm-agenda-event:focus-visible{outline:2px solid currentColor}
+#dmDateFields{padding:12px;border:1px solid rgba(255,179,0,.4);border-radius:12px;margin:12px 0;background:rgba(255,179,0,.06)}
+#dmDateFields label{display:block;margin:0 0 7px;font-weight:700;font-size:13px}
+#dmDateFields .form-row{gap:8px}
+#dmDateFields input{min-height:44px}
+.dm-agenda-help{margin-top:14px}
+@media(max-width:767px){#dmAgenda{padding:0 12px 100px;margin-top:16px}.dm-agenda-grid{border-radius:10px}.dm-agenda-day,.dm-agenda-empty{min-height:76px;padding:4px 3px}.dm-agenda-weekday{font-size:10px;padding:10px 2px}.dm-agenda-number{font-size:11px}.dm-agenda-event{font-size:10px;padding:4px 3px}.dm-agenda-controls h2{min-width:160px;font-size:17px}.dm-agenda-link{font-size:11px!important}}
+
+@media(max-width:767px){.dm-mobile-nav:has(.dm-agenda-link){grid-template-columns:repeat(5,minmax(0,1fr));padding-left:5px;padding-right:5px}.dm-mobile-nav .dm-agenda-link{min-width:0}}

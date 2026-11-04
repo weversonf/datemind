@@ -24,3 +24,8 @@
 @media(max-width:767px){#dmAgenda{padding:0 12px 100px;margin-top:16px}.dm-agenda-grid{border-radius:10px}.dm-agenda-day,.dm-agenda-empty{min-height:76px;padding:4px 3px}.dm-agenda-weekday{font-size:10px;padding:10px 2px}.dm-agenda-number{font-size:11px}.dm-agenda-event{font-size:10px;padding:4px 3px}.dm-agenda-controls h2{min-width:160px;font-size:17px}.dm-agenda-link{font-size:11px!important}}
 
 @media(max-width:767px){.dm-mobile-nav:has(.dm-agenda-link){grid-template-columns:repeat(5,minmax(0,1fr));padding-left:5px;padding-right:5px}.dm-mobile-nav .dm-agenda-link{min-width:0}}
+
+/* Agenda is a standalone view: do not show the contacts list or journey dashboard. */
+body.dm-agenda-open .app-grid,body.dm-agenda-open .dm-quest-strip{display:none!important}
+.view-switcher .dm-agenda-link.active{background:var(--bg-card,#1a1d21);color:var(--text-main,#e2e8f0)}
+.dm-mobile-nav .dm-agenda-link[aria-current='page']{color:var(--accent,#ffb300)}

@@ -36,16 +36,19 @@ function render(){
 function show(){
  active=true;
  document.getElementById('dmAgenda').hidden=false;
+ document.body.classList.add('dm-agenda-open');
  document.querySelector('.app-grid').style.display='none';
  document.getElementById('kanbanView').classList.remove('active');
- document.querySelectorAll('.dm-agenda-link').forEach(b=>b.setAttribute('aria-current','page'));
+ document.querySelectorAll('.dm-agenda-link').forEach(b=>{b.setAttribute('aria-current','page');b.classList.add('active');});
+ document.querySelectorAll('#btn-list,#btn-kanban').forEach(b=>b.classList.remove('active'));
  render();window.scrollTo({top:0,behavior:'instant'});
 }
 function hide(){
  if(!active)return;active=false;
  document.getElementById('dmAgenda').hidden=true;
+ document.body.classList.remove('dm-agenda-open');
  document.querySelector('.app-grid').style.display='';
- document.querySelectorAll('.dm-agenda-link').forEach(b=>b.removeAttribute('aria-current'));
+ document.querySelectorAll('.dm-agenda-link').forEach(b=>{b.removeAttribute('aria-current');b.classList.remove('active');});
 }
 function setup(){
  const grid=document.querySelector('.app-grid');if(!grid)return;

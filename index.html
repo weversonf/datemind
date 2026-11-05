@@ -2551,7 +2551,7 @@
                     id:prev?.id || id || 'import-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),
                     status:prev?.status || (STATUS_VALUES.includes(row.status)?row.status:'conheci'),
                     temperatura:prev?.temperatura || (TEMPERATURE_VALUES.includes(row.temperatura)?row.temperatura:'morno'),
-                    dossier:mergeImportedDossier(prev?.dossier,DateMindDossier.importRow(row,{})),
+                    dossier:mergeImportedDossier(prev?.dossier,DateMindDossier.importRow(row,prev?.dossier)),
                     createdAt:prev?.createdAt || new Date().toISOString(),
                     voiceNotes:prev?.voiceNotes || []
                 };

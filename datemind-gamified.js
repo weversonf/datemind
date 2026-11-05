@@ -20,6 +20,8 @@ function setup(){
   const marked=counts.agendado||0,active=(counts.conversando||0)+(counts.quase||0);
   strip.querySelector('.dm-quest-metrics').innerHTML='<div class="dm-quest-metric"><span aria-hidden="true">◉</span><strong>'+total+'</strong><small>Contatos registrados</small></div><div class="dm-quest-metric"><span aria-hidden="true">💬</span><strong>'+active+'</strong><small>Em conversa / planejamento</small></div><div class="dm-quest-metric"><span aria-hidden="true">📅</span><strong>'+marked+'</strong><small>Dates marcados</small></div>';
   strip.querySelector('.dm-quest-track').innerHTML=stages.map(s=>'<div class="dm-quest-stage" title="'+escapeHtml(s.label)+': '+counts[s.key]+'"><span class="dm-quest-stage-icon" aria-hidden="true">'+s.icon+'</span><span class="dm-quest-stage-label">'+escapeHtml(s.label)+'</span><strong>'+counts[s.key]+'</strong><span class="dm-quest-stage-bar"><span style="width:'+(total?Math.min(100,counts[s.key]/total*100):0)+'%"></span></span></div>').join('');
+  const mission=total===0?'Missão de hoje: registre sua primeira conexão.':marked===0?'Próximo passo: transforme uma conversa em um plano concreto.':active===0?'Próximo passo: reative uma conversa que merece atenção.':'Bom ritmo: escolha uma conversa e registre o próximo passo.';
+  strip.querySelector('.dm-quest-foot').innerHTML='<strong>✦ '+mission+'</strong><span> Cada etapa é uma organização pessoal, não uma avaliação de ninguém.</span>';
  }
  let pending=false;
  function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;render();});}

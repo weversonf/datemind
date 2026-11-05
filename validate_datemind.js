@@ -24,7 +24,7 @@ assert(html.includes('dossier: DateMindDossier.fromRemote(source)'), 'Falta leit
 assert(html.includes('dossier: DateMindDossier.normalize(c.dossier)'), 'Falta sync do Firestore');
 assert(html.includes('DateMindDossier.readForm(existing?.dossier)'), 'Falta escrita dos campos');
 assert(html.includes('...(existing || {}), // Preserve legacy fields'), 'Metadados antigos não preservados');
-assert(html.includes('DateMindDossier.importRow(row, old?.dossier)'), 'Falta importação dos campos');
+assert(html.includes('DateMindDossier.importRow(row,prev?.dossier)'), 'Importação não preserva o dossiê existente');
 assert(html.includes('DateMindDossier.match(c)'), 'Filtros não conectados');
 const columns = [...html.matchAll(/class="kanban-col" data-status="([^"]+)"/g)].map(m=>m[1]);
 assert.deepStrictEqual(columns,['conheci','conversando','quase','agendado','fiquei','intimidade','recorrente']);

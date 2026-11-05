@@ -3,8 +3,7 @@
   'use strict';
   const markup = '<nav class="dm-mobile-nav" aria-label="Navegação principal">' +
     '<button type="button" data-dm-view="list" aria-label="Ver contatos"><span class="dm-nav-icon" aria-hidden="true">☷</span>Contatos</button>' +
-    '<button type="button" data-dm-view="kanban" aria-label="Ver funil"><span class="dm-nav-icon" aria-hidden="true">▥</span>Funil</button>' +
-    '<button type="button" data-dm-action="new" aria-label="Novo contato"><span class="dm-nav-icon" aria-hidden="true">＋</span>Novo</button></nav>';
+    '<button type="button" data-dm-view="kanban" aria-label="Ver funil"><span class="dm-nav-icon" aria-hidden="true">▥</span>Funil</button></nav>';
   function activeView() {
     return document.getElementById('kanbanView')?.classList.contains('active') ? 'kanban' : 'list';
   }
@@ -26,7 +25,6 @@
         if(typeof window.setView==='function') window.setView(button.dataset.dmView);
         syncNav(); return;
       }
-      if(button.dataset.dmAction==='new') { if(typeof window.openModal==='function') window.openModal(); return; }
     });
     const kanban=document.getElementById('kanbanView');
     if(kanban) new MutationObserver(syncNav).observe(kanban,{attributes:true,attributeFilter:['class']});

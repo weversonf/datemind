@@ -31,6 +31,7 @@ assert(html.includes('dateAt: c.dateAt'), 'Data do encontro não sincronizada');
 assert(html.includes('dateTime: source.dateTime'), 'Horário do encontro não carregado');
 assert(html.includes('datePlace: source.datePlace'), 'Local do encontro não carregado');
 assert(!mobileJS.includes('data-dm-action="filters"'), 'Menu móvel Filtros ainda presente');
+assert(!mobileJS.includes('data-dm-action="new"'), 'Menu móvel Novo ainda presente');
 const columns = [...html.matchAll(/class="kanban-col" data-status="([^"]+)"/g)].map(m=>m[1]);
 assert.deepStrictEqual(columns,['conheci','conversando','quase','agendado','fiquei','intimidade','recorrente']);
 const fakeStorage = { getItem(k) { return k==='datemind_dossier_filters_v1' ? JSON.stringify({childrenStatus:'Não',music:'Rock',ageMin:'25',ageMax:'40'}) : null; },setItem(){},removeItem(){} };

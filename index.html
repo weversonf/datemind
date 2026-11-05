@@ -2699,13 +2699,34 @@
             if (syncQueue.length) await flushSyncQueue();
             const snapshot = await firestore.collection('contacts').get();
             const remoteContacts = snapshot.docs.map(doc => normalizeRemoteContact(doc.data())).filter(c => c.nome);
-            // O Firestore é a fonte de verdade: não reintroduzir contactos apagados pelo cache local.
-            contacts = remoteContacts.map(normalizeContact);
+            // Migração compatível: versões anteriores não enviavam dateAt/dateTime/datePlace.
+            // Se a cópia local ainda tiver esses campos, recuperá-los antes de substituir o cache.
+            const localById = new Map(contacts.map(c => [String(c.id), c]));
+            const recovered = [];
+            contacts = remoteContacts.map(remote => {
+                const local = localById.get(String(remote.id));
+                if (!remote.dateAt && local?.dateAt) {
+                    const restored = normalizeContact({
+                        ...remote,
+                        status: local.status === 'agendado' ? 'agendado' : remote.status,
+                        dateAt: local.dateAt,
+                        dateTime: local.dateTime || '',
+                        datePlace: local.datePlace || ''
+                    });
+                    recovered.push(restored);
+                    return restored;
+                }
+                return normalizeContact(remote);
+            });
             document.dispatchEvent(new Event('datemind:contacts-changed'));
             DateMindDossier.refreshOptions(contacts);
             syncQueue = [];
             persistContacts();
             persistSyncQueue();
+            if (recovered.length) {
+                recovered.forEach(contact => queueOperation(buildSyncPayload(contact)));
+                try { await flushSyncQueue(); } catch (e) { /* A fila local tenta novamente depois. */ }
+            }
             renderList(); renderKanban(); updateUI();
             setSyncStatus('ok', `Firestore · ${remoteContacts.length} registos`);
         } catch (e) {

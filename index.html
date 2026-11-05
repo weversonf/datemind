@@ -1645,6 +1645,9 @@
             temperatura: c.temperatura,
             lastContactAt: c.lastContactAt,
             nextActionAt: c.nextActionAt,
+            dateAt: c.dateAt,
+            dateTime: c.dateTime,
+            datePlace: c.datePlace,
             createdAt: c.createdAt,
             updatedAt: c.updatedAt,
             voiceNotes: c.voiceNotes || [],
@@ -2421,7 +2424,7 @@
 
     function exportCSV() {
         if (contacts.length === 0) { showToast('Nenhum contacto para exportar.', true); return; }
-        const headers = ['id','nome','idade','bairro','profissao','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','createdAt','updatedAt', ...DateMindDossier.exportHeaders()];
+        const headers = ['id','nome','idade','bairro','profissao','status','temperatura','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','dateAt','dateTime','datePlace','createdAt','updatedAt', ...DateMindDossier.exportHeaders()];
         const rows = contacts.map(c => headers.map(h => csvEscape(h.startsWith('dossier_') ? DateMindDossier.csvValue(c,h) : c[h])).join(','));
         const csv = '\uFEFF' + headers.join(',') + '\r\n' + rows.join('\r\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2544,7 +2547,7 @@
                     continue;
                 }
                 if(prev)usedIds.add(String(prev.id));
-                const allowed=['idade','bairro','profissao','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt'];
+                const allowed=['idade','bairro','profissao','origin','photo','whatsapp','instagram','notes','lastContactAt','nextActionAt','dateAt','dateTime','datePlace'];
                 const merged={
                     ...(prev||{}),
                     nome:prev?.nome||row.nome,
@@ -2652,6 +2655,9 @@
             notes: hasLegacyEncryptedValue(source.notes) ? '' : (source.notes || ''),
             lastContactAt: source.lastContactAt || '',
             nextActionAt: source.nextActionAt || '',
+            dateAt: source.dateAt || '',
+            dateTime: source.dateTime || '',
+            datePlace: source.datePlace || '',
             createdAt: source.createdAt || '',
             updatedAt: source.updatedAt || '',
             voiceNotes: parseRemoteVoiceNotes(source.notasvoz || source.voiceNotes),
